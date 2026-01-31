@@ -1,0 +1,64 @@
+{
+  "name": "@soko/hardhat-soko",
+  "version": "0.1.0",
+  "description": "Hardhat plugin for managing compilation artifacts",
+  "author": "Loïc Vincent-Genod",
+  "homepage": "https://github.com/VGLoic/soko-monorepo",
+  "bugs": {
+    "url": "https://github.com/VGLoic/soko-monorepo/issues"
+  },
+  "keywords": [
+    "web3",
+    "ethereum",
+    "smart contracts",
+    "hardhat",
+    "plugin",
+    "infrastructure"
+  ],
+  "license": "MIT",
+  "files": [
+    "dist",
+    "package.json",
+    "README.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs"
+    },
+    "./scripts": {
+      "types": "./dist/scripts/exports.d.ts",
+      "require": "./dist/scripts/exports.js",
+      "import": "./dist/scripts/exports.mjs"
+    }
+  },
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint . --max-warnings 0",
+    "format": "prettier --write src/**/*.ts",
+    "check-format": "prettier --check src/**/*.ts",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.624.0",
+    "@ethersproject/keccak256": "^5.7.0",
+    "@ethersproject/strings": "^5.7.0",
+    "@smithy/types": "^3.3.0",
+    "zod": "^3.23.8"
+  },
+  "peerDependencies": {
+    "hardhat": "^2.x"
+  },
+  "devDependencies": {
+    "@soko/eslint-config": "workspace:*",
+    "@soko/typescript-config": "workspace:*",
+    "@types/node": "^22.1.0",
+    "eslint": "^9.39.1",
+    "tsup": "^8.2.4",
+    "typescript": "5.9.2"
+  }
+}
