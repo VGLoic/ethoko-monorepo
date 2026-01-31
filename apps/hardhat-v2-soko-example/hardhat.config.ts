@@ -1,9 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
-import "hardhat-soko";
+import "@soko/hardhat-soko";
 import "dotenv/config";
-import type { SokoHardhatUserConfig } from "hardhat-soko";
+import { SokoHardhatUserConfig } from "@soko/hardhat-soko";
 
 let sokoConfig: SokoHardhatUserConfig | undefined = undefined;
 if (

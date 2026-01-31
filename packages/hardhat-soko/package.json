@@ -33,9 +33,9 @@
       "import": "./dist/scripts/exports.mjs"
     }
   },
+  "types": "./dist/index.d.ts",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsup",
     "lint": "eslint . --max-warnings 0",

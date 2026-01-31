@@ -21,3 +21,7 @@
 
 # Environment variables file
 .env
+
+# Soko files
+.soko
+.soko-typings
