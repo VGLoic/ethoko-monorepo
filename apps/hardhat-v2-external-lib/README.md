@@ -52,6 +52,6 @@ The deployment script can be executed using the Hardhat-Deploy plugin:
 npx hardhat deploy --no-compile --network <network-name>
 ```
 
-The `no-compile` flag is optional and here to highlight that no compilation is needed since we are working with frozen artifacts from `Soko`.
+The `no-compile` flag is optional and here to highlight that no compilation is needed since we are working with static artifacts from `Soko`.
 
 The deployment is by nature idempotent, this is guaranteed by the fact that the used artifacts are static and the Hardhat-Deploy plugin.
