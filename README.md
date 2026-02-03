@@ -31,6 +31,9 @@ It supports Hardhat V3, Hardhat V2 and Foundry as development environments.
 
 Soko stores compilation artifacts in your storage backend of choice, for now only AWS S3 is supported.
 
+See the Hardhat Soko [documentation](packages/hardhat-soko/README.md)
+for a complete guide of the plugin, its commands, configuration options and features.
+
 ### Install and configure
 
 ```bash
@@ -107,10 +110,7 @@ async function deployFoo() {
 }
 ```
 
-### Complete documentation and examples
-
-See the Hardhat Soko [documentation](packages/hardhat-soko/README.md)
-for a complete guide of the plugin, its commands, configuration options and features.
+### Examples
 
 Examples of projects using Hardhat Soko can be found in the `apps/` folder:
 - [hardhat-v2-external-lib](apps/hardhat-v2-external-lib/README.md): compile a contract and its external library with Hardhat V2, deploy using Hardhat Deploy V0.
