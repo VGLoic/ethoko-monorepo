@@ -1,4 +1,4 @@
 {
-  "extends": "@soko/typescript-config/dom-base.json",
+  "extends": "@soko/typescript-config/node-base.json",
   "include": ["src"]
 }
