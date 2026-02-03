@@ -27,13 +27,11 @@ Soko supports both Hardhat and Foundry development environments, compile once, d
 
 Soko is for now available as a [Hardhat](https://hardhat.org/) plugin.
 
-It has support for Hardhat V3, Hardhat V2 and Foundry compilations.
+It supports Hardhat V3, Hardhat V2 and Foundry as development environments.
 
-REMIND ME: talk about storage backends
+Soko stores compilation artifacts in your storage backend of choice, for now only AWS S3 is supported.
 
-### Overview
-
-#### Installation
+### Install and configure
 
 ```bash
 pnpm add -D @soko/hardhat-soko
@@ -41,8 +39,7 @@ npm install --save-dev @soko/hardhat-soko
 yarn add -D @soko/hardhat-soko
 ```
 
-#### Configuration
-
+Import and configure the plugin in the `hardhat.config.ts` file:
 ```ts
 // hardhat.config.ts
 import { HardhatUserConfig } from "hardhat/config";
@@ -65,24 +62,26 @@ export const config: HardhatUserConfig = {
 }
 ```
 
-#### Push an artifact to the Soko project
+### Development process
 
+Once compilation is done, push the artifacts to Soko under a specific tag
 ```bash
 npx hardhat soko push --artifact-path ./artifacts --tag 2026-02-02
 ```
 
-#### Pull the project artifacts from Soko locally
+### Deployment process
 
+Pull the project artifacts from Soko locally
 ```bash
 npx hardhat soko pull
 ```
 
-#### Generate TypeScript typings for the pulled artifacts
+Generate TypeScript typings for the pulled artifacts
 ```bash
 npx hardhat soko typings
 ```
 
-#### Write scripts in a fully typed and transparent manner
+Write scripts in a fully typed and transparent manner
 ```ts
 ...
 import { project } from "../.soko-typings";
