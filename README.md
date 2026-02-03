@@ -34,13 +34,7 @@ Soko stores compilation artifacts in your storage backend of choice, for now onl
 See the Hardhat Soko [documentation](packages/hardhat-soko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
 
-### Install and configure
-
-```bash
-pnpm add -D @soko/hardhat-soko
-npm install --save-dev @soko/hardhat-soko
-yarn add -D @soko/hardhat-soko
-```
+### Configure
 
 Import and configure the plugin in the `hardhat.config.ts` file:
 ```ts
