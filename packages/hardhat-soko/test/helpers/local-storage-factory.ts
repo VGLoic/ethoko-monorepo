@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { LocalStorage } from "@/scripts/local-storage";
+import { LocalStorage } from "@/local-storage";
 import { TEST_CONSTANTS } from "./test-constants";
 
 export async function createTestLocalStorage(): Promise<{

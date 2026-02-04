@@ -3,7 +3,7 @@ import { pushArtifact } from "./push";
 import { generateDiffWithTargetRelease } from "./diff";
 import { generateArtifactsSummariesAndTypings } from "./generate-typings";
 import { retrieveGeneratedSummary } from "./retrieve-generated-summary";
-import { LocalStorage } from "./local-storage";
+import { LocalStorage } from "../local-storage";
 
 export {
   pull,

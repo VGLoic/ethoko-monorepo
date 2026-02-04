@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { S3BucketProvider } from "@/s3-bucket-provider";
-import { LocalStorage } from "@/scripts/local-storage";
+import { LocalStorage } from "@/local-storage";
 import { TestSession } from "./test-session";
 
 export function createTestProjectName(baseName: string): string {

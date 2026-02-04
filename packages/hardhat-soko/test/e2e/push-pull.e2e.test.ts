@@ -7,7 +7,7 @@ import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import type { S3BucketProvider } from "@/s3-bucket-provider";
-import type { LocalStorage } from "@/scripts/local-storage";
+import type { LocalStorage } from "@/local-storage";
 
 describe("Push-Pull E2E Tests", () => {
   let storageProvider: S3BucketProvider;

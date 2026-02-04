@@ -1,9 +1,12 @@
 import fs from "fs/promises";
 import { Stream } from "stream";
-import { ZBuildInfo } from "../utils";
+import { ZBuildInfo } from "./utils";
 import { z } from "zod";
 import crypto from "crypto";
 
+/**
+ * Local storage implementation for storing artifacts on the local filesystem.
+ */
 export class LocalStorage {
   public readonly rootPath: string;
 
@@ -11,14 +14,30 @@ export class LocalStorage {
     this.rootPath = rootPath;
   }
 
+  /**
+   * Checks if an ID exists for a given project in the local storage.
+   * @param project The project name.
+   * @param id The artifact ID.
+   * @returns True if the ID exists, false otherwise.
+   */
   public async hasId(project: string, id: string): Promise<boolean> {
     return this.exists(`${this.rootPath}/${project}/ids/${id}.json`);
   }
 
+  /**
+   * Checks if a tag exists for a given project in the local storage.
+   * @param project The project name.
+   * @param tag The tag name.
+   * @returns True if the tag exists, false otherwise.
+   */
   public async hasTag(project: string, tag: string): Promise<boolean> {
     return this.exists(`${this.rootPath}/${project}/tags/${tag}.json`);
   }
 
+  /**
+   * Lists all projects in the local storage.
+   * @returns The list of project names.
+   */
   public async listProjects(): Promise<string[]> {
     const entries = await fs.readdir(this.rootPath, { withFileTypes: true });
     return entries
@@ -26,6 +45,11 @@ export class LocalStorage {
       .map((entry) => entry.name);
   }
 
+  /**
+   * Lists all IDs for a given project in the local storage.
+   * @param project The project name.
+   * @returns The list of IDs with their last modified timestamps.
+   */
   public async listIds(project: string): Promise<
     {
       id: string;
@@ -54,6 +78,11 @@ export class LocalStorage {
     }));
   }
 
+  /**
+   * Lists all tags for a given project in the local storage.
+   * @param project The project name.
+   * @returns The list of tags with their last modified timestamps.
+   */
   public async listTags(project: string): Promise<
     {
       tag: string;
@@ -81,6 +110,12 @@ export class LocalStorage {
     }));
   }
 
+  /**
+   * Creates an artifact associated with the given ID.
+   * @param project The project name.
+   * @param id The artifact ID.
+   * @param artifact The artifact content.
+   */
   public async createArtifactById(
     project: string,
     id: string,
@@ -89,6 +124,12 @@ export class LocalStorage {
     return fs.writeFile(`${this.rootPath}/${project}/ids/${id}.json`, artifact);
   }
 
+  /**
+   * Creates an artifact associated with the given tag.
+   * @param project The project name.
+   * @param tag The tag name.
+   * @param artifact The artifact content.
+   */
   public async createArtifactByTag(
     project: string,
     tag: string,
@@ -100,6 +141,64 @@ export class LocalStorage {
     );
   }
 
+  /**
+   * Retrieves the artifact associated with the given tag.
+   * @param project The project name.
+   * @param tag The tag name.
+   * @returns The artifact.
+   */
+  public async retrieveArtifactByTag(
+    project: string,
+    tag: string,
+  ): Promise<z.infer<typeof ZBuildInfo>> {
+    const artifactContent = await fs.readFile(
+      `${this.rootPath}/${project}/tags/${tag}.json`,
+      "utf-8",
+    );
+    const rawArtifact = JSON.parse(artifactContent);
+    return ZBuildInfo.passthrough().parse(rawArtifact);
+  }
+
+  /**
+   * Retrieves the artifact associated with the given ID.
+   * @param project The project name.
+   * @param id The artifact ID.
+   * @returns The artifact.
+   */
+  public async retrieveArtifactById(
+    project: string,
+    id: string,
+  ): Promise<z.infer<typeof ZBuildInfo>> {
+    const artifactContent = await fs.readFile(
+      `${this.rootPath}/${project}/ids/${id}.json`,
+      "utf-8",
+    );
+    const rawArtifact = JSON.parse(artifactContent);
+    return ZBuildInfo.passthrough().parse(rawArtifact);
+  }
+
+  /**
+   * Derives the artifact ID from the content of the artifact associated with the given tag.
+   * @param project The project name.
+   * @param tag The tag name.
+   * @returns The derived artifact ID.
+   */
+  public async retrieveArtifactId(
+    project: string,
+    tag: string,
+  ): Promise<string> {
+    const artifactContent = await fs.readFile(
+      `${this.rootPath}/${project}/tags/${tag}.json`,
+      "utf-8",
+    );
+    const hash = crypto.createHash("sha256");
+    hash.update(artifactContent);
+    return hash.digest("hex").substring(0, 12);
+  }
+
+  /**
+   * Ensures that the root path for local storage exists by creating it if necessary.
+   */
   public async ensureSetup(): Promise<void> {
     const doesRootPathExist = await this.exists(this.rootPath);
     if (!doesRootPathExist) {
@@ -107,6 +206,10 @@ export class LocalStorage {
     }
   }
 
+  /**
+   * Ensures that the necessary directories for a given project exist by creating them if necessary.
+   * @param project The project name.
+   */
   public async ensureProjectSetup(project: string): Promise<void> {
     const pathsToEnsure = [
       this.rootPath,
@@ -120,43 +223,6 @@ export class LocalStorage {
         await fs.mkdir(path, { recursive: true });
       }
     }
-  }
-
-  public async retrieveArtifactByTag(
-    project: string,
-    tag: string,
-  ): Promise<z.infer<typeof ZBuildInfo>> {
-    const artifactContent = await fs.readFile(
-      `${this.rootPath}/${project}/tags/${tag}.json`,
-      "utf-8",
-    );
-    const rawArtifact = JSON.parse(artifactContent);
-    return ZBuildInfo.passthrough().parse(rawArtifact);
-  }
-
-  public async retrieveArtifactById(
-    project: string,
-    id: string,
-  ): Promise<z.infer<typeof ZBuildInfo>> {
-    const artifactContent = await fs.readFile(
-      `${this.rootPath}/${project}/ids/${id}.json`,
-      "utf-8",
-    );
-    const rawArtifact = JSON.parse(artifactContent);
-    return ZBuildInfo.passthrough().parse(rawArtifact);
-  }
-
-  public async retrieveArtifactId(
-    project: string,
-    tag: string,
-  ): Promise<string> {
-    const artifactContent = await fs.readFile(
-      `${this.rootPath}/${project}/tags/${tag}.json`,
-      "utf-8",
-    );
-    const hash = crypto.createHash("sha256");
-    hash.update(artifactContent);
-    return hash.digest("hex").substring(0, 12);
   }
 
   private exists(path: string): Promise<boolean> {
