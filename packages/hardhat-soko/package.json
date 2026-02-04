@@ -43,7 +43,6 @@
     "format": "prettier --write src/**/*.ts",
     "check-format": "prettier --check src/**/*.ts",
     "check-types": "tsc --noEmit",
-    "test": "vitest run",
     "test:e2e": "vitest run test/e2e",
     "test:localstack:up": "docker compose -f compose.test.yml up -d",
     "test:localstack:down": "docker compose -f compose.test.yml down -v",
