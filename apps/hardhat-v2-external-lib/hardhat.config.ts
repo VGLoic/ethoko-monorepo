@@ -15,6 +15,11 @@ const sokoConfig: SokoHardhatUserConfig = {
     awsBucketName: process.env.AWS_S3_BUCKET || "",
     awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
     awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+    awsRole: process.env.AWS_ROLE_ARN
+      ? {
+          roleArn: process.env.AWS_ROLE_ARN,
+        }
+      : undefined,
   },
 };
 
