@@ -11,7 +11,8 @@ Soko is a warehouse for smart-contract compilation artifacts. It enables teams t
 - `packages/hardhat-soko`: Hardhat plugin for Soko (main package)
 - `packages/eslint-config`: Shared ESLint configurations
 - `packages/typescript-config`: Shared TypeScript configurations
-- `apps/hardhat-v2-external-lib`: Integration example with Hardhat v2
+- `apps/hardhat-v2_hardhat-deploy-v0`: Integration example with Hardhat v2 and Hardhat Deploy v0.12,
+- `apps/hardhat-v2_hardhat-deploy-v0_external-lib`: Integration example with Hardhat v2, Hardhat Deploy v0.12, and an external library.
 
 ## Build System
 
@@ -56,10 +57,9 @@ pnpm format             # Format TypeScript files
 pnpm check-types        # TypeScript type checking
 
 # App-specific (Hardhat example)
-cd apps/hardhat-v2-external-lib
-pnpm test               # Run Hardhat tests
+cd apps/hardhat-v2_hardhat-deploy-v0_external-lib
 pnpm compile            # Compile contracts (formats then compiles)
-pnpm deploy-contracts   # Deploy contracts
+pnpm format             # Format source files
 pnpm soko-typings       # Generate Soko typings
 ```
 
@@ -70,7 +70,7 @@ Currently, there are no unit test files in the main packages. The test command p
 To run a single Hardhat test:
 
 ```bash
-cd apps/hardhat-v2-external-lib
+cd apps/hardhat-v2_hardhat-deploy-v0_external-lib
 npx hardhat test test/specific-test.ts
 ```
 
