@@ -3,28 +3,28 @@ import { afterEach, beforeEach, describe, expect, test } from "vitest";
 import { pushArtifact } from "@/scripts/push";
 import { pull } from "@/scripts/pull";
 import { createTestS3Provider } from "@test/helpers/s3-provider-factory";
-import { createTestLocalProvider } from "@test/helpers/local-provider-factory";
+import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import type { S3BucketProvider } from "@/s3-bucket-provider";
-import type { LocalStorageProvider } from "@/scripts/local-storage-provider";
+import type { LocalStorage } from "@/scripts/local-storage";
 
 describe("Push-Pull E2E Tests", () => {
   let storageProvider: S3BucketProvider;
-  let localProvider: LocalStorageProvider;
-  let localProviderCleanup: (() => Promise<void>) | null = null;
+  let localStorage: LocalStorage;
+  let localStorageCleanup: (() => Promise<void>) | null = null;
 
   beforeEach(async () => {
     storageProvider = createTestS3Provider();
-    const localSetup = await createTestLocalProvider();
-    localProvider = localSetup.provider;
-    localProviderCleanup = localSetup.cleanup;
+    const localStorageSetup = await createTestLocalStorage();
+    localStorage = localStorageSetup.localStorage;
+    localStorageCleanup = localStorageSetup.cleanup;
   });
 
   afterEach(async () => {
-    if (localProviderCleanup) {
-      await localProviderCleanup();
-      localProviderCleanup = null;
+    if (localStorageCleanup) {
+      await localStorageCleanup();
+      localStorageCleanup = null;
     }
   });
 
@@ -32,7 +32,7 @@ describe("Push-Pull E2E Tests", () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     const artifactId = await pushArtifact(
       artifactPath,
@@ -55,17 +55,17 @@ describe("Push-Pull E2E Tests", () => {
       project,
       artifactId,
       { force: false, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
 
     expect(pullResult.pulledIds).toContain(artifactId);
     expect(pullResult.failedIds).toHaveLength(0);
 
-    const hasLocal = await localProvider.hasId(project, artifactId);
+    const hasLocal = await localStorage.hasId(project, artifactId);
     expect(hasLocal).toBe(true);
 
-    const localArtifact = await localProvider.retrieveArtifactById(
+    const localArtifact = await localStorage.retrieveArtifactById(
       project,
       artifactId,
     );
@@ -80,7 +80,7 @@ describe("Push-Pull E2E Tests", () => {
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     const artifactId = await pushArtifact(
       artifactPath,
@@ -99,17 +99,17 @@ describe("Push-Pull E2E Tests", () => {
       project,
       tag,
       { force: false, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
 
     expect(pullResult.pulledTags).toContain(tag);
     expect(pullResult.failedTags).toHaveLength(0);
 
-    const hasLocalTag = await localProvider.hasTag(project, tag);
+    const hasLocalTag = await localStorage.hasTag(project, tag);
     expect(hasLocalTag).toBe(true);
 
-    const localArtifact = await localProvider.retrieveArtifactByTag(
+    const localArtifact = await localStorage.retrieveArtifactByTag(
       project,
       tag,
     );
@@ -122,7 +122,7 @@ describe("Push-Pull E2E Tests", () => {
     );
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;
@@ -146,7 +146,7 @@ describe("Push-Pull E2E Tests", () => {
       project,
       undefined,
       { force: false, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
 
@@ -160,7 +160,7 @@ describe("Push-Pull E2E Tests", () => {
     const tag = TEST_CONSTANTS.TAGS.LATEST;
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     const id1 = await pushArtifact(
       artifactPath,
@@ -199,7 +199,7 @@ describe("Push-Pull E2E Tests", () => {
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     await pushArtifact(
       artifactPath,
@@ -212,7 +212,7 @@ describe("Push-Pull E2E Tests", () => {
       project,
       tag,
       { force: false, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
 
@@ -220,7 +220,7 @@ describe("Push-Pull E2E Tests", () => {
       project,
       tag,
       { force: false, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
     expect(result1.pulledTags).toHaveLength(0);
@@ -229,7 +229,7 @@ describe("Push-Pull E2E Tests", () => {
       project,
       tag,
       { force: true, debug: false },
-      localProvider,
+      localStorage,
       storageProvider,
     );
     expect(result2.pulledTags).toContain(tag);
@@ -238,14 +238,14 @@ describe("Push-Pull E2E Tests", () => {
   test("pull non-existent artifact returns error", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     await expect(
       pull(
         project,
         "non-existent-tag",
         { force: false, debug: false },
-        localProvider,
+        localStorage,
         storageProvider,
       ),
     ).rejects.toThrow();
@@ -255,7 +255,7 @@ describe("Push-Pull E2E Tests", () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT;
 
-    await localProvider.ensureProjectSetup(project);
+    await localStorage.ensureProjectSetup(project);
 
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;

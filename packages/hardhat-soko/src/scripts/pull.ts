@@ -1,7 +1,7 @@
 import { toAsyncResult } from "../utils";
 import { LOG_COLORS, ScriptError } from "../utils";
 import { StorageProvider } from "../s3-bucket-provider";
-import { LocalStorageProvider } from "./local-storage-provider";
+import { LocalStorage } from "./local-storage";
 
 /**
  * Pulls artifacts of a project from the storage provider
@@ -10,6 +10,7 @@ import { LocalStorageProvider } from "./local-storage-provider";
  * @param opts.force Whether to force the pull
  * @param opts.release A specific release to pull
  * @param opts.debug Whether to enable debug mode
+ * @param localStorage The local storage
  * @param storageProvider The storage provider
  * @returns An object with the remote releases, pulled releases, and failed releases
  */
@@ -17,7 +18,7 @@ export async function pull(
   project: string,
   tagOrId: string | undefined,
   opts: { force: boolean; debug: boolean },
-  localProvider: LocalStorageProvider,
+  localStorage: LocalStorage,
   storageProvider: StorageProvider,
 ) {
   const remoteListingResult = await toAsyncResult(
@@ -58,14 +59,14 @@ export async function pull(
   } else {
     const localListingResult = await toAsyncResult(
       Promise.all([
-        localProvider.listTags(project).then((tagMetadatas) => {
+        localStorage.listTags(project).then((tagMetadatas) => {
           const tags = new Set<string>();
           for (const tagMetadata of tagMetadatas) {
             tags.add(tagMetadata.tag);
           }
           return tags;
         }),
-        localProvider.listIds(project).then((idMetadatas) => {
+        localStorage.listIds(project).then((idMetadatas) => {
           const ids = new Set<string>();
           for (const idMetadata of idMetadatas) {
             ids.add(idMetadata.id);
@@ -119,7 +120,7 @@ export async function pull(
       }
 
       const createResult = await toAsyncResult(
-        localProvider.createArtifactByTag(project, tag, downloadResult.value),
+        localStorage.createArtifactByTag(project, tag, downloadResult.value),
         { debug: opts.debug },
       );
       if (!createResult.success) {
@@ -145,7 +146,7 @@ export async function pull(
       }
 
       const createResult = await toAsyncResult(
-        localProvider.createArtifactById(project, id, downloadResult.value),
+        localStorage.createArtifactById(project, id, downloadResult.value),
         { debug: opts.debug },
       );
       if (!createResult.success) {

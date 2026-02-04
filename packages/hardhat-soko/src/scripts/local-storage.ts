@@ -4,7 +4,7 @@ import { ZBuildInfo } from "../utils";
 import { z } from "zod";
 import crypto from "crypto";
 
-export class LocalStorageProvider {
+export class LocalStorage {
   public readonly rootPath: string;
 
   constructor(rootPath: string) {

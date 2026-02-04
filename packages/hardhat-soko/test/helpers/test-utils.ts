@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { S3BucketProvider } from "@/s3-bucket-provider";
-import { LocalStorageProvider } from "@/scripts/local-storage-provider";
+import { LocalStorage } from "@/scripts/local-storage";
 import { TestSession } from "./test-session";
 
 export function createTestProjectName(baseName: string): string {
@@ -30,15 +30,15 @@ export async function inspectS3Bucket(
 }
 
 export async function inspectLocalStorage(
-  localProvider: LocalStorageProvider,
+  localStorage: LocalStorage,
   project?: string,
 ): Promise<void> {
   console.log("\n=== Local Storage Contents ===");
 
   try {
     if (project) {
-      const tags = await localProvider.listTags(project);
-      const ids = await localProvider.listIds(project);
+      const tags = await localStorage.listTags(project);
+      const ids = await localStorage.listIds(project);
 
       console.log(`Project: ${project}`);
       console.log(
@@ -52,7 +52,7 @@ export async function inspectLocalStorage(
         }`,
       );
     } else {
-      const projects = await localProvider.listProjects();
+      const projects = await localStorage.listProjects();
       console.log(
         `Projects: ${projects.length > 0 ? projects.join(", ") : "(none)"}`,
       );

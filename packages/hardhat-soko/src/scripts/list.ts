@@ -1,4 +1,4 @@
-import { LocalStorageProvider } from "./local-storage-provider";
+import { LocalStorage } from "./local-storage";
 import { ScriptError, toAsyncResult } from "../utils";
 
 type ArtifactMetadata = {
@@ -9,10 +9,10 @@ type ArtifactMetadata = {
 };
 
 export async function generateStructuredDataForArtifacts(
-  localProvider: LocalStorageProvider,
+  localStorage: LocalStorage,
   opts: { debug?: boolean } = {},
 ): Promise<ArtifactMetadata[]> {
-  const projectsResult = await toAsyncResult(localProvider.listProjects(), {
+  const projectsResult = await toAsyncResult(localStorage.listProjects(), {
     debug: opts.debug,
   });
   if (!projectsResult.success) {
@@ -23,7 +23,7 @@ export async function generateStructuredDataForArtifacts(
   const idsAlreadyVisited = new Set<string>();
   const projects = projectsResult.value;
   for (const project of projects) {
-    const tagsResult = await toAsyncResult(localProvider.listTags(project), {
+    const tagsResult = await toAsyncResult(localStorage.listTags(project), {
       debug: opts.debug,
     });
     if (!tagsResult.success) {
@@ -31,7 +31,7 @@ export async function generateStructuredDataForArtifacts(
     }
 
     const artifactsPromises = tagsResult.value.map((metadata) =>
-      localProvider
+      localStorage
         .retrieveArtifactId(project, metadata.tag)
         .then((artifactId) => ({
           metadata,
@@ -60,7 +60,7 @@ export async function generateStructuredDataForArtifacts(
       idsAlreadyVisited.add(artifactId);
     }
 
-    const idsResult = await toAsyncResult(localProvider.listIds(project), {
+    const idsResult = await toAsyncResult(localStorage.listIds(project), {
       debug: opts.debug,
     });
     if (!idsResult.success) {
