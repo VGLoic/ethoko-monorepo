@@ -18,7 +18,7 @@ export class LocalStackHelper {
     const sessionId = TestSession.getInstance().getSessionId();
     console.log(`🔧 Test Session ID: ${sessionId}`);
     console.log("🐳 Starting LocalStack container...");
-    await execAsync("docker-compose -f docker-compose.test.yml up -d");
+    await execAsync("docker compose -f compose.test.yml up -d");
 
     await this.waitForHealthy();
 
@@ -38,7 +38,7 @@ export class LocalStackHelper {
 
   public async stop(): Promise<void> {
     console.log("🛑 Stopping LocalStack container...");
-    await execAsync("docker-compose -f docker-compose.test.yml down -v");
+    await execAsync("docker compose -f compose.test.yml down -v");
   }
 
   public async cleanupSession(): Promise<void> {
