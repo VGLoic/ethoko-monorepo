@@ -7,7 +7,7 @@ import { S3BucketProvider } from "./s3-bucket-provider";
 import { pull } from "./scripts/pull";
 import { generateArtifactsSummariesAndTypings } from "./scripts/generate-typings";
 import { pushArtifact } from "./scripts/push";
-import { LocalStorageProvider } from "./scripts/local-storage-provider";
+import { LocalStorage } from "./local-storage";
 import { generateStructuredDataForArtifacts } from "./scripts/list";
 import { generateDiffWithTargetRelease } from "./scripts/diff";
 
@@ -213,12 +213,10 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       debug: optsParsingResult.data.debug,
     });
 
-    const localProvider = new LocalStorageProvider(
-      sokoConfig.pulledArtifactsPath,
-    );
+    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
     const ensureResult = await toAsyncResult(
-      localProvider.ensureProjectSetup(optsParsingResult.data.project),
+      localStorage.ensureProjectSetup(optsParsingResult.data.project),
       { debug: optsParsingResult.data.debug },
     );
     if (!ensureResult.success) {
@@ -244,7 +242,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
           debug: optsParsingResult.data.debug,
           force: optsParsingResult.data.force,
         },
-        localProvider,
+        localStorage,
         storageProvider,
       ),
       { debug: optsParsingResult.data.debug },
@@ -378,12 +376,10 @@ If the provided tag already exists in the storage, the push will be aborted unle
       debug: optsParsingResult.data.debug,
     });
 
-    const localProvider = new LocalStorageProvider(
-      sokoConfig.pulledArtifactsPath,
-    );
+    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
     const ensureResult = await toAsyncResult(
-      localProvider.ensureProjectSetup(sokoConfig.project),
+      localStorage.ensureProjectSetup(sokoConfig.project),
       { debug: optsParsingResult.data.debug },
     );
     if (!ensureResult.success) {
@@ -469,10 +465,8 @@ The typings will be generated in the configured typings path.
 
     console.log(LOG_COLORS.log, "\nStarting typings generation\n");
 
-    const localProvider = new LocalStorageProvider(
-      sokoConfig.pulledArtifactsPath,
-    );
-    const ensureResult = await toAsyncResult(localProvider.ensureSetup(), {
+    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+    const ensureResult = await toAsyncResult(localStorage.ensureSetup(), {
       debug: parsingResult.data.debug,
     });
     if (!ensureResult.success) {
@@ -496,7 +490,7 @@ The typings will be generated in the configured typings path.
       {
         debug: parsingResult.data.debug,
       },
-      localProvider,
+      localStorage,
     )
       .then(() => {
         console.log(LOG_COLORS.success, "\nTypings generated successfully\n");
@@ -541,11 +535,9 @@ sokoScope
       return;
     }
 
-    const localProvider = new LocalStorageProvider(
-      sokoConfig.pulledArtifactsPath,
-    );
+    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
-    const setupResult = await toAsyncResult(localProvider.ensureSetup(), {
+    const setupResult = await toAsyncResult(localStorage.ensureSetup(), {
       debug: parsingResult.data.debug,
     });
     if (!setupResult.success) {
@@ -564,7 +556,7 @@ sokoScope
     }
 
     const structuredDataResult = await toAsyncResult(
-      generateStructuredDataForArtifacts(localProvider, {
+      generateStructuredDataForArtifacts(localStorage, {
         debug: parsingResult.data.debug,
       }),
       { debug: parsingResult.data.debug },
@@ -673,12 +665,10 @@ sokoScope
       `\nComparing the current compilation with the "${sokoConfig.project}:${tagOrId}" artifact`,
     );
 
-    const localProvider = new LocalStorageProvider(
-      sokoConfig.pulledArtifactsPath,
-    );
+    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
     const ensureResult = await toAsyncResult(
-      localProvider.ensureProjectSetup(sokoConfig.project),
+      localStorage.ensureProjectSetup(sokoConfig.project),
       { debug: paramParsingResult.data.debug },
     );
     if (!ensureResult.success) {
@@ -703,7 +693,7 @@ sokoScope
         {
           debug: paramParsingResult.data.debug,
         },
-        localProvider,
+        localStorage,
       ),
     );
     if (!differencesResult.success) {
