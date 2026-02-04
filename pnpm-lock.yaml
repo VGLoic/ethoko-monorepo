@@ -18,7 +18,7 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
-  apps/hardhat-v2_hardhat-deploy-v0_external-lib:
+  apps/hardhat-v2_hardhat-deploy-v0:
     devDependencies:
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.16
@@ -69,7 +69,7 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
 
-  apps/hardhat-v2_hardhat-deploy-v0:
+  apps/hardhat-v2_hardhat-deploy-v0_external-lib:
     devDependencies:
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.16
@@ -207,18 +207,6 @@ importers:
       vitest:
         specifier: ^2.1.8
         version: 2.1.9(@types/node@22.15.3)
-
-  packages/to-be-removed:
-    devDependencies:
-      prettier:
-        specifier: ^3.7.4
-        version: 3.7.4
-      turbo:
-        specifier: ^2.8.0
-        version: 2.8.0
-      typescript:
-        specifier: 5.9.2
-        version: 5.9.2
 
   packages/typescript-config: {}
 
@@ -5436,7 +5424,7 @@ snapshots:
   '@eslint/config-array@0.21.1':
     dependencies:
       '@eslint/object-schema': 2.1.7
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -5452,7 +5440,7 @@ snapshots:
   '@eslint/eslintrc@3.3.1':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       espree: 10.4.0
       globals: 14.0.0
       ignore: 5.3.2
@@ -7213,10 +7201,6 @@ snapshots:
 
   death@1.1.0: {}
 
-  debug@4.4.3:
-    dependencies:
-      ms: 2.1.3
-
   debug@4.4.3(supports-color@8.1.1):
     dependencies:
       ms: 2.1.3
@@ -7539,7 +7523,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       escape-string-regexp: 4.0.0
       eslint-scope: 8.4.0
       eslint-visitor-keys: 4.2.1
@@ -9482,7 +9466,7 @@ snapshots:
       cac: 6.7.14
       chokidar: 4.0.3
       consola: 3.4.2
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       esbuild: 0.27.2
       fix-dts-default-cjs-exports: 1.0.1
       joycon: 3.1.1
@@ -9666,7 +9650,7 @@ snapshots:
   vite-node@2.1.9(@types/node@22.15.3):
     dependencies:
       cac: 6.7.14
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       es-module-lexer: 1.7.0
       pathe: 1.1.2
       vite: 5.4.21(@types/node@22.15.3)
@@ -9700,7 +9684,7 @@ snapshots:
       '@vitest/spy': 2.1.9
       '@vitest/utils': 2.1.9
       chai: 5.3.3
-      debug: 4.4.3
+      debug: 4.4.3(supports-color@8.1.1)
       expect-type: 1.3.0
       magic-string: 0.30.21
       pathe: 1.1.2
