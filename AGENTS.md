@@ -1,6 +1,6 @@
 # Agent Guidelines for Soko Monorepo
 
-This document provides guidelines for AI coding agents working in the Soko monorepo.
+Guidelines for AI coding agents working in the Soko monorepo.
 
 ## Project Overview
 
@@ -11,54 +11,41 @@ Soko is a warehouse for smart-contract compilation artifacts. It enables teams t
 - `packages/hardhat-soko`: Hardhat plugin for Soko (main package)
 - `packages/eslint-config`: Shared ESLint configurations
 - `packages/typescript-config`: Shared TypeScript configurations
-- `apps/hardhat-v2_hardhat-deploy-v0`: Integration example with Hardhat v2 and Hardhat Deploy v0.12,
-- `apps/hardhat-v2_hardhat-deploy-v0_external-lib`: Integration example with Hardhat v2, Hardhat Deploy v0.12, and an external library.
+- `apps/*`: Integration examples with Hardhat v2 and Hardhat Deploy
 
 ## Build System
 
 **Package Manager:** pnpm 9.0.0 (required)
 **Build Tool:** Turborepo
-**Node Version:** >=18 (use `nvm use` to ensure correct version)
+**Node Version:** >=18 (use `nvm use`)
 
-### Common Commands
+### Commands
 
 ```bash
-# Root level (affects all packages)
+# Root level
 pnpm build              # Build all packages
-pnpm dev                # Run dev mode for all packages
-pnpm test               # Run tests for all packages
+pnpm test               # Run all tests
+pnpm test:e2e           # Run E2E tests for hardhat-soko
 pnpm lint               # Lint all packages
 pnpm format             # Format all packages
-pnpm check-format       # Check formatting
 pnpm check-types        # Typecheck all packages
 
-# Package-specific (run from package directory)
+# Package-specific (from package directory)
 cd packages/hardhat-soko
 pnpm build              # Build using tsup
 pnpm lint               # ESLint with max 0 warnings
-pnpm format             # Format TypeScript files
-pnpm check-types        # TypeScript type checking
+pnpm test:e2e           # Run E2E tests (uses Vitest)
 
-# App-specific (Hardhat example)
-cd apps/hardhat-v2_hardhat-deploy-v0_external-lib
-pnpm compile            # Compile contracts (formats then compiles)
-pnpm format             # Format source files
-pnpm soko-typings       # Generate Soko typings
+# Run single test file
+pnpm vitest run test/e2e/push-pull.e2e.test.ts
+
+# Run single test by name pattern
+pnpm vitest run -t "test name pattern"
 ```
 
-### Running Tests
+**Test Framework:** Vitest with global setup, 60s timeout, located in `test/**/*.e2e.test.ts`
 
-Currently, there are only E2E tests for the @soko/hardhat-soko package. To run these tests:
-```bash
-pnpm test:e2e
-```
-
-### Build Dependencies
-
-Turborepo manages dependencies between tasks. Notable dependencies:
-
-- `lint`, `check-types`, and `test` depend on `build`
-- Each package's tasks depend on its dependencies' tasks (via `^task` syntax)
+**Build Dependencies:** Turborepo manages task dependencies. `lint`, `check-types`, and `test` depend on `build` completing first.
 
 ## Code Style Guidelines
 
@@ -90,7 +77,7 @@ import { z } from "zod";
 import { keccak256 } from "@ethersproject/keccak256";
 
 // Internal imports
-import { LOG_COLORS, ScriptError, toAsyncResult } from "./utils";
+import { LOG_COLORS, toAsyncResult } from "./utils";
 import { S3BucketProvider } from "./s3-bucket-provider";
 ```
 
@@ -141,13 +128,13 @@ const ZBuildInfo = z.object({...});
 const ZAbi = z.array(...);
 ```
 
-**Constants:** SCREAMING_SNAKE_CASE for log colors and configuration
+**Constants:** SCREAMING_SNAKE_CASE for log colors and configuration:
 
 ```typescript
 export const LOG_COLORS = {
-  log: "\x1b[0m%s\x1b[0m",
-  success: "\x1b[32m%s\x1b[0m",
-};
+  log: "cyan",
+  success: "green",
+} as const;
 ```
 
 ### Type Safety
@@ -186,58 +173,99 @@ type Result<T> =
 
 ### Error Handling
 
-**Use custom error classes:**
+**Use custom error classes for CLI methods:**
+
+All CLI methods (@soko/hardhat-soko/src/cli-client/\*) MUST throw `CliError` class instance.
 
 ```typescript
-export class ScriptError extends Error {
+export class CliError extends Error {
   constructor(message: string) {
     super(message);
   }
 }
 ```
 
+```typescript
+// cli-client method example
+const ensureResult = await toAsyncResult(
+  localStorage.ensureProjectSetup(project),
+  { debug: opts.debug },
+);
+if (!ensureResult.success) {
+  steps.fail("Failed to setup local storage");
+  throw new CliError(
+    "Error setting up local storage, is the script not allowed to write to the filesystem? Run with debug mode for more info",
+  );
+}
+```
+
+**Use standard `Error` for internal methods:**
+
+Internal methods can diretly throw `Error` instances, no further wrapping is needed for now.
+
 **Use result wrappers for async operations:**
 
 ```typescript
 export function toAsyncResult<T, TError = Error>(
   promise: Promise<T>,
-  opts: { debug?: boolean } = {},
+  opts: {
+    debug?: boolean;
+  } = {},
 ): Promise<{ success: true; value: T } | { success: false; error: TError }> {
   return promise
     .then((value) => ({ success: true as const, value }))
     .catch((error) => {
-      if (opts.debug) console.error(error);
+      if (opts.debug) {
+        console.error(
+          styleText(
+            LOG_COLORS.error,
+            error instanceof Error
+              ? error.stack || error.message
+              : String(error),
+          ),
+        );
+      }
       return { success: false as const, error };
     });
 }
 ```
 
-**Error handling pattern:**
+**Error handling pattern when interacting with CLI methods:**
 
 ```typescript
-const result = await toAsyncResult(someOperation(), { debug: opts.debug });
-if (!result.success) {
-  if (result.error instanceof ScriptError) {
-    console.error(LOG_COLORS.error, "❌", result.error.message);
+await pull(
+  optsParsingResult.data.project,
+  optsParsingResult.data.id || optsParsingResult.data.tag,
+  storageProvider,
+  localStorage,
+  {
+    force: optsParsingResult.data.force,
+    debug: sokoConfig.debug || optsParsingResult.data.debug,
+  },
+)
+  .then((result) => displayPullResults(optsParsingResult.data.project, result))
+  .catch((err) => {
+    if (err instanceof CliError) {
+      cliError(err.message);
+    } else {
+      cliError(
+        "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+      );
+      console.error(err);
+    }
     process.exitCode = 1;
-    return;
-  }
-  console.error(LOG_COLORS.error, "❌ Unexpected error:", result.error);
-  process.exitCode = 1;
-  return;
-}
-// Use result.value
+  });
 ```
 
 ### Console Output
 
-Use `LOG_COLORS` for all console output:
+Use `LOG_COLORS` and `styleText` for all console output:
 
 ```typescript
-console.error(LOG_COLORS.success, "\nOperation successful");
-console.error(LOG_COLORS.error, "❌ Operation failed");
-console.error(LOG_COLORS.warn, "⚠️ Warning message");
-console.error(LOG_COLORS.log, "Info message");
+console.error(styleText(LOG_COLORS.success, "\nOperation successful"));
+console.error(styleText(LOG_COLORS.error, "❌ Operation failed"));
+console.error(styleText(LOG_COLORS.warn, "⚠️ Warning message"));
+console.error(styleText(LOG_COLORS.log, "Info message"));
 ```
 
 Note: Use `console.error()` for task output (not `console.log()`) to ensure proper streaming in Hardhat tasks.

@@ -9,7 +9,8 @@ import {
 } from "@aws-sdk/client-s3";
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { NodeJsClient } from "@smithy/types";
-import { LOG_COLORS, ScriptError } from "./utils";
+import { styleText } from "node:util";
+import { LOG_COLORS } from "./utils";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;
@@ -94,7 +95,7 @@ export class S3BucketProvider implements StorageProvider {
   private async getRoleCredentials(): Promise<RoleCredentials> {
     const role = this.config.role;
     if (!role) {
-      throw new ScriptError("Role configuration is missing");
+      throw new Error("Role configuration is missing");
     }
 
     const stsClient = new STSClient({
@@ -119,7 +120,7 @@ export class S3BucketProvider implements StorageProvider {
     try {
       response = await stsClient.send(assumeRoleCommand);
     } catch (error) {
-      throw new ScriptError(
+      throw new Error(
         `Failed to assume role "${role.roleArn}": ${error instanceof Error ? error.message : String(error)}`,
       );
     }
@@ -131,15 +132,17 @@ export class S3BucketProvider implements StorageProvider {
       !credentials.SecretAccessKey ||
       !credentials.SessionToken
     ) {
-      throw new ScriptError(
+      throw new Error(
         `Failed to assume role "${role.roleArn}": missing credentials`,
       );
     }
 
     if (this.config.debug) {
       console.error(
-        LOG_COLORS.log,
-        `Assumed role ${role.roleArn} with session ${sessionName} (access key ${credentials.AccessKeyId}, expires ${credentials.Expiration})`,
+        styleText(
+          LOG_COLORS.log,
+          `Assumed role ${role.roleArn} with session ${sessionName} (access key ${credentials.AccessKeyId}, expires ${credentials.Expiration})`,
+        ),
       );
     }
 
