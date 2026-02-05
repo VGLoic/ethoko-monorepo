@@ -6,7 +6,7 @@ import { styleText } from "node:util";
 import { ScriptError, toAsyncResult } from "./utils";
 import { S3BucketProvider } from "./s3-bucket-provider";
 import { generateArtifactsSummariesAndTypings } from "./scripts/generate-typings";
-import { pushArtifact } from "./scripts/push";
+// import { pushArtifact } from "./scripts/push";
 import { LocalStorage } from "./local-storage";
 import { generateStructuredDataForArtifacts } from "./scripts/list";
 import { generateDiffWithTargetRelease } from "./scripts/diff";
@@ -292,44 +292,28 @@ If the provided tag already exists in the storage, the push will be aborted unle
     });
 
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-
-    const ensureResult = await toAsyncResult(
-      localStorage.ensureProjectSetup(sokoConfig.project),
-      { debug: optsParsingResult.data.debug },
-    );
-    if (!ensureResult.success) {
-      if (ensureResult.error instanceof ScriptError) {
-        cliError(ensureResult.error.message);
-        process.exitCode = 1;
-        return;
-      }
-      cliError("An unexpected error occurred");
-      console.error(ensureResult.error);
-      process.exitCode = 1;
-      return;
-    }
+    const cliClient = new CliClient(storageProvider, localStorage, {
+      debug: sokoConfig.debug || optsParsingResult.data.debug,
+    });
 
     const pushResult = await toAsyncResult(
-      pushArtifact(
+      cliClient.push(
         optsParsingResult.data.artifactPath,
         sokoConfig.project,
         optsParsingResult.data.tag,
         {
-          debug: optsParsingResult.data.debug,
           force: optsParsingResult.data.force,
         },
-        storageProvider,
       ),
-      { debug: optsParsingResult.data.debug },
     );
     if (!pushResult.success) {
-      if (pushResult.error instanceof ScriptError) {
+      if (pushResult.error instanceof CliError) {
         cliError(pushResult.error.message);
-        process.exitCode = 1;
-        return;
+      } else {
+        cliError(
+          "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+        );
       }
-      cliError("An unexpected error occurred");
-      console.error(pushResult.error);
       process.exitCode = 1;
       return;
     }
