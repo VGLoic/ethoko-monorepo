@@ -5,6 +5,11 @@ import { retrieveFreshCompilationArtifact, toAsyncResult } from "./utils";
 
 import crypto from "crypto";
 
+/**
+ * Client implementing the operations of the CLI commands, it is used by the CLI entry point but also can be used programmatically, for example in tests or scripts.
+ * It is designed to be independent of the CLI entry point and can be used without any dependency on the CLI, it only requires a StorageProvider and a LocalStorage to operate.
+ * Methods MUST throw CliError with user-friendly messages that can be directly shown to the user, in case of any error. This allows the CLI entry point to handle the errors in a consistent way and also allows the methods to be used in other contexts without any dependency on the CLI error handling.
+ */
 export class CliClient {
   private storageProvider: StorageProvider;
   private localStorage: LocalStorage;
