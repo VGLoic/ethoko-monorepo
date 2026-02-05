@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { afterEach, beforeEach, describe, expect, test } from "vitest";
-import { CliClient } from "@/cli-client";
+import { pull, push } from "@/cli-client/index";
 import { createTestS3Provider } from "@test/helpers/s3-provider-factory";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
@@ -11,7 +11,6 @@ import type { LocalStorage } from "@/local-storage";
 describe("Push-Pull E2E Tests", () => {
   let storageProvider: S3BucketProvider;
   let localStorage: LocalStorage;
-  let cliClient: CliClient;
   let localStorageCleanup: (() => Promise<void>) | null = null;
 
   beforeEach(async () => {
@@ -19,8 +18,6 @@ describe("Push-Pull E2E Tests", () => {
     const localStorageSetup = await createTestLocalStorage();
     localStorage = localStorageSetup.localStorage;
     localStorageCleanup = localStorageSetup.cleanup;
-
-    cliClient = new CliClient(storageProvider, localStorage, { debug: false });
   });
 
   afterEach(async () => {
@@ -37,9 +34,16 @@ describe("Push-Pull E2E Tests", () => {
 
     await localStorage.ensureProjectSetup(project);
 
-    const artifactId = await cliClient.push(artifactPath, project, undefined, {
-      force: false,
-    });
+    const artifactId = await push(
+      artifactPath,
+      project,
+      undefined,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     expect(artifactId).toBeTruthy();
     expect(artifactId).toHaveLength(12);
@@ -50,9 +54,16 @@ describe("Push-Pull E2E Tests", () => {
     );
     expect(hasArtifact).toBe(true);
 
-    const pullResult = await cliClient.pull(project, artifactId, {
-      force: false,
-    });
+    const pullResult = await pull(
+      project,
+      artifactId,
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     expect(pullResult.pulledIds).toContain(artifactId);
     expect(pullResult.failedIds).toHaveLength(0);
@@ -76,9 +87,16 @@ describe("Push-Pull E2E Tests", () => {
 
     await localStorage.ensureProjectSetup(project);
 
-    const artifactId = await cliClient.push(artifactPath, project, undefined, {
-      force: false,
-    });
+    const artifactId = await push(
+      artifactPath,
+      project,
+      undefined,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     expect(artifactId).toBeTruthy();
     expect(artifactId).toHaveLength(12);
@@ -89,9 +107,16 @@ describe("Push-Pull E2E Tests", () => {
     );
     expect(hasArtifact).toBe(true);
 
-    const pullResult = await cliClient.pull(project, artifactId, {
-      force: false,
-    });
+    const pullResult = await pull(
+      project,
+      artifactId,
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     expect(pullResult.pulledIds).toContain(artifactId);
     expect(pullResult.failedIds).toHaveLength(0);
@@ -117,8 +142,9 @@ describe("Push-Pull E2E Tests", () => {
 
     await localStorage.ensureProjectSetup(project);
 
-    const artifactId = await cliClient.push(artifactPath, project, tag, {
+    const artifactId = await push(artifactPath, project, tag, storageProvider, {
       force: false,
+      debug: false,
     });
 
     const hasTag = await storageProvider.hasArtifactByTag(project, tag);
@@ -126,7 +152,10 @@ describe("Push-Pull E2E Tests", () => {
     expect(hasTag).toBe(true);
     expect(hasId).toBe(true);
 
-    const pullResult = await cliClient.pull(project, tag, { force: false });
+    const pullResult = await pull(project, tag, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+    });
 
     expect(pullResult.pulledTags).toContain(tag);
     expect(pullResult.failedTags).toHaveLength(0);
@@ -153,14 +182,22 @@ describe("Push-Pull E2E Tests", () => {
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;
 
-    await cliClient.push(artifactPath, project, tag1, { force: false });
-    await cliClient.push(artifactPath, project, tag2, {
+    await push(artifactPath, project, tag1, storageProvider, {
+      force: false,
+      debug: false,
+    });
+    await push(artifactPath, project, tag2, storageProvider, {
       force: true,
+      debug: false,
     });
 
-    const pullResult = await cliClient.pull(project, undefined, {
-      force: false,
-    });
+    const pullResult = await pull(
+      project,
+      undefined,
+      storageProvider,
+      localStorage,
+      { force: false, debug: false },
+    );
 
     expect(pullResult.pulledTags).toHaveLength(2);
     expect(pullResult.pulledTags).toContain(tag1);
@@ -175,16 +212,21 @@ describe("Push-Pull E2E Tests", () => {
 
     await localStorage.ensureProjectSetup(project);
 
-    const id1 = await cliClient.push(artifactPath, project, tag, {
+    const id1 = await push(artifactPath, project, tag, storageProvider, {
       force: false,
+      debug: false,
     });
 
     await expect(
-      cliClient.push(artifactPath, project, tag, { force: false }),
+      push(artifactPath, project, tag, storageProvider, {
+        force: false,
+        debug: false,
+      }),
     ).rejects.toThrow(/already exists/);
 
-    const id2 = await cliClient.push(artifactPath, project, tag, {
+    const id2 = await push(artifactPath, project, tag, storageProvider, {
       force: true,
+      debug: false,
     });
 
     expect(id1).toBe(id2);
@@ -201,13 +243,25 @@ describe("Push-Pull E2E Tests", () => {
 
     await localStorage.ensureProjectSetup(project);
 
-    await cliClient.push(artifactPath, project, tag, { force: false });
-    await cliClient.pull(project, tag, { force: false });
+    await push(artifactPath, project, tag, storageProvider, {
+      force: false,
+      debug: false,
+    });
+    await pull(project, tag, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+    });
 
-    const result1 = await cliClient.pull(project, tag, { force: false });
+    const result1 = await pull(project, tag, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+    });
     expect(result1.pulledTags).toHaveLength(0);
 
-    const result2 = await cliClient.pull(project, tag, { force: true });
+    const result2 = await pull(project, tag, storageProvider, localStorage, {
+      force: true,
+      debug: false,
+    });
     expect(result2.pulledTags).toContain(tag);
   });
 
@@ -217,7 +271,10 @@ describe("Push-Pull E2E Tests", () => {
     await localStorage.ensureProjectSetup(project);
 
     await expect(
-      cliClient.pull(project, "non-existent-tag", { force: false }),
+      pull(project, "non-existent-tag", storageProvider, localStorage, {
+        force: false,
+        debug: false,
+      }),
     ).rejects.toThrow();
   });
 
@@ -231,11 +288,13 @@ describe("Push-Pull E2E Tests", () => {
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;
 
-    const id1 = await cliClient.push(artifactPath, project, tag1, {
+    const id1 = await push(artifactPath, project, tag1, storageProvider, {
       force: false,
+      debug: false,
     });
-    await cliClient.push(artifactPath, project, tag2, {
+    await push(artifactPath, project, tag2, storageProvider, {
       force: true,
+      debug: false,
     });
 
     const remoteTags = await storageProvider.listTags(project);

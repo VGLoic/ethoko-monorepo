@@ -18,7 +18,7 @@ import {
   displayListResults,
 } from "./cli-ui";
 import { SokoHardhatConfig, SokoHardhatUserConfig } from "./config";
-import { CliClient, CliError } from "./cli-client";
+import { CliError, listPulledArtifacts, pull, push } from "./cli-client/index";
 
 export { type SokoHardhatUserConfig };
 
@@ -150,16 +150,15 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       role: sokoConfig.storageConfiguration.awsRole,
     });
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-    const cliClient = new CliClient(storageProvider, localStorage, {
-      debug: sokoConfig.debug || optsParsingResult.data.debug,
-    });
-
     const pullResult = await toAsyncResult(
-      cliClient.pull(
+      pull(
         optsParsingResult.data.project,
         optsParsingResult.data.id || optsParsingResult.data.tag,
+        storageProvider,
+        localStorage,
         {
           force: optsParsingResult.data.force,
+          debug: sokoConfig.debug || optsParsingResult.data.debug,
         },
       ),
     );
@@ -288,18 +287,15 @@ If the provided tag already exists in the storage, the push will be aborted unle
       debug: optsParsingResult.data.debug,
     });
 
-    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-    const cliClient = new CliClient(storageProvider, localStorage, {
-      debug: sokoConfig.debug || optsParsingResult.data.debug,
-    });
-
     const pushResult = await toAsyncResult(
-      cliClient.push(
+      push(
         optsParsingResult.data.artifactPath,
         sokoConfig.project,
         optsParsingResult.data.tag,
+        storageProvider,
         {
           force: optsParsingResult.data.force,
+          debug: sokoConfig.debug || optsParsingResult.data.debug,
         },
       ),
     );
@@ -436,19 +432,10 @@ sokoScope
     boxHeader("Listing artifacts");
 
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-    const storageProvider = new S3BucketProvider({
-      bucketName: sokoConfig.storageConfiguration.awsBucketName,
-      bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-      accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-      secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-      role: sokoConfig.storageConfiguration.awsRole,
-      debug: parsingResult.data.debug,
-    });
-    const cliClient = new CliClient(storageProvider, localStorage, {
-      debug: parsingResult.data.debug,
-    });
 
-    const listResult = await toAsyncResult(cliClient.listPulledArtifacts());
+    const listResult = await toAsyncResult(
+      listPulledArtifacts(localStorage, { debug: parsingResult.data.debug }),
+    );
     if (!listResult.success) {
       if (listResult.error instanceof CliError) {
         cliError(listResult.error.message);

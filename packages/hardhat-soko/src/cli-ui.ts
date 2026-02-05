@@ -1,7 +1,7 @@
 import ora, { Ora } from "ora";
 import boxen from "boxen";
 import { styleText } from "node:util";
-import { ListResult } from "./cli-client";
+import { type ListResult } from "./cli-client/index";
 
 /**
  * CLI UI utilities for enhanced terminal output
