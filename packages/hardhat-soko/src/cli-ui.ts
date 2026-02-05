@@ -1,7 +1,7 @@
 import ora, { Ora } from "ora";
 import boxen from "boxen";
 import { styleText } from "node:util";
-import { type ListResult } from "./cli-client/index";
+import { PullResult, type ListResult } from "./cli-client/index";
 
 /**
  * CLI UI utilities for enhanced terminal output
@@ -143,6 +143,64 @@ export function info(message: string): void {
 // ##########################################
 // ########### CLI RESULT DISPLAY ###########
 // ##########################################
+
+export function displayPullResults(project: string, data: PullResult): void {
+  if (data.remoteTags.length === 0 && data.remoteIds.length === 0) {
+    success("No artifacts to pull yet");
+  } else if (
+    data.failedTags.length === 0 &&
+    data.failedIds.length === 0 &&
+    data.pulledTags.length === 0 &&
+    data.pulledIds.length === 0
+  ) {
+    success(`You're up to date with project "${project}"`);
+  } else {
+    const summaryLines: string[] = [];
+
+    if (data.pulledTags.length > 0) {
+      summaryLines.push(styleText(["bold", "green"], "✔ Pulled Tags:"));
+      data.pulledTags.forEach((tag) => {
+        summaryLines.push(styleText("green", `  • ${tag}`));
+      });
+    }
+    if (data.pulledIds.length > 0) {
+      if (summaryLines.length > 0) summaryLines.push("");
+      summaryLines.push(styleText(["bold", "green"], "✔ Pulled IDs:"));
+      data.pulledIds.forEach((id) => {
+        summaryLines.push(styleText("green", `  • ${id}`));
+      });
+    }
+    if (data.failedTags.length > 0) {
+      if (summaryLines.length > 0) summaryLines.push("");
+      summaryLines.push(styleText(["bold", "red"], "✖ Failed Tags:"));
+      data.failedTags.forEach((tag) => {
+        summaryLines.push(styleText("red", `  • ${tag}`));
+      });
+    }
+    if (data.failedIds.length > 0) {
+      if (summaryLines.length > 0) summaryLines.push("");
+      summaryLines.push(styleText(["bold", "red"], "✖ Failed IDs:"));
+      data.failedIds.forEach((id) => {
+        summaryLines.push(styleText("red", `  • ${id}`));
+      });
+    }
+
+    if (summaryLines.length > 0) {
+      boxSummary("Summary", summaryLines);
+    }
+  }
+}
+
+export function displayPushResult(
+  project: string,
+  tag: string | undefined,
+  artifactId: string,
+): void {
+  console.error("");
+  success(`Artifact "${project}:${tag || artifactId}" pushed successfully`);
+  console.error(styleText("cyan", `  ID: ${artifactId}`));
+  console.error("");
+}
 
 export function displayListResults(data: ListResult): void {
   if (data.length === 0) {

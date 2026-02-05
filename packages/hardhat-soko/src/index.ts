@@ -16,6 +16,8 @@ import {
   success as cliSuccess,
   info as cliInfo,
   displayListResults,
+  displayPullResults,
+  displayPushResult,
 } from "./cli-ui";
 import { SokoHardhatConfig, SokoHardhatUserConfig } from "./config";
 import { CliError, listPulledArtifacts, pull, push } from "./cli-client/index";
@@ -150,79 +152,30 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       role: sokoConfig.storageConfiguration.awsRole,
     });
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-    const pullResult = await toAsyncResult(
-      pull(
-        optsParsingResult.data.project,
-        optsParsingResult.data.id || optsParsingResult.data.tag,
-        storageProvider,
-        localStorage,
-        {
-          force: optsParsingResult.data.force,
-          debug: sokoConfig.debug || optsParsingResult.data.debug,
-        },
-      ),
-    );
-    if (!pullResult.success) {
-      if (pullResult.error instanceof CliError) {
-        cliError(pullResult.error.message);
-      } else {
-        cliError(
-          "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-        );
-      }
-      process.exitCode = 1;
-      return;
-    }
-
-    if (
-      pullResult.value.remoteTags.length === 0 &&
-      pullResult.value.remoteIds.length === 0
-    ) {
-      cliSuccess("No artifacts to pull yet");
-    } else if (
-      pullResult.value.failedTags.length === 0 &&
-      pullResult.value.failedIds.length === 0 &&
-      pullResult.value.pulledTags.length === 0 &&
-      pullResult.value.pulledIds.length === 0
-    ) {
-      cliSuccess(
-        `You're up to date with project "${optsParsingResult.data.project}"`,
-      );
-    } else {
-      const summaryLines: string[] = [];
-
-      if (pullResult.value.pulledTags.length > 0) {
-        summaryLines.push(styleText(["bold", "green"], "✔ Pulled Tags:"));
-        pullResult.value.pulledTags.forEach((tag) => {
-          summaryLines.push(styleText("green", `  • ${tag}`));
-        });
-      }
-      if (pullResult.value.pulledIds.length > 0) {
-        if (summaryLines.length > 0) summaryLines.push("");
-        summaryLines.push(styleText(["bold", "green"], "✔ Pulled IDs:"));
-        pullResult.value.pulledIds.forEach((id) => {
-          summaryLines.push(styleText("green", `  • ${id}`));
-        });
-      }
-      if (pullResult.value.failedTags.length > 0) {
-        if (summaryLines.length > 0) summaryLines.push("");
-        summaryLines.push(styleText(["bold", "red"], "✖ Failed Tags:"));
-        pullResult.value.failedTags.forEach((tag) => {
-          summaryLines.push(styleText("red", `  • ${tag}`));
-        });
-      }
-      if (pullResult.value.failedIds.length > 0) {
-        if (summaryLines.length > 0) summaryLines.push("");
-        summaryLines.push(styleText(["bold", "red"], "✖ Failed IDs:"));
-        pullResult.value.failedIds.forEach((id) => {
-          summaryLines.push(styleText("red", `  • ${id}`));
-        });
-      }
-
-      if (summaryLines.length > 0) {
-        boxSummary("Summary", summaryLines);
-      }
-    }
+    await pull(
+      optsParsingResult.data.project,
+      optsParsingResult.data.id || optsParsingResult.data.tag,
+      storageProvider,
+      localStorage,
+      {
+        force: optsParsingResult.data.force,
+        debug: sokoConfig.debug || optsParsingResult.data.debug,
+      },
+    )
+      .then((result) =>
+        displayPullResults(optsParsingResult.data.project, result),
+      )
+      .catch((err) => {
+        if (err instanceof CliError) {
+          cliError(err.message);
+        } else {
+          cliError(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(err);
+        }
+        process.exitCode = 1;
+      });
   });
 
 sokoScope
@@ -287,36 +240,34 @@ If the provided tag already exists in the storage, the push will be aborted unle
       debug: optsParsingResult.data.debug,
     });
 
-    const pushResult = await toAsyncResult(
-      push(
-        optsParsingResult.data.artifactPath,
-        sokoConfig.project,
-        optsParsingResult.data.tag,
-        storageProvider,
-        {
-          force: optsParsingResult.data.force,
-          debug: sokoConfig.debug || optsParsingResult.data.debug,
-        },
-      ),
-    );
-    if (!pushResult.success) {
-      if (pushResult.error instanceof CliError) {
-        cliError(pushResult.error.message);
-      } else {
-        cliError(
-          "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-        );
-      }
-      process.exitCode = 1;
-      return;
-    }
-
-    console.error("");
-    cliSuccess(
-      `Artifact "${sokoConfig.project}:${optsParsingResult.data.tag || pushResult.value}" pushed successfully`,
-    );
-    console.error(styleText("cyan", `  ID: ${pushResult.value}`));
-    console.error("");
+    await push(
+      optsParsingResult.data.artifactPath,
+      sokoConfig.project,
+      optsParsingResult.data.tag,
+      storageProvider,
+      {
+        force: optsParsingResult.data.force,
+        debug: sokoConfig.debug || optsParsingResult.data.debug,
+      },
+    )
+      .then((result) =>
+        displayPushResult(
+          sokoConfig.project,
+          optsParsingResult.data.tag,
+          result,
+        ),
+      )
+      .catch((err) => {
+        if (err instanceof CliError) {
+          cliError(err.message);
+        } else {
+          cliError(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(err);
+        }
+        process.exitCode = 1;
+      });
   });
 
 sokoScope
@@ -433,22 +384,21 @@ sokoScope
 
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
-    const listResult = await toAsyncResult(
-      listPulledArtifacts(localStorage, { debug: parsingResult.data.debug }),
-    );
-    if (!listResult.success) {
-      if (listResult.error instanceof CliError) {
-        cliError(listResult.error.message);
-      } else {
-        cliError(
-          "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-        );
-      }
-      process.exitCode = 1;
-      return;
-    }
-
-    displayListResults(listResult.value);
+    await listPulledArtifacts(localStorage, {
+      debug: parsingResult.data.debug,
+    })
+      .then(displayListResults)
+      .catch((err) => {
+        if (err instanceof CliError) {
+          cliError(err.message);
+        } else {
+          cliError(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(err);
+        }
+        process.exitCode = 1;
+      });
   });
 
 sokoScope
