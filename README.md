@@ -9,10 +9,11 @@
     <strong>Warehouse for smart-contract compilation artifacts.</strong>
 </p>
 
-> [!WARNING]
-> Work in progress.
 
 ## What is Soko?
+
+> [!WARNING]
+> Work in progress.
 
 Soko enables teams to **version**, **store** and **share** smart-contract compilation artifacts.  
 As such, it decouples the compilation process from the deployment process.
