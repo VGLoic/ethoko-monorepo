@@ -54,11 +54,15 @@ Pull the project artifacts from Soko locally
   <img alt="Pull example" src="images/pull-example.png">
 </picture>
 
+<br />
+
 Generate TypeScript typings for the pulled artifacts
 
 <picture>
   <img alt="Typings example" src="images/typings-example.png">
 </picture>
+
+<br />
 
 Write scripts in a fully typed and transparent manner
 
