@@ -67,23 +67,24 @@ export const config: HardhatUserConfig = {
 
 Once compilation is done, push the artifacts to Soko under a specific tag
 
-```bash
-npx hardhat soko push --artifact-path ./artifacts --tag 2026-02-02
-```
+<picture>
+  <img alt="Push example" src="images/push-example.png">
+</picture>
+
 
 ### Deployment process
 
 Pull the project artifacts from Soko locally
 
-```bash
-npx hardhat soko pull
-```
+<picture>
+  <img alt="Pull example" src="images/pull-example.png">
+</picture>
 
 Generate TypeScript typings for the pulled artifacts
 
-```bash
-npx hardhat soko typings
-```
+<picture>
+  <img alt="Typings example" src="images/typings-example.png">
+</picture>
 
 Write scripts in a fully typed and transparent manner
 
