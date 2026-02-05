@@ -28,12 +28,6 @@ export function toAsyncResult<T, TError = Error>(
     });
 }
 
-export class ScriptError extends Error {
-  constructor(message: string) {
-    super(message);
-  }
-}
-
 export const LOG_COLORS = {
   log: "cyan",
   success: "green",

@@ -186,47 +186,90 @@ type Result<T> =
 
 ### Error Handling
 
-**Use custom error classes:**
+**Use custom error classes for CLI methods:**
 
+All CLI methods (@soko/hardhat-soko/src/cli-client/*) MUST throw `CliError` class instance.
 ```typescript
-export class ScriptError extends Error {
+export class CliError extends Error {
   constructor(message: string) {
     super(message);
   }
 }
 ```
 
+```typescript
+// cli-client method example
+const ensureResult = await toAsyncResult(
+  localStorage.ensureProjectSetup(project),
+  { debug: opts.debug },
+);
+if (!ensureResult.success) {
+  steps.fail("Failed to setup local storage");
+  throw new CliError(
+    "Error setting up local storage, is the script not allowed to write to the filesystem? Run with debug mode for more info",
+  );
+}
+```
+
+**Use standard `Error` for internal methods:**
+
+Internal methods can diretly throw `Error` instances, no further wrapping is needed for now.
+
+
 **Use result wrappers for async operations:**
 
 ```typescript
 export function toAsyncResult<T, TError = Error>(
   promise: Promise<T>,
-  opts: { debug?: boolean } = {},
+  opts: {
+    debug?: boolean;
+  } = {},
 ): Promise<{ success: true; value: T } | { success: false; error: TError }> {
   return promise
     .then((value) => ({ success: true as const, value }))
     .catch((error) => {
-      if (opts.debug) console.error(error);
+      if (opts.debug) {
+        console.error(
+          styleText(
+            LOG_COLORS.error,
+            error instanceof Error
+              ? error.stack || error.message
+              : String(error),
+          ),
+        );
+      }
       return { success: false as const, error };
     });
 }
 ```
 
-**Error handling pattern:**
+**Error handling pattern when interacting with CLI methods:**
 
 ```typescript
-const result = await toAsyncResult(someOperation(), { debug: opts.debug });
-if (!result.success) {
-  if (result.error instanceof ScriptError) {
-    console.error(LOG_COLORS.error, "❌", result.error.message);
+await pull(
+  optsParsingResult.data.project,
+  optsParsingResult.data.id || optsParsingResult.data.tag,
+  storageProvider,
+  localStorage,
+  {
+    force: optsParsingResult.data.force,
+    debug: sokoConfig.debug || optsParsingResult.data.debug,
+  },
+)
+  .then((result) =>
+    displayPullResults(optsParsingResult.data.project, result),
+  )
+  .catch((err) => {
+    if (err instanceof CliError) {
+      cliError(err.message);
+    } else {
+      cliError(
+        "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+      );
+      console.error(err);
+    }
     process.exitCode = 1;
-    return;
-  }
-  console.error(LOG_COLORS.error, "❌ Unexpected error:", result.error);
-  process.exitCode = 1;
-  return;
-}
-// Use result.value
+  });
 ```
 
 ### Console Output
