@@ -40,7 +40,7 @@ import {
 export async function mapBuildInfoToSokoArtifact(
   buildInfoPath: string,
   debug: boolean,
-): Promise<SokoArtifact> {
+): Promise<{ artifact: SokoArtifact; additionalArtifactsPaths: string[] }> {
   const buildInfoContentResult = await toAsyncResult(
     fs.readFile(buildInfoPath, "utf-8"),
     { debug },
@@ -52,7 +52,7 @@ export async function mapBuildInfoToSokoArtifact(
   }
 
   const jsonContentResult = await toResult(
-    JSON.parse(buildInfoContentResult.value),
+    () => JSON.parse(buildInfoContentResult.value),
     { debug },
   );
   if (!jsonContentResult.success) {
@@ -68,14 +68,17 @@ export async function mapBuildInfoToSokoArtifact(
   if (hardhatV2ParsingResult.success) {
     // The parsing is successful, we can map it to the SokoArtifact format
     return {
-      id: deriveSokoArtifactId(hardhatV2ParsingResult.data.output),
-      origin: {
-        id: hardhatV2ParsingResult.data.id,
-        _format: hardhatV2ParsingResult.data._format,
+      artifact: {
+        id: deriveSokoArtifactId(hardhatV2ParsingResult.data.output),
+        origin: {
+          id: hardhatV2ParsingResult.data.id,
+          _format: hardhatV2ParsingResult.data._format,
+        },
+        solcLongVersion: hardhatV2ParsingResult.data.solcLongVersion,
+        input: hardhatV2ParsingResult.data.input,
+        output: hardhatV2ParsingResult.data.output,
       },
-      solcLongVersion: hardhatV2ParsingResult.data.solcLongVersion,
-      input: hardhatV2ParsingResult.data.input,
-      output: hardhatV2ParsingResult.data.output,
+      additionalArtifactsPaths: [],
     };
   }
 
@@ -86,14 +89,20 @@ export async function mapBuildInfoToSokoArtifact(
     );
   if (forgeCompleteBuildInfoParsingResult.success) {
     return {
-      id: deriveSokoArtifactId(forgeCompleteBuildInfoParsingResult.data.output),
-      origin: {
-        id: forgeCompleteBuildInfoParsingResult.data.id,
-        _format: forgeCompleteBuildInfoParsingResult.data._format,
+      artifact: {
+        id: deriveSokoArtifactId(
+          forgeCompleteBuildInfoParsingResult.data.output,
+        ),
+        origin: {
+          id: forgeCompleteBuildInfoParsingResult.data.id,
+          _format: forgeCompleteBuildInfoParsingResult.data._format,
+        },
+        solcLongVersion:
+          forgeCompleteBuildInfoParsingResult.data.solcLongVersion,
+        input: forgeCompleteBuildInfoParsingResult.data.input,
+        output: forgeCompleteBuildInfoParsingResult.data.output,
       },
-      solcLongVersion: forgeCompleteBuildInfoParsingResult.data.solcLongVersion,
-      input: forgeCompleteBuildInfoParsingResult.data.input,
-      output: forgeCompleteBuildInfoParsingResult.data.output,
+      additionalArtifactsPaths: [],
     };
   }
 
@@ -111,11 +120,14 @@ export async function mapBuildInfoToSokoArtifact(
       { debug },
     );
     if (!mappingResult.success) {
-      throw new Error(
+      throw new CliError(
         `The provided build info file "${buildInfoPath}" seems to be in the Foundry default format but we failed to validate it, please try to build with the "--build-info" option or file an issue with the error details.`,
       );
     }
-    return mappingResult.value;
+    return {
+      artifact: mappingResult.value.artifact,
+      additionalArtifactsPaths: mappingResult.value.additionalArtifactsPaths,
+    };
   }
 
   // No format has been detected, we try to guide the user as much as possible
@@ -171,7 +183,7 @@ async function forgeDefaultBuildInfoToSokoArtifact(
   buildInfoPath: string,
   forgeBuildInfo: z.infer<typeof ForgeCompilerDefaultOutputSchema>,
   debug: boolean,
-): Promise<SokoArtifact> {
+): Promise<{ artifact: SokoArtifact; additionalArtifactsPaths: string[] }> {
   const expectedContractPaths = new Set(
     Object.values(forgeBuildInfo.source_id_to_path),
   );
@@ -182,7 +194,11 @@ async function forgeDefaultBuildInfoToSokoArtifact(
   const buildInfoFolder = path.dirname(buildInfoPath);
   const rootArtifactsFolder = path.dirname(buildInfoFolder);
 
+  // We keep track of the additional artifacts paths to return them at the end
+  const additionalArtifactsPaths: string[] = [];
+
   const exploredContractPaths = new Set<string>();
+  let solcLongVersion: string | undefined = undefined;
   // Target input libraries are formatted as
   // "sourceFile" -> "libraryName" -> "libraryAddress"
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -196,6 +212,8 @@ async function forgeDefaultBuildInfoToSokoArtifact(
   for await (const contractArtifactPath of lookForContractArtifactPath(
     rootArtifactsFolder,
   )) {
+    additionalArtifactsPaths.push(contractArtifactPath);
+
     const contractContentResult = await toAsyncResult(
       fs.readFile(contractArtifactPath, "utf-8").then((content) => {
         const rawParsing = JSON.parse(content);
@@ -213,6 +231,10 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     }
     const contract = contractContentResult.value;
 
+    if (!solcLongVersion) {
+      solcLongVersion = contract.metadata.compiler.version;
+    }
+
     const compilationTargetEntries = Object.entries(
       contract.metadata.settings.compilationTarget || {},
     );
@@ -225,7 +247,8 @@ async function forgeDefaultBuildInfoToSokoArtifact(
       }
       continue;
     }
-    const [sourceFile, contractName] = targetEntry;
+    // E.g "contracts/MyContract.sol" and "MyContract"
+    const [contractPath, contractName] = targetEntry;
 
     // Fill the input language if not set
     if (!input.language) {
@@ -269,10 +292,10 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     }
 
     // Fill the output contracts
-    if (!outputContracts[sourceFile]) {
-      outputContracts[sourceFile] = {};
+    if (!outputContracts[contractPath]) {
+      outputContracts[contractPath] = {};
     }
-    outputContracts[sourceFile][contractName] = {
+    outputContracts[contractPath][contractName] = {
       abi: contract.abi,
       metadata: contract.rawMetadata,
       userdoc: contract.metadata.output.userdoc,
@@ -293,7 +316,7 @@ async function forgeDefaultBuildInfoToSokoArtifact(
       },
     } satisfies z.infer<typeof SolcContractSchema>;
 
-    exploredContractPaths.add(sourceFile);
+    exploredContractPaths.add(contractPath);
   }
 
   if (exploredContractPaths.size !== expectedContractPaths.size) {
@@ -317,6 +340,7 @@ async function forgeDefaultBuildInfoToSokoArtifact(
 
   const sokoArtifact = {
     id: deriveSokoArtifactId(output),
+    solcLongVersion,
     origin: {
       id: forgeBuildInfo.id,
       _format: FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
@@ -332,7 +356,10 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     );
   }
 
-  return sokoArtifactResult.data;
+  return {
+    artifact: sokoArtifactResult.data,
+    additionalArtifactsPaths,
+  };
 }
 
 async function* lookForContractArtifactPath(

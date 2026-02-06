@@ -61,6 +61,7 @@ export async function lookForBuildInfoJsonFile(
   }
 
   let finalEntries = entriesResult.value;
+  let finalFolderPath = inputPath;
 
   // If it contains a `build-info` directory, look for JSON files in it
   const buildInfoDirEntry = entriesResult.value.find(
@@ -77,6 +78,7 @@ export async function lookForBuildInfoJsonFile(
         `The "build-info" directory in the provided path "${inputPath}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
       );
     }
+    finalFolderPath = buildInfoDirPath;
     finalEntries = buildInfoEntriesResult.value;
   }
 
@@ -99,5 +101,5 @@ export async function lookForBuildInfoJsonFile(
     );
   }
 
-  return `${inputPath}/${targetFile.name}`;
+  return `${finalFolderPath}/${targetFile.name}`;
 }

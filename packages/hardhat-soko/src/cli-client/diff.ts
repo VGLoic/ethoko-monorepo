@@ -177,7 +177,7 @@ export async function generateDiffWithTargetRelease(
     // @dev the lookForBuildInfoJsonFile function throws a CliError with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw buildInfoPathResult.error;
   }
-  steps.succeed("Compilation artifact found");
+  steps.succeed(`Compilation artifact found at ${buildInfoPathResult.value}`);
 
   // Step 3: Parse the compilation artifact, mapping it to the Soko format
   steps.start("Analyzing compilation artifact...");
@@ -189,7 +189,7 @@ export async function generateDiffWithTargetRelease(
     // @dev the mapBuildInfoToSokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw sokoArtifactParsingResult.error;
   }
-  const sokoArtifact = sokoArtifactParsingResult.value;
+  const sokoArtifact = sokoArtifactParsingResult.value.artifact;
   steps.succeed(PARSING_SUCCESS_TEXT[sokoArtifact.origin._format]);
 
   const virtualReleaseContractHashesResult = await toAsyncResult(

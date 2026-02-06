@@ -4,10 +4,10 @@ import { SolcJsonInputSchema } from "./solc-v0.8.33/input-json";
 import {
   AbiItemSchema,
   BytecodeSchema,
-  ContractMetadataSchema,
   SolcJsonOutputSchema,
 } from "./solc-v0.8.33/output-json";
 import { JsonSchema } from "./json";
+import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
 
 // Forge version at the time of writing: v1.6
 
@@ -53,6 +53,6 @@ export const ForgeCompilerContractOutputSchema = z.object({
   methodIdentifiers: z.record(z.string(), z.string()).optional(),
   rawMetadata: z.string(),
   metadata: ContractMetadataSchema,
-  // ID as number (e.g. "0", "1", etc.) of the contract, used to resolve the source file path from the "source_id_to_path" field in the output JSON.
-  id: z.string(),
+  // ID as number (e.g. 0, 1, etc.) of the contract, used to resolve the source file path from the "source_id_to_path" field in the output JSON.
+  id: z.number().int(),
 });

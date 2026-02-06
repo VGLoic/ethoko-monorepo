@@ -6,6 +6,8 @@ import z from "zod";
 const Keccak256DigestSchema = z.string().regex(/^0x[0-9a-fA-F]{64}$/);
 
 const SolSourceSchema = z.object({
+  // [Added by me]
+  license: z.string().optional(),
   // Optional: keccak256 hash of the source file
   // It is used to verify the retrieved content if imported via URLs.
   keccak256: Keccak256DigestSchema.optional(),
@@ -46,7 +48,7 @@ const EvmAssemblySourceSchema = z.object({
   }),
 });
 
-export const SourceSchema = SolSourceSchema.or(SolAstSourceSchema).or(
+export const InputSourceSchema = SolSourceSchema.or(SolAstSourceSchema).or(
   EvmAssemblySourceSchema,
 );
 
@@ -277,7 +279,7 @@ export const SolcJsonInputSchema = z.object({
   // Required: Source code language. Currently supported are "Solidity", "Yul", "SolidityAST" (experimental), "EVMAssembly" (experimental).
   language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
   // Required: Record where keys are the "global" names of the source files, imports can use other files via remappings (see below)
-  sources: z.record(z.string(), SourceSchema),
+  sources: z.record(z.string(), InputSourceSchema),
   // Optional
   settings: SettingsSchema.optional(),
 });

@@ -55,7 +55,7 @@ export async function push(
     // @dev the lookForBuildInfoJsonFile function throws a CliError with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw buildInfoPathResult.error;
   }
-  steps.succeed("Compilation artifact found");
+  steps.succeed(`Compilation artifact found at ${buildInfoPathResult.value}`);
 
   // Step 2: Parse the compilation artifact, mapping it to the Soko format
   steps.start("Analyzing compilation artifact...");
@@ -67,7 +67,7 @@ export async function push(
     // @dev the mapBuildInfoToSokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw sokoArtifactParsingResult.error;
   }
-  const sokoArtifact = sokoArtifactParsingResult.value;
+  const sokoArtifact = sokoArtifactParsingResult.value.artifact;
   steps.succeed(PARSING_SUCCESS_TEXT[sokoArtifact.origin._format]);
 
   // Step 3: Check if tag exists
@@ -102,7 +102,11 @@ export async function push(
   // Step 4: Upload artifact
   steps.start("Uploading artifact...");
   const pushResult = await toAsyncResult(
-    storageProvider.uploadArtifact(project, sokoArtifact, tag),
+    storageProvider.uploadArtifact(project, sokoArtifact, tag, {
+      buildInfoPath: buildInfoPathResult.value,
+      additionalArtifactsPaths:
+        sokoArtifactParsingResult.value.additionalArtifactsPaths,
+    }),
     { debug: opts.debug },
   );
 
