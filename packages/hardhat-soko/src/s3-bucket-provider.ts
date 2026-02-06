@@ -11,17 +11,17 @@ import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { NodeJsClient } from "@smithy/types";
 import { styleText } from "node:util";
 import { LOG_COLORS } from "./utils/colors";
+import { SokoArtifact } from "./utils/artifacts-schemas/soko-v0";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;
   listIds(project: string): Promise<string[]>;
   hasArtifactByTag(project: string, tag: string): Promise<boolean>;
-  hasArtifactById(project: string, tag: string): Promise<boolean>;
+  hasArtifactById(project: string, id: string): Promise<boolean>;
   uploadArtifact(
     project: string,
-    id: string,
+    artifact: SokoArtifact,
     tag: string | undefined,
-    content: string,
   ): Promise<void>;
   downloadArtifactById(project: string, id: string): Promise<Stream>;
   downloadArtifactByTag(project: string, tag: string): Promise<Stream>;
@@ -234,17 +234,16 @@ export class S3BucketProvider implements StorageProvider {
 
   public async uploadArtifact(
     project: string,
-    id: string,
+    artifact: SokoArtifact,
     tag: string | undefined,
-    content: string,
   ): Promise<void> {
     const client = await this.getClient();
-    const idKey = `${this.rootPath}/${project}/ids/${id}.json`;
+    const idKey = `${this.rootPath}/${project}/ids/${artifact.id}.json`;
 
     const putIdCommand = new PutObjectCommand({
       Bucket: this.config.bucketName,
       Key: idKey,
-      Body: content,
+      Body: JSON.stringify(artifact),
     });
     await client.send(putIdCommand);
 

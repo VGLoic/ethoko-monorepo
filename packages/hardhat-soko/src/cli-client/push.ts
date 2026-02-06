@@ -102,13 +102,7 @@ export async function push(
   // Step 4: Upload artifact
   steps.start("Uploading artifact...");
   const pushResult = await toAsyncResult(
-    storageProvider.uploadArtifact(
-      project,
-      sokoArtifact.id,
-      tag,
-      // REMIND ME
-      JSON.stringify(sokoArtifact),
-    ),
+    storageProvider.uploadArtifact(project, sokoArtifact, tag),
     { debug: opts.debug },
   );
 
