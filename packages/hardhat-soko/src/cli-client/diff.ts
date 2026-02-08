@@ -104,14 +104,16 @@ export type Difference = {
  * @param artifactPath The path to the artifact to compare with,
  * @param artifact The artifact to compare with, containing the project and the tag or id of the target artifact
  * @param localStorage The local storage used to persist pulled artifacts
- * @param opts Options for the diff command, currently only supports the debug option to enable more verbose logging
+ * @param opts Options for the diff command
+ * @param opts.debug Enable debug mode for more verbose logging
+ * @param opts.isCI Whether running in CI environment (disables interactive prompts)
  * @returns The array of differences between the fresh compilation artifact and the target artifact
  */
 export async function generateDiffWithTargetRelease(
   artifactPath: string,
   artifact: { project: string; tagOrId: string },
   localStorage: LocalStorage,
-  opts: { debug: boolean },
+  opts: { debug: boolean; isCI?: boolean },
 ): Promise<Difference[]> {
   const steps = new StepTracker(4);
 
@@ -170,7 +172,10 @@ export async function generateDiffWithTargetRelease(
   // Step 2: Look for compilation artifact
   steps.start("Looking for compilation artifact...");
   const buildInfoPathResult = await toAsyncResult(
-    lookForBuildInfoJsonFile(artifactPath, opts.debug),
+    lookForBuildInfoJsonFile(artifactPath, steps, {
+      debug: opts.debug,
+      isCI: opts.isCI,
+    }),
   );
   if (!buildInfoPathResult.success) {
     steps.fail("Failed to find compilation artifact");
