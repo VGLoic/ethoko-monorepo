@@ -38,6 +38,7 @@ describe("Counter", async function () {
     // check that the aggregated events match the current value
     let total = 0n;
     for (const event of events) {
+      // @ts-expect-error - type is not correctly set up if compilation is not done
       total += event.args.by;
     }
 
