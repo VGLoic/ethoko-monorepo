@@ -5,7 +5,8 @@ import {
   FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
   FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
 } from "./forge-v1";
-import { HARDHAT_COMPILER_OUTPUT_FORMAT } from "./hardhat-v2";
+import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "./hardhat-v2";
+import { HARDHAT_V3_COMPILER_OUTPUT_FORMAT } from "./hardhat-v3";
 
 /**
  * This is the schema for an artifact stored on Soko
@@ -19,7 +20,8 @@ export const SokoArtifactSchema = z.object({
     _format: z.enum([
       FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
       FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
-      HARDHAT_COMPILER_OUTPUT_FORMAT,
+      HARDHAT_V2_COMPILER_OUTPUT_FORMAT,
+      HARDHAT_V3_COMPILER_OUTPUT_FORMAT,
     ]),
   }),
   solcLongVersion: z.string(),

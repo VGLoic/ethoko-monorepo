@@ -7,7 +7,8 @@ import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-soko-artifact";
 import { SokoArtifact } from "@/utils/artifacts-schemas/soko-v0";
-import { HARDHAT_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
+import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
+import { HARDHAT_V3_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
 import {
   FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
   FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
@@ -15,7 +16,10 @@ import {
 
 const PARSING_SUCCESS_TEXT: Record<SokoArtifact["origin"]["_format"], string> =
   {
-    [HARDHAT_COMPILER_OUTPUT_FORMAT]: "Hardhat compilation artifact detected",
+    [HARDHAT_V2_COMPILER_OUTPUT_FORMAT]:
+      "Hardhat V2 compilation artifact detected",
+    [HARDHAT_V3_COMPILER_OUTPUT_FORMAT]:
+      "Hardhat V3 compilation artifact detected",
     [FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT]:
       "Forge compilation artifact detected",
     [FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT]:

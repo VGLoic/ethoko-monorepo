@@ -3,7 +3,7 @@ import { extendConfig, scope } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
 import { styleText } from "node:util";
-import { S3BucketProvider } from "./s3-bucket-provider";
+import { LocalStorageProvider, S3BucketProvider } from "./storage-provider";
 import { LocalStorage } from "./local-storage";
 import {
   boxHeader,
@@ -144,13 +144,20 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       boxHeader(`Pulling artifacts for "${optsParsingResult.data.project}"`);
     }
 
-    const storageProvider = new S3BucketProvider({
-      bucketName: sokoConfig.storageConfiguration.awsBucketName,
-      bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-      accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-      secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-      role: sokoConfig.storageConfiguration.awsRole,
-    });
+    const storageProvider =
+      sokoConfig.storageConfiguration.type === "aws"
+        ? new S3BucketProvider({
+            bucketName: sokoConfig.storageConfiguration.awsBucketName,
+            bucketRegion: sokoConfig.storageConfiguration.awsRegion,
+            accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
+            secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
+            role: sokoConfig.storageConfiguration.awsRole,
+            debug: optsParsingResult.data.debug,
+          })
+        : new LocalStorageProvider({
+            path: sokoConfig.storageConfiguration.path,
+            debug: optsParsingResult.data.debug,
+          });
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
     await pull(
       optsParsingResult.data.project,
@@ -243,14 +250,20 @@ If the provided tag already exists in the storage, the push will be aborted unle
       `Pushing artifact to "${sokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
     );
 
-    const storageProvider = new S3BucketProvider({
-      bucketName: sokoConfig.storageConfiguration.awsBucketName,
-      bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-      accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-      secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-      role: sokoConfig.storageConfiguration.awsRole,
-      debug: optsParsingResult.data.debug,
-    });
+    const storageProvider =
+      sokoConfig.storageConfiguration.type === "aws"
+        ? new S3BucketProvider({
+            bucketName: sokoConfig.storageConfiguration.awsBucketName,
+            bucketRegion: sokoConfig.storageConfiguration.awsRegion,
+            accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
+            secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
+            role: sokoConfig.storageConfiguration.awsRole,
+            debug: optsParsingResult.data.debug,
+          })
+        : new LocalStorageProvider({
+            path: sokoConfig.storageConfiguration.path,
+            debug: optsParsingResult.data.debug,
+          });
 
     await push(
       finalArtifactPath,

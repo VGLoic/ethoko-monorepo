@@ -5,7 +5,7 @@ import {
 import fs from "fs/promises";
 import { CliError } from "../error";
 import { toAsyncResult, toResult } from "@/utils/result";
-import { HardhatCompilerOutputSchema } from "@/utils/artifacts-schemas/hardhat-v2";
+import { HardhatV2CompilerOutputSchema } from "@/utils/artifacts-schemas/hardhat-v2";
 import {
   FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
   ForgeCompilerContractOutputSchema,
@@ -62,7 +62,7 @@ export async function mapBuildInfoToSokoArtifact(
   }
 
   // We try Hardhat V2 format first
-  const hardhatV2ParsingResult = HardhatCompilerOutputSchema.safeParse(
+  const hardhatV2ParsingResult = HardhatV2CompilerOutputSchema.safeParse(
     jsonContentResult.value,
   );
   if (hardhatV2ParsingResult.success) {

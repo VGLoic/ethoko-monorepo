@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import { S3BucketProvider } from "@/s3-bucket-provider";
+import { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
 import { LocalStorage } from "@/local-storage";
 import { TestSession } from "./test-session";
 

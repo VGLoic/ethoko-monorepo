@@ -10,27 +10,10 @@ import {
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { NodeJsClient } from "@smithy/types";
 import { styleText } from "node:util";
-import { LOG_COLORS } from "./utils/colors";
-import { SokoArtifact } from "./utils/artifacts-schemas/soko-v0";
+import { LOG_COLORS } from "../utils/colors";
+import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
+import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";
-
-export interface StorageProvider {
-  listTags(project: string): Promise<string[]>;
-  listIds(project: string): Promise<string[]>;
-  hasArtifactByTag(project: string, tag: string): Promise<boolean>;
-  hasArtifactById(project: string, id: string): Promise<boolean>;
-  uploadArtifact(
-    project: string,
-    artifact: SokoArtifact,
-    tag: string | undefined,
-    originalContentPaths: {
-      buildInfoPath: string;
-      additionalArtifactsPaths: string[];
-    },
-  ): Promise<void>;
-  downloadArtifactById(project: string, id: string): Promise<Stream>;
-  downloadArtifactByTag(project: string, tag: string): Promise<Stream>;
-}
 
 type S3BucketProviderConfig = {
   bucketName: string;

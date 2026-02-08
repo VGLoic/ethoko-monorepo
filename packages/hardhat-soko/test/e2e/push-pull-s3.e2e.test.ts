@@ -5,10 +5,10 @@ import { createTestS3Provider } from "@test/helpers/s3-provider-factory";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
-import type { S3BucketProvider } from "@/s3-bucket-provider";
+import type { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
 import type { LocalStorage } from "@/local-storage";
 
-describe("Push-Pull E2E Tests", () => {
+describe("Push-Pull E2E Tests (S3 Storage)", () => {
   let storageProvider: S3BucketProvider;
   let localStorage: LocalStorage;
   let localStorageCleanup: (() => Promise<void>) | null = null;

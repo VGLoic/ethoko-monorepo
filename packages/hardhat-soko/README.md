@@ -29,7 +29,7 @@ export const config: HardhatUserConfig = {
     pulledArtifactsPath: ".soko", // Local path for pulled artifacts, default to `.soko`
     typingsPath: ".soko-typings", // Local path for generated typings, default to `.soko-typings`
     compilationOutputPath: "./artifacts", // Local path for generated artifacts, allows to avoid providing --artifact-path for push/diff commands
-    storageConfiguration: { // Configuration of the storage, only AWS S3 is supported for now
+    storageConfiguration: { // Configuration of the storage, see "Storage configurations"
       type: "aws",
       awsRegion: MY_AWS_REGION,
       awsBucketName: MY_AWS_S3_BUCKET,
@@ -229,7 +229,7 @@ export default deployMyExample;
 
 ## Storage configurations
 
-Currently only AWS S3 storage configuration is supported.
+Soko supports AWS S3 and local filesystem storage providers.
 
 ### AWS S3
 
@@ -254,6 +254,23 @@ Make sure the credentials used have the right permissions to read and write obje
 When `awsRole` is provided, Soko assumes the role using the access key and secret key, and uses the temporary credentials for S3 operations. The credentials are cached in memory for the duration of the task.
 
 It is possible to use a single bucket for multiple projects, Soko will handle the organization of the artifacts within the bucket.
+
+### Local filesystem
+
+The local filesystem provider stores artifacts in a local directory, making it a good fit for lightweight organizations or small teams that want a simpler setup while keeping proper versioning of compilation artifacts.
+
+This storage is compatible with sharing through version control (commit the storage directory) or a shared drive.
+
+Configuration example:
+
+```ts
+storageConfiguration: {
+  type: "local",
+  path: "./soko-storage",
+}
+```
+
+Use this provider when you want to keep the setup light and local while still tracking versions of artifacts across your team.
 
 ## Integration examples
 
