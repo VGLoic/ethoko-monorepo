@@ -15,7 +15,9 @@
         "AWS_ROLE_ARN",
         "SEPOLIA_RPC_URL",
         "SEPOLIA_MNEMONIC",
-        "ETHERSCAN_API_KEY"
+        "ETHERSCAN_API_KEY",
+        /* CI detection for prompt behavior */
+        "CI"
       ]
     },
     "lint": {

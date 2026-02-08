@@ -246,6 +246,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
       {
         force: optsParsingResult.data.force,
         debug: sokoConfig.debug || optsParsingResult.data.debug,
+        isCI: process.env.CI === "true" || process.env.CI === "1",
       },
     )
       .then((result) =>
@@ -444,6 +445,7 @@ sokoScope
       localStorage,
       {
         debug: paramParsingResult.data.debug,
+        isCI: process.env.CI === "true" || process.env.CI === "1",
       },
     )
       .then(displayDifferences)

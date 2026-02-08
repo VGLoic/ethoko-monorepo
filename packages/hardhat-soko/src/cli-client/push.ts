@@ -33,7 +33,10 @@ const PARSING_SUCCESS_TEXT: Record<SokoArtifact["origin"]["_format"], string> =
  * @param project The project name
  * @param tag The tag to associate with the artifact, if any
  * @param storageProvider The storage provider used to upload artifacts
- * @param opts Options for the push command, currently only supports the force option to skip the check of existing tag in the storage
+ * @param opts Options for the push command
+ * @param opts.force Force the push of the artifact even if the tag already exists in the storage
+ * @param opts.debug Enable debug mode
+ * @param opts.isCI Whether running in CI environment (disables interactive prompts)
  * @returns The generated artifact ID
  */
 export async function push(
@@ -41,14 +44,17 @@ export async function push(
   project: string,
   tag: string | undefined,
   storageProvider: StorageProvider,
-  opts: { force: boolean; debug: boolean },
+  opts: { force: boolean; debug: boolean; isCI?: boolean },
 ): Promise<string> {
   const steps = new StepTracker(4);
 
   // Step 1: Look for compilation artifact
   steps.start("Looking for compilation artifact...");
   const buildInfoPathResult = await toAsyncResult(
-    lookForBuildInfoJsonFile(artifactPath, opts.debug),
+    lookForBuildInfoJsonFile(artifactPath, steps, {
+      debug: opts.debug,
+      isCI: opts.isCI,
+    }),
   );
   if (!buildInfoPathResult.success) {
     steps.fail("Failed to find compilation artifact");
