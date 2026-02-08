@@ -196,76 +196,41 @@ async function promptUserSelection(
         })
       : new Promise<never>(() => {}); // Never resolves if timeout is disabled
 
-  try {
-    const selectionPromise = (async () => {
-      console.error("");
-      console.error(styleText(LOG_COLORS.log, message));
-      options.forEach((option, index) => {
+  async function selectionPromise() {
+    console.error("");
+    console.error(styleText(LOG_COLORS.log, message));
+    options.forEach((option, index) => {
+      console.error(
+        styleText(LOG_COLORS.log, `  ${index + 1}. ${option.display}`),
+      );
+    });
+    console.error("");
+
+    let selectedIndex: number | null = null;
+    let warningLinesCount = 0;
+    let promptLinesCount = 0;
+
+    while (selectedIndex === null && !isTimedOut) {
+      promptLinesCount++;
+      const answer = await readline.question(
+        styleText(LOG_COLORS.log, "Enter your choice (number): "),
+      );
+
+      const parsed = parseInt(answer.trim(), 10);
+
+      if (isNaN(parsed) || parsed < 1 || parsed > options.length) {
         console.error(
-          styleText(LOG_COLORS.log, `  ${index + 1}. ${option.display}`),
+          styleText(
+            LOG_COLORS.warn,
+            `⚠️  Invalid selection. Please enter a number between 1 and ${options.length}`,
+          ),
         );
-      });
-      console.error("");
-
-      let selectedIndex: number | null = null;
-      let warningLinesCount = 0;
-      let promptLinesCount = 0;
-
-      while (selectedIndex === null && !isTimedOut) {
-        promptLinesCount++;
-        const answer = await readline.question(
-          styleText(LOG_COLORS.log, "Enter your choice (number): "),
-        );
-
-        const parsed = parseInt(answer.trim(), 10);
-
-        if (isNaN(parsed) || parsed < 1 || parsed > options.length) {
-          console.error(
-            styleText(
-              LOG_COLORS.warn,
-              `⚠️  Invalid selection. Please enter a number between 1 and ${options.length}`,
-            ),
-          );
-          warningLinesCount++;
-        } else {
-          selectedIndex = parsed - 1;
-        }
+        warningLinesCount++;
+      } else {
+        selectedIndex = parsed - 1;
       }
+    }
 
-      if (timeoutId) {
-        clearTimeout(timeoutId);
-      }
-      if (!isClosed) {
-        isClosed = true;
-        readline.close();
-      }
-
-      const baseLinesCount = 2 + options.length + 1;
-      const linesToClear =
-        baseLinesCount + promptLinesCount + warningLinesCount;
-
-      for (let i = 0; i < linesToClear; i++) {
-        process.stderr.write("\x1b[1A");
-        process.stderr.write("\x1b[2K");
-      }
-      process.stderr.write("\r");
-
-      if (selectedIndex === null) {
-        throw new Error("Selection was interrupted");
-      }
-
-      const selected = options[selectedIndex];
-      if (!selected) {
-        throw new Error(
-          `Failed to get selected option at index ${selectedIndex}`,
-        );
-      }
-
-      return selected.value;
-    })();
-
-    return await Promise.race([selectionPromise, timeoutPromise]);
-  } catch (error) {
     if (timeoutId) {
       clearTimeout(timeoutId);
     }
@@ -273,8 +238,42 @@ async function promptUserSelection(
       isClosed = true;
       readline.close();
     }
-    throw error;
+
+    const baseLinesCount = 2 + options.length + 1;
+    const linesToClear = baseLinesCount + promptLinesCount + warningLinesCount;
+
+    for (let i = 0; i < linesToClear; i++) {
+      process.stderr.write("\x1b[1A");
+      process.stderr.write("\x1b[2K");
+    }
+    process.stderr.write("\r");
+
+    if (selectedIndex === null) {
+      throw new Error("Selection was interrupted");
+    }
+
+    const selected = options[selectedIndex];
+    if (!selected) {
+      throw new Error(
+        `Failed to get selected option at index ${selectedIndex}`,
+      );
+    }
+
+    return selected.value;
   }
+
+  return await Promise.race([selectionPromise(), timeoutPromise]).catch(
+    (error) => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+      if (!isClosed) {
+        isClosed = true;
+        readline.close();
+      }
+      throw error;
+    },
+  );
 }
 
 function formatTimeAgo(date: Date): string {
