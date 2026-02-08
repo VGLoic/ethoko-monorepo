@@ -56,3 +56,13 @@ export const ForgeCompilerContractOutputSchema = z.object({
   // ID as number (e.g. 0, 1, etc.) of the contract, used to resolve the source file path from the "source_id_to_path" field in the output JSON.
   id: z.number().int(),
 });
+
+// This is a smaller schema used for format inference
+export const FormatInferenceForgeCompilerOutputDefaultFormatSchema =
+  ForgeCompilerDefaultOutputSchema;
+
+// This is a smaller schema used for format inference
+export const FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema =
+  z.object({
+    _format: z.literal(FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT),
+  });

@@ -12,3 +12,8 @@ export const HardhatV2CompilerOutputSchema = z.object({
   input: SolcJsonInputSchema,
   output: SolcJsonOutputSchema,
 });
+
+// This is a smaller schema used for format inference
+export const FormatInferenceHardhatV2CompilerOutputSchema = z.object({
+  _format: z.literal(HARDHAT_V2_COMPILER_OUTPUT_FORMAT),
+});

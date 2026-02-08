@@ -6,6 +6,7 @@ import { styleText } from "node:util";
 import { LOG_COLORS } from "../utils/colors";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
 import { StorageProvider } from "./storage-provider.interface";
+import { BuildInfoPath } from "@/utils/build-info-path";
 
 type LocalStorageProviderConfig = {
   path: string;
@@ -59,7 +60,7 @@ export class LocalStorageProvider implements StorageProvider {
     artifact: SokoArtifact,
     tag: string | undefined,
     originalContentPaths: {
-      buildInfoPath: string;
+      buildInfoPath: BuildInfoPath;
       additionalArtifactsPaths: string[];
     },
   ): Promise<void> {
@@ -73,13 +74,17 @@ export class LocalStorageProvider implements StorageProvider {
       await fs.copyFile(idFilePath, tagFilePath);
     }
 
+    if (originalContentPaths.buildInfoPath.format === "hardhat-v3") {
+      throw new Error("REMIND ME Not implemented yet");
+    }
+
     const buildInfoTargetPath = this.originalContentPath(
       project,
       artifact.id,
-      originalContentPaths.buildInfoPath,
+      originalContentPaths.buildInfoPath.path,
     );
     await this.copyOriginalContent(
-      originalContentPaths.buildInfoPath,
+      originalContentPaths.buildInfoPath.path,
       buildInfoTargetPath,
     );
 

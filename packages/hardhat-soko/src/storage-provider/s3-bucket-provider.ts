@@ -14,6 +14,7 @@ import { LOG_COLORS } from "../utils/colors";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
 import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";
+import { BuildInfoPath } from "@/utils/build-info-path";
 
 type S3BucketProviderConfig = {
   bucketName: string;
@@ -227,7 +228,7 @@ export class S3BucketProvider implements StorageProvider {
     artifact: SokoArtifact,
     tag: string | undefined,
     originalContentPaths: {
-      buildInfoPath: string;
+      buildInfoPath: BuildInfoPath;
       additionalArtifactsPaths: string[];
     },
   ): Promise<void> {
@@ -253,10 +254,13 @@ export class S3BucketProvider implements StorageProvider {
     // Upload original content files as well, using the artifact ID as reference
     // These files are stored under `${this.rootPath}/${project}/ids/${artifact.id}/original-content/` prefix, so they don't interfere with the main artifact JSON file and can be easily retrieved when downloading the artifact
     // We start with the build info file
+    if (originalContentPaths.buildInfoPath.format === "hardhat-v3") {
+      throw new Error("[REMIND ME]: not implemented");
+    }
     const buildInfoContent = await fs.readFile(
-      originalContentPaths.buildInfoPath,
+      originalContentPaths.buildInfoPath.path,
     );
-    let sanitizedBuildInfoPath = originalContentPaths.buildInfoPath;
+    let sanitizedBuildInfoPath = originalContentPaths.buildInfoPath.path;
     // We remove any leading `/` or `./` from the path to avoid creating unnecessary folders in the storage and to ensure the key is valid
     if (sanitizedBuildInfoPath.startsWith("/")) {
       sanitizedBuildInfoPath = sanitizedBuildInfoPath.substring(1);

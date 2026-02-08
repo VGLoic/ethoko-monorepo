@@ -1,5 +1,6 @@
 import { Stream } from "stream";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
+import { BuildInfoPath } from "@/utils/build-info-path";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;
@@ -11,7 +12,7 @@ export interface StorageProvider {
     artifact: SokoArtifact,
     tag: string | undefined,
     originalContentPaths: {
-      buildInfoPath: string;
+      buildInfoPath: BuildInfoPath;
       additionalArtifactsPaths: string[];
     },
   ): Promise<void>;

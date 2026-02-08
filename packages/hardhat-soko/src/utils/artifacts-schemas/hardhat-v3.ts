@@ -10,7 +10,7 @@ export const HardhatV3CompilerInputPieceSchema = z.object({
   id: z.string(),
   solcVersion: z.string().optional(),
   solcLongVersion: z.string(),
-  userSourceNameMap: JsonSchema,
+  userSourceNameMap: JsonSchema.optional(),
   input: SolcJsonInputSchema,
 });
 
@@ -18,4 +18,16 @@ export const HardhatV3CompilerOutputPieceSchema = z.object({
   _format: z.literal(HARDHAT_V3_COMPILER_OUTPUT_FORMAT),
   id: z.string(),
   output: SolcJsonOutputSchema,
+});
+
+// This is a smaller schema used for format inference
+export const FormatInferenceHardhatV3CompilerInputPieceSchema = z.object({
+  _format: z.literal(HARDHAT_V3_COMPILER_OUTPUT_FORMAT),
+  input: z.any(),
+});
+
+// This is a smaller schema used for format inference
+export const FormatInferenceHardhatV3CompilerOutputPieceSchema = z.object({
+  _format: z.literal(HARDHAT_V3_COMPILER_OUTPUT_FORMAT),
+  output: z.any(),
 });

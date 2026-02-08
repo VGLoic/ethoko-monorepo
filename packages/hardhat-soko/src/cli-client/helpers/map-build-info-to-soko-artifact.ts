@@ -20,6 +20,7 @@ import {
   SolcContractSchema,
   SolcJsonOutputSchema,
 } from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
+import { BuildInfoPath } from "@/utils/build-info-path";
 
 /**
  * Given a path to a candidate build info JSON file, try to output a SokoArtifact.
@@ -29,25 +30,29 @@ import {
  * const sokoArtifact = await mapBuildInfoToSokoArtifact(buildInfoPath);
  * ```
  *
- * This function will parse the build info JSON file in the different supported formats, if a format is detected, it will be mapped to the SokoArtifact format.
- * If not format is detected, an error is thrown. If the mapping fails, an error is thrown.
+ * The format of the build info has already been detected previously by the caller.
+ * According to the detected format, this function will fully satisfy the build info content, validate it and map it to the SokoArtifact format.
  *
- * @param buildInfoPath The candidate build info JSON file path to parse and map to a SokoArtifact
+ * @param buildInfoPath The candidate build info path to parse and map to a SokoArtifact, it contains both the format and the path to the build info JSON files
  * @param debug Whether to enable debug logging
  * @return The SokoArtifact mapped from the build info JSON file
- * @throws A CliError if the file cannot be parsed, if the format is not detected or if the mapping fails
+ * @throws A CliError if the file cannot be parsed, if the build info is not valid or if the mapping fails
  */
 export async function mapBuildInfoToSokoArtifact(
-  buildInfoPath: string,
+  buildInfoPath: BuildInfoPath,
   debug: boolean,
 ): Promise<{ artifact: SokoArtifact; additionalArtifactsPaths: string[] }> {
+  if (buildInfoPath.format === "hardhat-v3") {
+    throw new CliError("REMIND ME Not implemented yet");
+  }
+
   const buildInfoContentResult = await toAsyncResult(
-    fs.readFile(buildInfoPath, "utf-8"),
+    fs.readFile(buildInfoPath.path, "utf-8"),
     { debug },
   );
   if (!buildInfoContentResult.success) {
     throw new CliError(
-      `The provided build info path "${buildInfoPath}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
+      `The provided build info path "${buildInfoPath.path}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
     );
   }
 
@@ -57,71 +62,97 @@ export async function mapBuildInfoToSokoArtifact(
   );
   if (!jsonContentResult.success) {
     throw new CliError(
-      `The provided build info file "${buildInfoPath}" could not be parsed as JSON. Please provide a valid JSON file. Run with debug mode for more info.`,
+      `The provided build info file "${buildInfoPath.path}" could not be parsed as JSON. Please provide a valid JSON file. Run with debug mode for more info.`,
     );
   }
 
-  // We try Hardhat V2 format first
-  const hardhatV2ParsingResult = HardhatV2CompilerOutputSchema.safeParse(
-    jsonContentResult.value,
-  );
-  if (hardhatV2ParsingResult.success) {
-    // The parsing is successful, we can map it to the SokoArtifact format
-    return {
-      artifact: {
-        id: deriveSokoArtifactId(hardhatV2ParsingResult.data.output),
-        origin: {
-          id: hardhatV2ParsingResult.data.id,
-          _format: hardhatV2ParsingResult.data._format,
-        },
-        solcLongVersion: hardhatV2ParsingResult.data.solcLongVersion,
-        input: hardhatV2ParsingResult.data.input,
-        output: hardhatV2ParsingResult.data.output,
-      },
-      additionalArtifactsPaths: [],
-    };
-  }
+  // We validate the content and map it to the SokoArtifact format based on the previously detected format
 
-  // We try the Foundry format with the build info option (which includes the input and output)
-  const forgeCompleteBuildInfoParsingResult =
-    ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(
+  if (buildInfoPath.format === "hardhat-v2") {
+    const parsingResult = HardhatV2CompilerOutputSchema.safeParse(
       jsonContentResult.value,
     );
-  if (forgeCompleteBuildInfoParsingResult.success) {
+    if (!parsingResult.success) {
+      if (debug) {
+        console.error(
+          `Failed to parse the build info file "${buildInfoPath.path}" as a Hardhat V2 build info format. Error: ${parsingResult.error}`,
+        );
+      }
+      throw new CliError(
+        `The provided build info file "${buildInfoPath.path}" seems to be in the Hardhat V2 format but we failed to validate it. Please provide a valid Hardhat V2 build info JSON file. Run with debug mode for more info.`,
+      );
+    }
     return {
       artifact: {
-        id: deriveSokoArtifactId(
-          forgeCompleteBuildInfoParsingResult.data.output,
-        ),
+        id: deriveSokoArtifactId(parsingResult.data.output),
         origin: {
-          id: forgeCompleteBuildInfoParsingResult.data.id,
-          _format: forgeCompleteBuildInfoParsingResult.data._format,
+          id: parsingResult.data.id,
+          _format: parsingResult.data._format,
         },
-        solcLongVersion:
-          forgeCompleteBuildInfoParsingResult.data.solcLongVersion,
-        input: forgeCompleteBuildInfoParsingResult.data.input,
-        output: forgeCompleteBuildInfoParsingResult.data.output,
+        solcLongVersion: parsingResult.data.solcLongVersion,
+        input: parsingResult.data.input,
+        output: parsingResult.data.output,
       },
       additionalArtifactsPaths: [],
     };
   }
 
-  // We try the Foundry format without the build info option
-  const forgeDefaultBuildInfoParsingResult =
-    ForgeCompilerDefaultOutputSchema.safeParse(jsonContentResult.value);
-  if (forgeDefaultBuildInfoParsingResult.success) {
+  if (buildInfoPath.format === "forge-with-build-info-option") {
+    const parsingResult =
+      ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(
+        jsonContentResult.value,
+      );
+    if (!parsingResult.success) {
+      if (debug) {
+        console.error(
+          `Failed to parse the build info file "${buildInfoPath.path}" as a Forge build info format with the build info option. Error: ${parsingResult.error}`,
+        );
+      }
+      throw new CliError(
+        `The provided build info file "${buildInfoPath.path}" seems to be in the Forge format with the build info option but we failed to validate it. Please provide a valid Forge build info JSON file with the build info option. Run with debug mode for more info.`,
+      );
+    }
+    return {
+      artifact: {
+        id: deriveSokoArtifactId(parsingResult.data.output),
+        origin: {
+          id: parsingResult.data.id,
+          _format: parsingResult.data._format,
+        },
+        solcLongVersion: parsingResult.data.solcLongVersion,
+        input: parsingResult.data.input,
+        output: parsingResult.data.output,
+      },
+      additionalArtifactsPaths: [],
+    };
+  }
+
+  if (buildInfoPath.format === "forge-default") {
+    const parsingResult = ForgeCompilerDefaultOutputSchema.safeParse(
+      jsonContentResult.value,
+    );
+    if (!parsingResult.success) {
+      if (debug) {
+        console.error(
+          `Failed to parse the build info file "${buildInfoPath.path}" as a Forge build info format without the build info option. Error: ${parsingResult.error}`,
+        );
+      }
+      throw new CliError(
+        `The provided build info file "${buildInfoPath.path}" seems to be in the Forge format without the build info option but we failed to validate it. Please provide a valid Forge build info JSON file without the build info option. Run with debug mode for more info.`,
+      );
+    }
     // The mapping is not straightforward as we need to reconstruct the input and output from the scattered contract pieces
     const mappingResult = await toAsyncResult(
       forgeDefaultBuildInfoToSokoArtifact(
-        buildInfoPath,
-        forgeDefaultBuildInfoParsingResult.data,
+        buildInfoPath.path,
+        parsingResult.data,
         debug,
       ),
       { debug },
     );
     if (!mappingResult.success) {
       throw new CliError(
-        `The provided build info file "${buildInfoPath}" seems to be in the Foundry default format but we failed to validate it, please try to build with the "--build-info" option or file an issue with the error details.`,
+        `The provided build info file "${buildInfoPath.path}" seems to be in the Foundry default format but we failed to validate it, please try to build with the "--build-info" option or file an issue with the error details.`,
       );
     }
     return {
@@ -130,29 +161,10 @@ export async function mapBuildInfoToSokoArtifact(
     };
   }
 
-  // No format has been detected, we try to guide the user as much as possible
-  const isProbablyForgeOutput =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (jsonContentResult.value as any)["source_id_to_path"] !== undefined;
-  if (isProbablyForgeOutput) {
-    throw new CliError(
-      `The provided build info file "${buildInfoPath}" seems to be in a Foundry format, but it does not match any of the supported Foundry formats. Try to build with the following options "--skip test --skip script --force --build-info". If the problem persists, please file an issue with the build info JSON file content and the command used to generate it.`,
-    );
-  }
-
-  const isProbablyHardhatOutput =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (jsonContentResult.value as any)["format"] &&
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (jsonContentResult.value as any)["format"].startsWith("hh");
-  if (isProbablyHardhatOutput) {
-    throw new CliError(
-      `The provided build info file "${buildInfoPath}" seems to be in a Hardhat format, but it does not match any of the supported Hardhat formats. If the problem persists, please file an issue with the build info JSON file content and the command used to generate it.`,
-    );
-  }
+  buildInfoPath.format satisfies never; // to ensure we covered all the cases
 
   throw new CliError(
-    `The provided build info file "${buildInfoPath}" does not match any of the supported formats. Please provide a valid build info JSON file. Run with debug mode for more info.`,
+    `The provided build info file "${buildInfoPath.path}" does not match any of the supported formats. Please provide a valid build info JSON file. Run with debug mode for more info.`,
   );
 }
 
