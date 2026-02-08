@@ -9,6 +9,7 @@ const sokoConfig: SokoHardhatUserConfig = {
   project: "forge-counter",
   pulledArtifactsPath: ".soko",
   typingsPath: ".soko-typings",
+  compilationOutputPath: "./out",
   storageConfiguration: {
     type: "aws",
     awsRegion: process.env.AWS_REGION || "",

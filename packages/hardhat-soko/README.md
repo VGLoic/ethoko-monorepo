@@ -28,6 +28,7 @@ export const config: HardhatUserConfig = {
     project: "doubtful-project", // Name of the project, used when pushing artifacts and as default for other commands
     pulledArtifactsPath: ".soko", // Local path for pulled artifacts, default to `.soko`
     typingsPath: ".soko-typings", // Local path for generated typings, default to `.soko-typings`
+    compilationOutputPath: "./artifacts", // Local path for generated artifacts, allows to avoid providing --artifact-path for push/diff commands
     storageConfiguration: { // Configuration of the storage, only AWS S3 is supported for now
       type: "aws",
       awsRegion: MY_AWS_REGION,
@@ -86,17 +87,24 @@ Push a local compilation artifact for the configured project to the storage, cre
 Only push the compilation artifact without an additional tag:
 
 ```bash
-npx hardhat soko push --artifact-path ./artifacts
+npx hardhat soko push
 ```
 
 Or use a tag to associate the compilation artifact with it
 
 ```bash
-npx hardhat soko push --artifact-path ./artifacts --tag 2026-02-02
+npx hardhat soko push --tag 2026-02-02
+```
+
+If not setup in the configuration or need to be overriden, the path to the compilation artifact can be provided
+
+```bash
+# e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
+npx hardhat soko push --artifact-path ./path/to/artifacts
 ```
 
 > [!NOTE]
-> Hardhat Soko will try to read the compilation artifact from the provided path. If multiple choices are possible, it will ask the user to select one of them. One can avoid this prompt by providing the full path to the compilation artifact or ensure there is only one compilation artifact in the provided path.
+> Hardhat Soko will try to read the compilation artifact from the configured or provided path. If multiple choices are possible, it will ask the user to select one of them. One can avoid this prompt by providing the full path to the compilation artifact or ensure there is only one compilation artifact in the provided path.
 
 ### Pull
 
@@ -140,8 +148,16 @@ npx hardhat soko list
 Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.
 
 ```bash
-npx hardhat soko diff --artifact-path ./artifacts --tag 2026-02-02
-npx hardhat soko diff --artifact-path ./artifacts --id b5e41181986a
+npx hardhat soko diff --tag 2026-02-02
+
+npx hardhat soko diff --id b5e41181986a
+```
+
+If not setup in the configuration or need to be overriden, the path to the compilation artifact can be provided
+
+```bash
+# e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
+npx hardhat soko diff --tag 2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
 ## Using the typings
