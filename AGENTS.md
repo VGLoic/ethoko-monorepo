@@ -78,7 +78,7 @@ import { keccak256 } from "@ethersproject/keccak256";
 
 // Internal imports
 import { LOG_COLORS } from "./utils/colors";
-import { S3BucketProvider } from "./s3-bucket-provider";
+import { S3BucketProvider } from "./storage-provider/s3-bucket-provider";
 ```
 
 **Order:** Built-in modules → External packages → Internal modules
@@ -278,7 +278,9 @@ packages/hardhat-soko/
 │   ├── index.ts              # Main plugin entry, task definitions
 │   ├── utils.ts              # Shared utilities and types
 │   ├── local-storage.ts      # Local storage implementation - for pulled artifacts
-│   ├── s3-bucket-provider.ts # Storage provider implementation
+│   ├── storage-provider/
+│   │   ├── s3-bucket-provider.ts # AWS S3 storage provider
+│   │   ├── local-storage-provider.ts # Local filesystem storage provider
 │   └── scripts/
 │       ├── exports.ts        # Public script exports
 │       ├── push.ts           # Push artifact logic

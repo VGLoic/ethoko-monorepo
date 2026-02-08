@@ -1,4 +1,4 @@
-import { S3BucketProvider } from "@/s3-bucket-provider";
+import { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
 import { TEST_CONSTANTS } from "./test-constants";
 
 export function createTestS3Provider(opts?: {

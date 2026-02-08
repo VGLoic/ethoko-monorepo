@@ -9,7 +9,6 @@
     <strong>Warehouse for smart-contract compilation artifacts.</strong>
 </p>
 
-
 ## What is Soko?
 
 > [!NOTE]
@@ -32,7 +31,7 @@ Soko is for now available as a Hardhat plugin.
 
 It supports Hardhat V3, Hardhat V2 and Foundry as development environments.
 
-Soko stores compilation artifacts in your storage backend of choice, for now only AWS S3 is supported.
+Soko stores compilation artifacts in your storage backend of choice, supporting AWS S3 and local filesystem storage providers.
 
 See the [Hardhat Soko documentation](packages/hardhat-soko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
@@ -44,7 +43,6 @@ Once compilation is done, push the artifacts to Soko under a specific tag
 <picture>
   <img alt="Push example" src="images/push-example.png">
 </picture>
-
 
 ### Deployment process
 
