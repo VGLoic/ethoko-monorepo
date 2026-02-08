@@ -21,6 +21,14 @@ export type SokoHardhatUserConfig = {
    */
   typingsPath?: string;
   /**
+   * The path to compilation output artifacts
+   *
+   * E.g. "./artifacts" for Hardhat, "./out" for Foundry
+   *
+   * When set, makes the --artifact-path flag optional for push and diff commands
+   */
+  compilationOutputPath?: string;
+  /**
    * Configuration of the storage where the artifacts will be stored
    *
    * Only AWS is supported for now
@@ -50,6 +58,7 @@ export const SokoHardhatConfig = z.object({
   project: z.string().min(1),
   pulledArtifactsPath: z.string().default(".soko"),
   typingsPath: z.string().default(".soko-typings"),
+  compilationOutputPath: z.string().optional(),
   storageConfiguration: z.object({
     type: z.literal("aws"),
     awsRegion: z.string().min(1),

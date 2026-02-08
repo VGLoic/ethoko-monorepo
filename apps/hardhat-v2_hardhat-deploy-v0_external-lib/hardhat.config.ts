@@ -9,6 +9,7 @@ const sokoConfig: SokoHardhatUserConfig = {
   project: "doubtful-counter",
   pulledArtifactsPath: ".soko",
   typingsPath: ".soko-typings",
+  compilationOutputPath: "./artifacts",
   storageConfiguration: {
     type: "aws",
     awsRegion: process.env.AWS_REGION || "",

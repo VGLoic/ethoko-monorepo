@@ -186,13 +186,16 @@ sokoScope
 The artifact will be stored in the configured project. An identifier is derived for the artifact.
   npx hardhat soko push --artifact-path ./path/to-my-artifact/artifact.json
 
+If a compilationOutputPath is configured, the --artifact-path flag is optional:
+  npx hardhat soko push --tag v1.2.3
+
 If a tag is provided, the artifact will also be identified by it:
   npx hardhat soko push --artifact-path ./path/to-my-artifact/artifact.json --tag v1.2.3
 
 If the provided tag already exists in the storage, the push will be aborted unless the force flag is enabled.
 `,
   )
-  .addParam("artifactPath", "The compilation artifact path to push")
+  .addOptionalParam("artifactPath", "The compilation artifact path to push")
   .addOptionalParam("tag", "Tag of the artifact")
   .addFlag(
     "force",
@@ -209,7 +212,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
 
     const optsParsingResult = z
       .object({
-        artifactPath: z.string().min(1),
+        artifactPath: z.string().min(1).optional(),
         tag: z.string().optional(),
         force: z.boolean().default(false),
         debug: z.boolean().default(sokoConfig.debug),
@@ -221,6 +224,17 @@ If the provided tag already exists in the storage, the push will be aborted unle
       if (sokoConfig.debug || opts.debug) {
         console.error(optsParsingResult.error);
       }
+      process.exitCode = 1;
+      return;
+    }
+
+    const finalArtifactPath =
+      optsParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+
+    if (!finalArtifactPath) {
+      cliError(
+        "Artifact path must be provided either via --artifact-path flag or compilationOutputPath in config",
+      );
       process.exitCode = 1;
       return;
     }
@@ -239,7 +253,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
     });
 
     await push(
-      optsParsingResult.data.artifactPath,
+      finalArtifactPath,
       sokoConfig.project,
       optsParsingResult.data.tag,
       storageProvider,
@@ -382,7 +396,7 @@ sokoScope
     "diff",
     "Compare a local compilation artifacts with an existing release.",
   )
-  .addParam("artifactPath", "The compilation artifact path to compare")
+  .addOptionalParam("artifactPath", "The compilation artifact path to compare")
   .addOptionalParam(
     "id",
     "The ID of the artifact to compare with, can not be used with the `tag` parameter",
@@ -402,7 +416,7 @@ sokoScope
 
     const paramParsingResult = z
       .object({
-        artifactPath: z.string().min(1),
+        artifactPath: z.string().min(1).optional(),
         id: z.string().optional(),
         tag: z.string().optional(),
         debug: z.boolean().default(sokoConfig.debug),
@@ -428,6 +442,17 @@ sokoScope
       return;
     }
 
+    const finalArtifactPath =
+      paramParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+
+    if (!finalArtifactPath) {
+      cliError(
+        "Artifact path must be provided either via --artifact-path flag or compilationOutputPath in config",
+      );
+      process.exitCode = 1;
+      return;
+    }
+
     const tagOrId = paramParsingResult.data.id || paramParsingResult.data.tag;
     if (!tagOrId) {
       cliError("The artifact must be identified by a tag or an ID");
@@ -440,7 +465,7 @@ sokoScope
     const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
 
     await generateDiffWithTargetRelease(
-      paramParsingResult.data.artifactPath,
+      finalArtifactPath,
       { project: sokoConfig.project, tagOrId },
       localStorage,
       {
