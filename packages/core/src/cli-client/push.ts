@@ -4,23 +4,25 @@ import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-soko-artifact";
-import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
-import { HARDHAT_V3_COMPILER_INPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
-import {
-  FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
-  FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
-} from "@/utils/artifacts-schemas/forge-v1";
-import { SokoArtifact } from "@/utils/artifacts-schemas/soko-v0";
+import { BuildInfoPath } from "@/utils/build-info-path";
 
-const PARSING_SUCCESS_TEXT: Record<SokoArtifact["origin"]["format"], string> = {
-  [HARDHAT_V2_COMPILER_OUTPUT_FORMAT]:
-    "Hardhat V2 compilation artifact detected",
-  [HARDHAT_V3_COMPILER_INPUT_FORMAT]:
-    "Hardhat V3 compilation artifact detected",
-  [FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT]:
-    "Forge compilation artifact detected",
-  [FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT]: "Forge compilation artifact detected",
-};
+function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
+  if (buildInfoPath.format === "hardhat-v3") {
+    return `Hardhat V3 compilation artifact found at ${buildInfoPath.inputPath}`;
+  }
+  if (buildInfoPath.format === "hardhat-v2") {
+    return `Hardhat V2 compilation artifact input file found at ${buildInfoPath.path}`;
+  }
+  if (
+    buildInfoPath.format === "forge-default" ||
+    buildInfoPath.format === "forge-with-build-info-option"
+  ) {
+    return `Forge compilation artifact found at ${buildInfoPath.path}`;
+  }
+  throw new Error(
+    `Unsupported build info format: ${buildInfoPath.format satisfies never}`,
+  );
+}
 
 /**
  * Run the push command of the CLI client, it consists of three steps:
@@ -63,7 +65,7 @@ export async function push(
     // @dev the lookForBuildInfoJsonFile function throws a CliError with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw buildInfoPathResult.error;
   }
-  steps.succeed(`Compilation artifact found at ${buildInfoPathResult.value}`);
+  steps.succeed(buildInfoPathToSuccessText(buildInfoPathResult.value));
 
   // Step 2: Parse the compilation artifact, mapping it to the Soko format
   steps.start("Analyzing compilation artifact...");
@@ -76,7 +78,7 @@ export async function push(
     throw sokoArtifactParsingResult.error;
   }
   const sokoArtifact = sokoArtifactParsingResult.value.artifact;
-  steps.succeed(PARSING_SUCCESS_TEXT[sokoArtifact.origin.format]);
+  steps.succeed("Compilation artifact is valid");
 
   // Step 3: Check if tag exists
   steps.start("Checking if tag exists...");

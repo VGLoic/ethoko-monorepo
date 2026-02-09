@@ -179,6 +179,9 @@ importers:
       '@soko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@soko/hardhat-soko':
+        specifier: workspace:*
+        version: link:../../packages/hardhat-soko
       '@soko/hardhat-v2-soko':
         specifier: workspace:*
         version: link:../../packages/hardhat-v2-soko
@@ -289,20 +292,45 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
 
+  packages/hardhat-soko:
+    dependencies:
+      '@soko/core':
+        specifier: workspace:*
+        version: link:../core
+      hardhat:
+        specifier: ^3.x
+        version: 3.1.7
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@soko/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@soko/typescript-config':
+        specifier: workspace:*
+        version: link:../typescript-config
+      '@types/node':
+        specifier: ^22.1.0
+        version: 22.15.3
+      eslint:
+        specifier: ^9.39.1
+        version: 9.39.1
+      tsup:
+        specifier: ^8.2.4
+        version: 8.5.1(postcss@8.5.6)(tsx@4.21.0)(typescript@5.9.2)
+      typescript:
+        specifier: 5.9.2
+        version: 5.9.2
+
   packages/hardhat-v2-soko:
     dependencies:
       '@soko/core':
         specifier: workspace:*
         version: link:../core
-      boxen:
-        specifier: 5.1.2
-        version: 5.1.2
       hardhat:
         specifier: ^2.x
         version: 2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
-      ora:
-        specifier: 5.4.1
-        version: 5.4.1
       zod:
         specifier: ^3.23.8
         version: 3.25.76

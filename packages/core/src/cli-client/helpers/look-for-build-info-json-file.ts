@@ -282,10 +282,17 @@ export async function lookForBuildInfoJsonFile(
 
     const options = filesToOptions(files);
 
-    if (options.length === 0) {
+    const firstOption = options[0];
+
+    if (!firstOption) {
       throw new CliError(
         `No valid JSON files found in "${finalFolderPath}". Please make sure the directory contains valid build info JSON files. Run with debug mode for more info.`,
       );
+    }
+
+    // @dev it may be possible to start with multiple JSON files, but after filtering out the invalid ones, only one valid file may remain. In that case, we can skip the prompt and directly return that file.
+    if (options.length === 1) {
+      return firstOption.value;
     }
 
     const selectedBuildInfo = await promptUserSelection(

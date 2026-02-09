@@ -1,8 +1,17 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
+import HardhatSoko from "@soko/hardhat-soko";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin],
+  plugins: [hardhatToolboxViemPlugin, HardhatSoko],
+  soko: {
+    project: "curious-counter",
+    compilationOutputPath: "./artifacts",
+    storageConfiguration: {
+      type: "local",
+      path: "./soko-storage",
+    }
+  },
   solidity: {
     profiles: {
       default: {
