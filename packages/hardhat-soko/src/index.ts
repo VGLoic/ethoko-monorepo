@@ -27,13 +27,9 @@ import { ArgumentType } from "hardhat/types/arguments";
 
 import "./type-extension.js";
 
-// export { type SokoHardhatUserConfig };
-
 const plugin = {
   id: "hardhat-soko" as const,
   hookHandlers: {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore - Type is not correctly inferred for unknown reasons
     config: () => import("./hook.js"),
   },
   tasks: [
