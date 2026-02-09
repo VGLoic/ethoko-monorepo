@@ -278,7 +278,7 @@ packages/core/
 ├── src/                      # Source backing package exports
 │   ├── cli-client/           # CLI client entrypoints (push/pull/diff/typings)
 │   ├── storage-provider/     # Storage provider interfaces and implementations
-│   ├── cli-ui.ts             # CLI UI primitives (spinners, output helpers)
+│   ├── cli-ui/               # CLI UI primitives (spinners, output helpers)
 │   └── local-storage.ts      # Local artifact storage read/write utilities
 ├── package.json              # Package metadata and exports map
 └── README.md                 # Public API overview and usage
