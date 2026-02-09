@@ -1,4 +1,4 @@
-# Contributing to @soko/hardhat-soko
+# Contributing to @soko/soko-cli-client
 
 ## Running Tests
 

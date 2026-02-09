@@ -1,7 +1,12 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  entry: [
+    "src/cli-client/index.ts",
+    "src/storage-provider/index.ts",
+    "src/cli-ui.ts",
+    "src/local-storage.ts",
+  ],
   format: ["cjs", "esm"],
   splitting: false,
   sourcemap: true,
