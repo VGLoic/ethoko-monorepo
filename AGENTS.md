@@ -275,23 +275,13 @@ Note: Use `console.error()` for task output (not `console.log()`) to ensure prop
 
 ```
 packages/core/
-├── src/
-│   ├── utils.ts              # Shared utilities and types
-│   ├── local-storage.ts      # Local storage implementation - for pulled artifacts
-│   ├── storage-provider/
-│   │   ├── s3-bucket-provider.ts # AWS S3 storage provider
-│   │   ├── local-storage-provider.ts # Local filesystem storage provider
-│   └── scripts/
-│       ├── exports.ts        # Public script exports
-│       ├── push.ts           # Push artifact logic
-│       ├── pull.ts           # Pull artifact logic
-│       ├── generate-typings.ts
-│       └── ...
-├── dist/                     # Build output (ignored)
-├── tsup.config.ts            # Build configuration
-├── tsconfig.json
-├── eslint.config.mjs
-└── package.json
+├── src/                      # Source backing package exports
+│   ├── cli-client/           # CLI client entrypoints (push/pull/diff/typings)
+│   ├── storage-provider/     # Storage provider interfaces and implementations
+│   ├── cli-ui.ts             # CLI UI primitives (spinners, output helpers)
+│   └── local-storage.ts      # Local artifact storage read/write utilities
+├── package.json              # Package metadata and exports map
+└── README.md                 # Public API overview and usage
 ```
 
 ## Best Practices
