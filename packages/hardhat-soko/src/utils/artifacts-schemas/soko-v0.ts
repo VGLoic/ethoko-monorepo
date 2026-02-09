@@ -14,7 +14,6 @@ import {
 const OriginSchema = z.discriminatedUnion("format", [
   z.object({
     id: z.string(),
-    // REMIND ME
     format: z.enum([
       FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
       FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
