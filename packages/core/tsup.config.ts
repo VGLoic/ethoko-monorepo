@@ -13,4 +13,5 @@ export default defineConfig({
   dts: true,
   clean: true,
   publicDir: "templates",
+  shims: true,
 });
