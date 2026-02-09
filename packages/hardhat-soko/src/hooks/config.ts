@@ -1,8 +1,8 @@
-import { type ConfigHooks } from "hardhat/types/hooks";
-import { HookHandlerCategoryFactory } from "hardhat/types/plugins";
-import { resolvePluginConfig, validatePluginConfig } from "./config.js";
+import type { ConfigHooks } from "hardhat/types/hooks";
+import type { HookHandlerCategoryFactory } from "hardhat/types/plugins";
+import { resolvePluginConfig, validatePluginConfig } from "../config.js";
 
-const hook: HookHandlerCategoryFactory<"config"> = async () => {
+const configHook: HookHandlerCategoryFactory<"config"> = async () => {
   const handlers: Partial<ConfigHooks> = {
     async validateUserConfig(userConfig) {
       return validatePluginConfig(userConfig);
@@ -20,4 +20,4 @@ const hook: HookHandlerCategoryFactory<"config"> = async () => {
   return handlers;
 };
 
-export default hook;
+export default configHook;
