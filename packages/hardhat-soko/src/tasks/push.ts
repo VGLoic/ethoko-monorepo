@@ -3,25 +3,23 @@ import { z } from "zod";
 import {
   boxHeader,
   error as cliError,
-  displayPullResults,
+  displayPushResult,
 } from "@soko/core/cli-ui";
-import { CliError, pull } from "@soko/core/cli-client";
+import { CliError, push } from "@soko/core/cli-client";
 import {
   LocalStorageProvider,
   S3BucketProvider,
 } from "@soko/core/storage-provider";
-import { LocalStorage } from "@soko/core/local-storage";
 
-interface PullTaskArguments {
-  id?: string;
+interface PushTaskArguments {
+  artifactPath?: string;
   tag?: string;
-  project?: string;
   force?: boolean;
   debug?: boolean;
 }
 
 export default async function (
-  taskArguments: PullTaskArguments,
+  taskArguments: PushTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
   const sokoConfig = hre.config.soko;
@@ -33,13 +31,13 @@ export default async function (
 
   const optsParsingResult = z
     .object({
-      id: z.string().optional(),
+      artifactPath: z.string().min(1).optional(),
       tag: z.string().optional(),
-      project: z.string().optional().default(sokoConfig.project),
       force: z.boolean().default(false),
       debug: z.boolean().default(sokoConfig.debug),
     })
     .safeParse(taskArguments);
+
   if (!optsParsingResult.success) {
     cliError("Invalid arguments");
     if (sokoConfig.debug) {
@@ -49,19 +47,20 @@ export default async function (
     return;
   }
 
-  if (optsParsingResult.data.id && optsParsingResult.data.tag) {
-    cliError("The ID and tag parameters can not be used together");
+  const finalArtifactPath =
+    optsParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+
+  if (!finalArtifactPath) {
+    cliError(
+      "Artifact path must be provided either via --artifact-path flag or compilationOutputPath in config",
+    );
     process.exitCode = 1;
     return;
   }
 
-  if (optsParsingResult.data.id || optsParsingResult.data.tag) {
-    boxHeader(
-      `Pulling artifact "${optsParsingResult.data.project}:${optsParsingResult.data.id || optsParsingResult.data.tag}"`,
-    );
-  } else {
-    boxHeader(`Pulling artifacts for "${optsParsingResult.data.project}"`);
-  }
+  boxHeader(
+    `Pushing artifact to "${sokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+  );
 
   const storageProvider =
     sokoConfig.storageConfiguration.type === "aws"
@@ -77,19 +76,20 @@ export default async function (
           path: sokoConfig.storageConfiguration.path,
           debug: optsParsingResult.data.debug,
         });
-  const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
-  await pull(
-    optsParsingResult.data.project,
-    optsParsingResult.data.id || optsParsingResult.data.tag,
+
+  await push(
+    finalArtifactPath,
+    sokoConfig.project,
+    optsParsingResult.data.tag,
     storageProvider,
-    localStorage,
     {
       force: optsParsingResult.data.force,
       debug: sokoConfig.debug || optsParsingResult.data.debug,
+      isCI: process.env.CI === "true" || process.env.CI === "1",
     },
   )
     .then((result) =>
-      displayPullResults(optsParsingResult.data.project, result),
+      displayPushResult(sokoConfig.project, optsParsingResult.data.tag, result),
     )
     .catch((err) => {
       if (err instanceof CliError) {

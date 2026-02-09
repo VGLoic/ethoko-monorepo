@@ -129,7 +129,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       .safeParse(opts);
     if (!optsParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug || opts.debug) {
+      if (sokoConfig.debug) {
         console.error(optsParsingResult.error);
       }
       process.exitCode = 1;
@@ -234,7 +234,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
 
     if (!optsParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug || opts.debug) {
+      if (sokoConfig.debug) {
         console.error(optsParsingResult.error);
       }
       process.exitCode = 1;
@@ -382,7 +382,7 @@ sokoScope
 
     if (!parsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug || opts.debug) {
+      if (sokoConfig.debug) {
         console.error(parsingResult.error);
       }
       process.exitCode = 1;
@@ -443,7 +443,7 @@ sokoScope
       .safeParse(opts);
     if (!paramParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug || opts.debug) {
+      if (sokoConfig.debug) {
         console.error(paramParsingResult.error);
       }
       process.exitCode = 1;

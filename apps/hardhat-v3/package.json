@@ -7,7 +7,8 @@
     "check-format": "prettier --check --ignore-unknown --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "format-contracts": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "format": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "check-types": "tsc --noEmit"
+    "check-types": "tsc --noEmit",
+    "compile": "pnpm format-contracts && hardhat compile --force --no-tests"
   },
   "devDependencies": {
     "@soko/hardhat-soko": "workspace:*",
