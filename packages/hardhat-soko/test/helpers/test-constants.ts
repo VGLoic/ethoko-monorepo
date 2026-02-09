@@ -26,6 +26,10 @@ export const TEST_CONSTANTS = {
         process.cwd(),
         "test/fixtures/hardhat-v2-counter/build-info/sample-artifact.json",
       ),
+      HARDHAT_V3_COUNTER: path.resolve(
+        process.cwd(),
+        "test/fixtures/hardhat-v3-counter/build-info/sample-artifact.json",
+      ),
       FOUNDRY_COUNTER: path.resolve(
         process.cwd(),
         "test/fixtures/foundry-counter/build-info/sample-artifact.json",

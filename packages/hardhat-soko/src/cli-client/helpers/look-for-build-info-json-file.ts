@@ -205,7 +205,10 @@ export async function lookForBuildInfoJsonFile(
 
     steps.stop();
 
-    const jsonFilesWithStats = await Promise.all(
+    const jsonFilesWithStats: (
+      | { ignored: false; summary: FileSummary }
+      | { ignored: true; name: string }
+    )[] = await Promise.all(
       jsonFiles.map(async (file) => {
         const filePath = `${finalFolderPath}/${file.name}`;
         const statsResult = await toAsyncResult(fs.stat(filePath), {
@@ -253,43 +256,32 @@ export async function lookForBuildInfoJsonFile(
           };
         }
 
-        if (
-          formatResult.value === "hardhat-v3-input" ||
-          formatResult.value === "hardhat-v3-output"
-        ) {
-          throw new CliError("REMIND ME: not implemented yet");
-        }
-
         return {
-          ignored: false,
-          name: file.name,
-          filePath,
-          mtime: statsResult.value.mtime,
-          size: statsResult.value.size,
-          format: formatResult.value,
+          ignored: false as const,
+          summary: {
+            name: file.name,
+            filePath,
+            mtime: statsResult.value.mtime,
+            size: statsResult.value.size,
+            format: formatResult.value,
+          },
         };
       }),
     );
 
     let ignoredFilesCount = 0;
-    const files = [];
+    const files: FileSummary[] = [];
     for (const file of jsonFilesWithStats) {
       if (file.ignored) {
         ignoredFilesCount++;
         continue;
       }
-      files.push(file);
+      files.push(file.summary);
     }
 
     files.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
 
-    const options: SelectionOption[] = files.map((file) => ({
-      display: `${truncateFilename(file.name)} (${formatBuildInfoFormat(file.format)}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
-      value: {
-        path: file.filePath,
-        format: file.format,
-      },
-    }));
+    const options = filesToOptions(files);
 
     if (options.length === 0) {
       throw new CliError(
@@ -346,6 +338,50 @@ export async function lookForBuildInfoJsonFile(
     format,
     path: targetFilePath,
   };
+}
+
+type FileSummary = {
+  name: string;
+  filePath: string;
+  mtime: Date;
+  size: number;
+  format: SupportedFormatPerFile;
+};
+function filesToOptions(files: FileSummary[]): SelectionOption[] {
+  const options: SelectionOption[] = [];
+  for (const file of files) {
+    if (file.format === "hardhat-v3-input") {
+      // We check if the corresponding output file is present in the list of files, if not, we ignore this file since it is not a valid build info on its own
+      const matchingOutputName = file.name.replace(".json", ".output.json");
+      if (
+        !files.some(
+          (f) =>
+            f.name === matchingOutputName && f.format === "hardhat-v3-output",
+        )
+      ) {
+        continue;
+      }
+      options.push({
+        display: `${truncateFilename(file.name)} (Hardhat v3, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
+        value: {
+          format: "hardhat-v3",
+          inputPath: file.filePath,
+          outputPath: `${file.filePath.replace(".json", ".output.json")}`,
+        },
+      });
+    } else if (file.format === "hardhat-v3-output") {
+      // Hardhat V3 output files are ignored as they will be handled together with their corresponding input file
+    } else {
+      options.push({
+        display: `${truncateFilename(file.name)} (${formatBuildInfoFormat(file.format)}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
+        value: {
+          path: file.filePath,
+          format: file.format,
+        },
+      });
+    }
+  }
+  return options;
 }
 
 function inferSingleJsonFileFormat(

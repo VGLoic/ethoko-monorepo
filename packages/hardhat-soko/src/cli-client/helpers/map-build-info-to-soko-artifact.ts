@@ -21,6 +21,10 @@ import {
   SolcJsonOutputSchema,
 } from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
 import { BuildInfoPath } from "@/utils/build-info-path";
+import {
+  HardhatV3CompilerInputPieceSchema,
+  HardhatV3CompilerOutputPieceSchema,
+} from "@/utils/artifacts-schemas/hardhat-v3";
 
 /**
  * Given a path to a candidate build info JSON file, try to output a SokoArtifact.
@@ -43,35 +47,84 @@ export async function mapBuildInfoToSokoArtifact(
   debug: boolean,
 ): Promise<{ artifact: SokoArtifact; originalContentPaths: string[] }> {
   if (buildInfoPath.format === "hardhat-v3") {
-    throw new CliError("REMIND ME Not implemented yet");
+    // @dev readJsonFile throws a CliError so it is safe to use it directly without wrapping it in a try catch block
+    const inputJsonContent = await readJsonFile(
+      buildInfoPath.inputPath,
+      "build info input",
+      debug,
+    );
+
+    const inputParsingResult =
+      HardhatV3CompilerInputPieceSchema.safeParse(inputJsonContent);
+    if (!inputParsingResult.success) {
+      if (debug) {
+        console.error(
+          `Failed to parse the build info input file "${buildInfoPath.inputPath}" as a Hardhat V3 compiler input piece. Error: ${inputParsingResult.error}`,
+        );
+      }
+      throw new CliError(
+        `The provided build info input file "${buildInfoPath.inputPath}" seems to be in the Hardhat V3 compiler input piece format but we failed to validate it. Please provide a valid Hardhat V3 compiler input piece JSON file. Run with debug mode for more info.`,
+      );
+    }
+
+    // @dev readJsonFile throws a CliError so it is safe to use it directly without wrapping it in a try catch block
+    const outputJsonContent = await readJsonFile(
+      buildInfoPath.outputPath,
+      "build info output",
+      debug,
+    );
+
+    const outputParsingResult =
+      HardhatV3CompilerOutputPieceSchema.safeParse(outputJsonContent);
+    if (!outputParsingResult.success) {
+      if (debug) {
+        console.error(
+          `Failed to parse the build info output file "${buildInfoPath.outputPath}" as a Hardhat V3 compiler output piece. Error: ${outputParsingResult.error}`,
+        );
+      }
+      throw new CliError(
+        `The provided build info output file "${buildInfoPath.outputPath}" seems to be in the Hardhat V3 compiler output piece format but we failed to validate it. Please provide a valid Hardhat V3 compiler output piece JSON file. Run with debug mode for more info.`,
+      );
+    }
+
+    if (inputParsingResult.data.id !== outputParsingResult.data.id) {
+      if (debug) {
+        console.error(
+          `The input and output files provided do not seem to belong together, their ids are different. Input id: "${inputParsingResult.data.id}", output id: "${outputParsingResult.data.id}". Please provide matching input and output files. Run with debug mode for more info.`,
+        );
+      }
+      throw new CliError(
+        `The input and output files provided do not seem to belong together, their ids are different. Please provide matching input and output files. Run with debug mode for more info.`,
+      );
+    }
+
+    return {
+      artifact: {
+        id: deriveSokoArtifactId(outputParsingResult.data.output),
+        origin: {
+          id: inputParsingResult.data.id,
+          format: inputParsingResult.data._format,
+          outputFormat: outputParsingResult.data._format,
+        },
+        input: inputParsingResult.data.input,
+        output: outputParsingResult.data.output,
+        solcLongVersion: inputParsingResult.data.solcLongVersion,
+      },
+      originalContentPaths: [buildInfoPath.inputPath, buildInfoPath.outputPath],
+    };
   }
 
-  const buildInfoContentResult = await toAsyncResult(
-    fs.readFile(buildInfoPath.path, "utf-8"),
-    { debug },
+  // @dev readJsonFile throws a CliError so it is safe to use it directly without wrapping it in a try catch block
+  const jsonContent = await readJsonFile(
+    buildInfoPath.path,
+    "build info",
+    debug,
   );
-  if (!buildInfoContentResult.success) {
-    throw new CliError(
-      `The provided build info path "${buildInfoPath.path}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
-    );
-  }
-
-  const jsonContentResult = await toResult(
-    () => JSON.parse(buildInfoContentResult.value),
-    { debug },
-  );
-  if (!jsonContentResult.success) {
-    throw new CliError(
-      `The provided build info file "${buildInfoPath.path}" could not be parsed as JSON. Please provide a valid JSON file. Run with debug mode for more info.`,
-    );
-  }
 
   // We validate the content and map it to the SokoArtifact format based on the previously detected format
 
   if (buildInfoPath.format === "hardhat-v2") {
-    const parsingResult = HardhatV2CompilerOutputSchema.safeParse(
-      jsonContentResult.value,
-    );
+    const parsingResult = HardhatV2CompilerOutputSchema.safeParse(jsonContent);
     if (!parsingResult.success) {
       if (debug) {
         console.error(
@@ -87,7 +140,7 @@ export async function mapBuildInfoToSokoArtifact(
         id: deriveSokoArtifactId(parsingResult.data.output),
         origin: {
           id: parsingResult.data.id,
-          _format: parsingResult.data._format,
+          format: parsingResult.data._format,
         },
         solcLongVersion: parsingResult.data.solcLongVersion,
         input: parsingResult.data.input,
@@ -99,9 +152,7 @@ export async function mapBuildInfoToSokoArtifact(
 
   if (buildInfoPath.format === "forge-with-build-info-option") {
     const parsingResult =
-      ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(
-        jsonContentResult.value,
-      );
+      ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(jsonContent);
     if (!parsingResult.success) {
       if (debug) {
         console.error(
@@ -117,7 +168,7 @@ export async function mapBuildInfoToSokoArtifact(
         id: deriveSokoArtifactId(parsingResult.data.output),
         origin: {
           id: parsingResult.data.id,
-          _format: parsingResult.data._format,
+          format: parsingResult.data._format,
         },
         solcLongVersion: parsingResult.data.solcLongVersion,
         input: parsingResult.data.input,
@@ -128,9 +179,8 @@ export async function mapBuildInfoToSokoArtifact(
   }
 
   if (buildInfoPath.format === "forge-default") {
-    const parsingResult = ForgeCompilerDefaultOutputSchema.safeParse(
-      jsonContentResult.value,
-    );
+    const parsingResult =
+      ForgeCompilerDefaultOutputSchema.safeParse(jsonContent);
     if (!parsingResult.success) {
       if (debug) {
         console.error(
@@ -168,6 +218,31 @@ export async function mapBuildInfoToSokoArtifact(
   throw new CliError(
     `The provided build info file "${buildInfoPath.path}" does not match any of the supported formats. Please provide a valid build info JSON file. Run with debug mode for more info.`,
   );
+}
+
+async function readJsonFile(
+  path: string,
+  displayName: string,
+  debug: boolean,
+): Promise<unknown> {
+  const contentResult = await toAsyncResult(fs.readFile(path, "utf-8"), {
+    debug,
+  });
+  if (!contentResult.success) {
+    throw new CliError(
+      `The provided ${displayName} path "${path}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
+    );
+  }
+  const jsonContentResult = await toResult(
+    () => JSON.parse(contentResult.value),
+    { debug },
+  );
+  if (!jsonContentResult.success) {
+    throw new CliError(
+      `The provided ${displayName} file "${path}" could not be parsed as JSON. Please provide a valid JSON file. Run with debug mode for more info.`,
+    );
+  }
+  return jsonContentResult.value;
 }
 
 /**
@@ -357,7 +432,7 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     solcLongVersion,
     origin: {
       id: forgeBuildInfo.id,
-      _format: FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
+      format: FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
     },
     input,
     output,
