@@ -5,24 +5,22 @@ import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-soko-artifact";
 import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
-import { HARDHAT_V3_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
+import { HARDHAT_V3_COMPILER_INPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
 import {
   FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
   FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT,
 } from "@/utils/artifacts-schemas/forge-v1";
 import { SokoArtifact } from "@/utils/artifacts-schemas/soko-v0";
 
-const PARSING_SUCCESS_TEXT: Record<SokoArtifact["origin"]["_format"], string> =
-  {
-    [HARDHAT_V2_COMPILER_OUTPUT_FORMAT]:
-      "Hardhat V2 compilation artifact detected",
-    [HARDHAT_V3_COMPILER_OUTPUT_FORMAT]:
-      "Hardhat V3 compilation artifact detected",
-    [FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT]:
-      "Forge compilation artifact detected",
-    [FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT]:
-      "Forge compilation artifact detected",
-  };
+const PARSING_SUCCESS_TEXT: Record<SokoArtifact["origin"]["format"], string> = {
+  [HARDHAT_V2_COMPILER_OUTPUT_FORMAT]:
+    "Hardhat V2 compilation artifact detected",
+  [HARDHAT_V3_COMPILER_INPUT_FORMAT]:
+    "Hardhat V3 compilation artifact detected",
+  [FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT]:
+    "Forge compilation artifact detected",
+  [FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT]: "Forge compilation artifact detected",
+};
 
 /**
  * Run the push command of the CLI client, it consists of three steps:
@@ -78,7 +76,7 @@ export async function push(
     throw sokoArtifactParsingResult.error;
   }
   const sokoArtifact = sokoArtifactParsingResult.value.artifact;
-  steps.succeed(PARSING_SUCCESS_TEXT[sokoArtifact.origin._format]);
+  steps.succeed(PARSING_SUCCESS_TEXT[sokoArtifact.origin.format]);
 
   // Step 3: Check if tag exists
   steps.start("Checking if tag exists...");
@@ -112,11 +110,12 @@ export async function push(
   // Step 4: Upload artifact
   steps.start("Uploading artifact...");
   const pushResult = await toAsyncResult(
-    storageProvider.uploadArtifact(project, sokoArtifact, tag, {
-      buildInfoPath: buildInfoPathResult.value,
-      additionalArtifactsPaths:
-        sokoArtifactParsingResult.value.additionalArtifactsPaths,
-    }),
+    storageProvider.uploadArtifact(
+      project,
+      sokoArtifact,
+      tag,
+      sokoArtifactParsingResult.value.originalContentPaths,
+    ),
     { debug: opts.debug },
   );
 

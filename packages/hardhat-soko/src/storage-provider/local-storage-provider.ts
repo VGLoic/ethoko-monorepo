@@ -58,10 +58,7 @@ export class LocalStorageProvider implements StorageProvider {
     project: string,
     artifact: SokoArtifact,
     tag: string | undefined,
-    originalContentPaths: {
-      buildInfoPath: string;
-      additionalArtifactsPaths: string[];
-    },
+    originalContentPaths: string[],
   ): Promise<void> {
     await this.ensureProjectSetup(project);
 
@@ -73,23 +70,13 @@ export class LocalStorageProvider implements StorageProvider {
       await fs.copyFile(idFilePath, tagFilePath);
     }
 
-    const buildInfoTargetPath = this.originalContentPath(
-      project,
-      artifact.id,
-      originalContentPaths.buildInfoPath,
-    );
-    await this.copyOriginalContent(
-      originalContentPaths.buildInfoPath,
-      buildInfoTargetPath,
-    );
-
-    for (const additionalArtifactPath of originalContentPaths.additionalArtifactsPaths) {
+    for (const originalContentPath of originalContentPaths) {
       const targetPath = this.originalContentPath(
         project,
         artifact.id,
-        additionalArtifactPath,
+        originalContentPath,
       );
-      await this.copyOriginalContent(additionalArtifactPath, targetPath);
+      await this.copyOriginalContent(originalContentPath, targetPath);
     }
 
     if (this.debug) {

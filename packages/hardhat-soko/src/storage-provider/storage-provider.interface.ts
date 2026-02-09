@@ -10,10 +10,7 @@ export interface StorageProvider {
     project: string,
     artifact: SokoArtifact,
     tag: string | undefined,
-    originalContentPaths: {
-      buildInfoPath: string;
-      additionalArtifactsPaths: string[];
-    },
+    originalContentPaths: string[],
   ): Promise<void>;
   downloadArtifactById(project: string, id: string): Promise<Stream>;
   downloadArtifactByTag(project: string, tag: string): Promise<Stream>;
