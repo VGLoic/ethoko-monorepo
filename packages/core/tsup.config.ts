@@ -4,7 +4,7 @@ export default defineConfig({
   entry: [
     "src/cli-client/index.ts",
     "src/storage-provider/index.ts",
-    "src/cli-ui.ts",
+    "src/cli-ui/index.ts",
     "src/local-storage.ts",
   ],
   format: ["cjs", "esm"],

@@ -10,7 +10,7 @@ import {
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { NodeJsClient } from "@smithy/types";
 import { styleText } from "node:util";
-import { LOG_COLORS } from "../utils/colors";
+import { LOG_COLORS } from "@/cli-ui/utils";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
 import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";

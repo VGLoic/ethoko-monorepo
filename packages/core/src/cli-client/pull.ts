@@ -1,6 +1,6 @@
 import { LocalStorage } from "../local-storage";
 import { StorageProvider } from "../storage-provider";
-import { StepTracker } from "../cli-ui";
+import { StepTracker } from "@/cli-ui/utils";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 

@@ -39,9 +39,9 @@
       "import": "./dist/local-storage.mjs"
     },
     "./cli-ui": {
-      "types": "./dist/cli-ui.d.ts",
-      "require": "./dist/cli-ui.js",
-      "import": "./dist/cli-ui.mjs"
+      "types": "./dist/cli-ui/index.d.ts",
+      "require": "./dist/cli-ui/index.js",
+      "import": "./dist/cli-ui/index.mjs"
     }
   },
   "scripts": {
