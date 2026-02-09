@@ -96,6 +96,7 @@ for a complete guide of the plugin, its commands, configuration options and feat
 
 Examples of projects using Hardhat Soko can be found in the `apps/` folder:
 
+- [hardhat-v3](apps/hardhat-v3/README.md): compile a contract using Hardhat V3,
 - [foundry_hardhat-deploy-v0](apps/foundry_hardhat-deploy-v0/README.md): compile a contract with Foundry, deploy using Hardhat Deploy V0.12,
 - [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat V2, deploy using Hardhat Deploy V0.12,
 - [hardhat-v2_hardhat-deploy-v0_external-lib](apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat V2, deploy using Hardhat Deploy V0.12.

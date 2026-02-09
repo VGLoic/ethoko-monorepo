@@ -14,7 +14,7 @@ nvm use
 
 ### Apps and Packages
 
-- `hardhat-v2-soko-example`: integration example of Soko with Hardhat v2 and Hardhat-Deploy v0,
+- `apps/`: integration example of Soko with Hardhat v2, Hardhat v3 and Foundry with Soko,
 - `@soko/eslint-config`: `eslint` configurations,
 - `@soko/typescript-config`: `tsconfig.json`s used throughout the monorepo,
 - `@soko/hardhat-v2-soko`: Hardhat Plugin to integrate Soko with Hardhat V2.
