@@ -8,10 +8,11 @@ Soko is a warehouse for smart-contract compilation artifacts. It enables teams t
 
 **Monorepo Structure:**
 
-- `packages/hardhat-soko`: Hardhat plugin for Soko (main package)
+- `packages/core`: Core functionalities of the Soko CLI (main package)
+- `packages/hardhat-v2-soko`: Hardhat V2 plugin for Soko
 - `packages/eslint-config`: Shared ESLint configurations
 - `packages/typescript-config`: Shared TypeScript configurations
-- `apps/*`: Integration examples with Hardhat v2 and Hardhat Deploy
+- `apps/*`: Integration examples with different frameworks (e.g., Foundry, Hardhat V2, Hardhat V3)
 
 ## Build System
 
@@ -31,7 +32,7 @@ pnpm format             # Format all packages
 pnpm check-types        # Typecheck all packages
 
 # Package-specific (from package directory)
-cd packages/hardhat-soko
+cd packages/core
 pnpm build              # Build using tsup
 pnpm lint               # ESLint with max 0 warnings
 pnpm test:e2e           # Run E2E tests (uses Vitest)
@@ -175,7 +176,7 @@ type Result<T> =
 
 **Use custom error classes for CLI methods:**
 
-All CLI methods (@soko/hardhat-soko/src/cli-client/\*) MUST throw `CliError` class instance.
+All CLI methods (@soko/core/src/cli-client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {
@@ -273,25 +274,14 @@ Note: Use `console.error()` for task output (not `console.log()`) to ensure prop
 ## File Organization
 
 ```
-packages/hardhat-soko/
-├── src/
-│   ├── index.ts              # Main plugin entry, task definitions
-│   ├── utils.ts              # Shared utilities and types
-│   ├── local-storage.ts      # Local storage implementation - for pulled artifacts
-│   ├── storage-provider/
-│   │   ├── s3-bucket-provider.ts # AWS S3 storage provider
-│   │   ├── local-storage-provider.ts # Local filesystem storage provider
-│   └── scripts/
-│       ├── exports.ts        # Public script exports
-│       ├── push.ts           # Push artifact logic
-│       ├── pull.ts           # Pull artifact logic
-│       ├── generate-typings.ts
-│       └── ...
-├── dist/                     # Build output (ignored)
-├── tsup.config.ts            # Build configuration
-├── tsconfig.json
-├── eslint.config.mjs
-└── package.json
+packages/core/
+├── src/                      # Source backing package exports
+│   ├── cli-client/           # CLI client entrypoints (push/pull/diff/typings)
+│   ├── storage-provider/     # Storage provider interfaces and implementations
+│   ├── cli-ui/               # CLI UI primitives (spinners, output helpers)
+│   └── local-storage.ts      # Local artifact storage read/write utilities
+├── package.json              # Package metadata and exports map
+└── README.md                 # Public API overview and usage
 ```
 
 ## Best Practices

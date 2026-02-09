@@ -3,8 +3,11 @@ import { extendConfig, scope } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
 import { styleText } from "node:util";
-import { LocalStorageProvider, S3BucketProvider } from "./storage-provider";
-import { LocalStorage } from "./local-storage";
+import { LocalStorage } from "@soko/core/local-storage";
+import {
+  LocalStorageProvider,
+  S3BucketProvider,
+} from "@soko/core/storage-provider";
 import {
   boxHeader,
   error as cliError,
@@ -13,8 +16,7 @@ import {
   displayPullResults,
   displayPushResult,
   displayDifferences,
-} from "./cli-ui";
-import { SokoHardhatConfig, SokoHardhatUserConfig } from "./config";
+} from "@soko/core/cli-ui";
 import {
   CliError,
   generateArtifactsSummariesAndTypings,
@@ -22,8 +24,8 @@ import {
   listPulledArtifacts,
   pull,
   push,
-} from "./cli-client/index";
-import { LOG_COLORS } from "./utils/colors";
+} from "@soko/core/cli-client";
+import { SokoHardhatConfigSchema, SokoHardhatUserConfig } from "./config";
 
 export { type SokoHardhatUserConfig };
 
@@ -33,7 +35,7 @@ declare module "hardhat/types/config" {
   }
 
   export interface HardhatConfig {
-    soko?: z.infer<typeof SokoHardhatConfig>;
+    soko?: z.infer<typeof SokoHardhatConfigSchema>;
   }
 }
 
@@ -44,7 +46,9 @@ extendConfig(
       return;
     }
 
-    const sokoParsingResult = SokoHardhatConfig.safeParse(userConfig.soko);
+    const sokoParsingResult = SokoHardhatConfigSchema.safeParse(
+      userConfig.soko,
+    );
 
     if (!sokoParsingResult.success) {
       console.error(
@@ -507,3 +511,10 @@ sokoScope
       "This help format is not supported by Hardhat.\nPlease use `npx hardhat help soko` instead (change `npx` with what you use).\nHelp on a specific task can be obtained by using `npx hardhat help soko <command>`.",
     );
   });
+
+const LOG_COLORS = {
+  log: "cyan",
+  success: "green",
+  error: "red",
+  warn: "yellow",
+} as const;

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-import { StepTracker } from "../cli-ui";
+import { StepTracker } from "../cli-ui/utils";
 import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";

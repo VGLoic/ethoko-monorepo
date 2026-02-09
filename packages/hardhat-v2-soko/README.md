@@ -7,19 +7,19 @@ Hardhat plugin in order to interact with Soko, warehouse for smart contract comp
 Installation can be made using any package manager
 
 ```bash
-pnpm install @soko/hardhat-soko
-npm install @soko/hardhat-soko
-yarn add @soko/hardhat-soko
+pnpm install @soko/hardhat-v2-soko
+npm install @soko/hardhat-v2-soko
+yarn add @soko/hardhat-v2-soko
 ```
 
 ## Configuration
 
-In the `hardhat.config.ts/js` file, one should import the `@soko/hardhat-soko` plugin and fill the Soko configuration.
+In the `hardhat.config.ts/js` file, one should import the `@soko/hardhat-v2-soko` plugin and fill the Soko configuration.
 
 ```ts
 import { HardhatUserConfig } from "hardhat/config";
 ...
-import "@soko/hardhat-soko";
+import "@soko/hardhat-v2-soko";
 
 export const config: HardhatUserConfig = {
   ... // Existing configuration

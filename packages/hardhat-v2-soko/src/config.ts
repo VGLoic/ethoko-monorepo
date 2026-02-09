@@ -57,7 +57,7 @@ export type SokoHardhatUserConfig = {
   debug?: boolean;
 };
 
-export const SokoHardhatConfig = z.object({
+export const SokoHardhatConfigSchema = z.object({
   project: z.string().min(1),
   pulledArtifactsPath: z.string().default(".soko"),
   typingsPath: z.string().default(".soko-typings"),

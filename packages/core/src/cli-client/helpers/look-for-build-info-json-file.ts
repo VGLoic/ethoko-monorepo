@@ -1,8 +1,7 @@
 import fs from "fs/promises";
 import { createInterface } from "node:readline/promises";
 import { styleText } from "util";
-import type { StepTracker } from "@/cli-ui";
-import { LOG_COLORS } from "@/utils/colors";
+import { type StepTracker, LOG_COLORS } from "@/cli-ui/utils";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "../error";
 import { FormatInferenceHardhatV2CompilerOutputSchema } from "@/utils/artifacts-schemas/hardhat-v2";

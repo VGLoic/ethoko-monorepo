@@ -1,5 +1,5 @@
 import { styleText } from "node:util";
-import { LOG_COLORS } from "./colors";
+import { LOG_COLORS } from "@/cli-ui/utils";
 
 export function toAsyncResult<T, TError = Error>(
   promise: Promise<T>,

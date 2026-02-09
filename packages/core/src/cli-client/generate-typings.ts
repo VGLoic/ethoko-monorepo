@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 
-import { StepTracker } from "../cli-ui";
+import { StepTracker } from "@/cli-ui/utils";
 import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
@@ -244,8 +244,9 @@ async function writeSummaries(
     ),
   );
 
+  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli-client/`
   const typingsTemplate = await fs.readFile(
-    `${__dirname}/typings.txt`,
+    `${__dirname}/../typings.txt`,
     "utf-8",
   );
 
@@ -268,8 +269,10 @@ async function writeEmptySummaries(
       4,
     ),
   );
+
+  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli-client/`
   const typingsTemplate = await fs.readFile(
-    `${__dirname}/typings.txt`,
+    `${__dirname}/../typings.txt`,
     "utf-8",
   );
 

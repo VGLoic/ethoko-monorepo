@@ -1,9 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
-import "@soko/hardhat-soko";
+import "@soko/hardhat-v2-soko";
 import "dotenv/config";
-import { SokoHardhatUserConfig } from "@soko/hardhat-soko";
+import { SokoHardhatUserConfig } from "@soko/hardhat-v2-soko";
 
 const sokoConfig: SokoHardhatUserConfig = {
   project: "forge-counter",
