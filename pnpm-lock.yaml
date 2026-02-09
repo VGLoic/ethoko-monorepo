@@ -38,9 +38,9 @@ importers:
       '@soko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
+      '@soko/hardhat-v2-soko':
         specifier: workspace:*
-        version: link:../../packages/hardhat-soko
+        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -86,9 +86,9 @@ importers:
       '@soko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
+      '@soko/hardhat-v2-soko':
         specifier: workspace:*
-        version: link:../../packages/hardhat-soko
+        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -134,9 +134,9 @@ importers:
       '@soko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
+      '@soko/hardhat-v2-soko':
         specifier: workspace:*
-        version: link:../../packages/hardhat-soko
+        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -179,9 +179,9 @@ importers:
       '@soko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
+      '@soko/hardhat-v2-soko':
         specifier: workspace:*
-        version: link:../../packages/hardhat-soko
+        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -289,7 +289,7 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
 
-  packages/hardhat-soko:
+  packages/hardhat-v2-soko:
     dependencies:
       '@soko/core':
         specifier: workspace:*
@@ -299,7 +299,7 @@ importers:
         version: 5.1.2
       hardhat:
         specifier: ^2.x
-        version: 2.28.4(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
+        version: 2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       ora:
         specifier: 5.4.1
         version: 5.4.1
@@ -1100,20 +1100,12 @@ packages:
     resolution: {integrity: sha512-gI9/9ysLeAid0+VSTBeutxOJ0/Rrh00niGkGL9+4lR577igDY+v55XGN0oBMST49ILS0f12J6ZY90LG8sxPXmQ==}
     engines: {node: '>= 20'}
 
-  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.22':
-    resolution: {integrity: sha512-TpEBSKyMZJEPvYwBPYclC2b+qobKjn1YhVa7aJ1R7RMPy5dJ/PqsrUK5UuUFFybBqoIorru5NTcsyCMWP5T/Fg==}
-    engines: {node: '>= 20'}
-
   '@nomicfoundation/edr-darwin-arm64@0.12.0-next.23':
     resolution: {integrity: sha512-Amh7mRoDzZyJJ4efqoePqdoZOzharmSOttZuJDlVE5yy07BoE8hL6ZRpa5fNYn0LCqn/KoWs8OHANWxhKDGhvQ==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.17':
     resolution: {integrity: sha512-zSZtwf584RkIyb8awELDt7ctskogH0p4pmqOC4vhykc8ODOv2XLuG1IgeE4WgYhWGZOufbCtgLfpJQrWqN6mmw==}
-    engines: {node: '>= 20'}
-
-  '@nomicfoundation/edr-darwin-x64@0.12.0-next.22':
-    resolution: {integrity: sha512-aK/+m8xUkR4u+czTVGU06nSFVH43AY6XCBoR2YjO8SglAAjCSTWK3WAfVb6FcsriMmKv4PrvoyHLMbMP+fXcGA==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.23':
@@ -1124,20 +1116,12 @@ packages:
     resolution: {integrity: sha512-WjdfgV6B7gT5Q0NXtSIWyeK8gzaJX5HK6/jclYVHarWuEtS1LFgePYgMjK8rmm7IRTkM9RsE/PCuQEP1nrSsuA==}
     engines: {node: '>= 20'}
 
-  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.22':
-    resolution: {integrity: sha512-W5vXMleG14hVzRYGPEwlHLJ6iiQE8Qh63Uj538nAz4YUI6wWSgUOZE7K2Gt1EdujZGnrt7kfDslgJ96n4nKQZw==}
-    engines: {node: '>= 20'}
-
   '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.23':
     resolution: {integrity: sha512-nlk5EejSzEUfEngv0Jkhqq3/wINIfF2ED9wAofc22w/V1DV99ASh9l3/e/MIHOQFecIZ9MDqt0Em9/oDyB1Uew==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.17':
     resolution: {integrity: sha512-26rObKhhCDb9JkZbToyr7JVZo4tSVAFvzoJSJVmvpOl0LOHrfFsgVQu2n/8cNkwMAqulPubKL2E0jdnmEoZjWA==}
-    engines: {node: '>= 20'}
-
-  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.22':
-    resolution: {integrity: sha512-VDp7EB3iY8MH/fFVcgEzLDGYmtS6j2honNc0RNUCFECKPrdsngGrTG8p+YFxyVjq2m5GEsdyKo4e+BKhaUNPdg==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.23':
@@ -1148,20 +1132,12 @@ packages:
     resolution: {integrity: sha512-dPkHScIf/CU6h6k3k4HNUnQyQcVSLKanviHCAcs5HkviiJPxvVtOMMvtNBxoIvKZRxGFxf2eutcqQW4ZV1wRQQ==}
     engines: {node: '>= 20'}
 
-  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.22':
-    resolution: {integrity: sha512-XL6oA3ymRSQYyvg6hF1KIax6V/9vlWr5gJ8GPHVVODk1a/YfuEEY1osN5Zmo6aztUkSGKwSuac/3Ax7rfDDiSg==}
-    engines: {node: '>= 20'}
-
   '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.23':
     resolution: {integrity: sha512-NU+Qs3u7Qt6t3bJFdmmjd5CsvgI2bPPzO31KifM2Ez96/jsXYho5debtTQnimlb5NAqiHTSlxjh/F8ROcptmeQ==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.17':
     resolution: {integrity: sha512-5Ixe/bpyWZxC3AjIb8EomAOK44ajemBVx/lZRHZiWSBlwQpbSWriYAtKjKcReQQPwuYVjnFpAD2AtuCvseIjHw==}
-    engines: {node: '>= 20'}
-
-  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.22':
-    resolution: {integrity: sha512-hmkRIXxWa9P0PwfXOAO6WUw11GyV5gpxcMunqWBTkwZ4QW/hi/CkXmlLo6VHd6ceCwpUNLhCGndBtrOPrNRi4A==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.23':
@@ -1172,20 +1148,12 @@ packages:
     resolution: {integrity: sha512-29YlvdgofSdXG1mUzIuH4kMXu1lmVc1hvYWUGWEH59L+LaakdhfJ/Wu5izeclKkrTh729Amtk/Hk1m29kFOO8A==}
     engines: {node: '>= 20'}
 
-  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.22':
-    resolution: {integrity: sha512-X7f+7KUMm00trsXAHCHJa+x1fc3QAbk2sBctyOgpET+GLrfCXbxqrccKi7op8f0zTweAVGg1Hsc8SjjC7kwFLw==}
-    engines: {node: '>= 20'}
-
   '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.23':
     resolution: {integrity: sha512-IfJZQJn7d/YyqhmguBIGoCKjE9dKjbu6V6iNEPApfwf5JyyjHYyyfkLU4rf7hygj57bfH4sl1jtQ6r8HnT62lw==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr@0.12.0-next.17':
     resolution: {integrity: sha512-Y8Kwqd5JpBmI/Kst6NJ/bZ81FeJea9J6WEwoSRTZnEvwfqW9dk9PI8zJs2UJpOACL1fXEPvN+doETbxT9EhwXA==}
-    engines: {node: '>= 20'}
-
-  '@nomicfoundation/edr@0.12.0-next.22':
-    resolution: {integrity: sha512-JigYWf2stjpDxSndBsxRoobQHK8kz4SAVaHtTIKQLIHbsBwymE8i120Ejne6Jk+Ndc5CsNINXB8/bK6vLPe9jA==}
     engines: {node: '>= 20'}
 
   '@nomicfoundation/edr@0.12.0-next.23':
@@ -2962,18 +2930,6 @@ packages:
 
   hardhat@2.28.0:
     resolution: {integrity: sha512-A3yBISI18EcnY2IR7Ny2xZF33Q3qH01yrWapeWbyGOiJm/386SasWjbHRHYgUlZ3YWJETIMh7wYfMUaXrofTDQ==}
-    hasBin: true
-    peerDependencies:
-      ts-node: '*'
-      typescript: '*'
-    peerDependenciesMeta:
-      ts-node:
-        optional: true
-      typescript:
-        optional: true
-
-  hardhat@2.28.4:
-    resolution: {integrity: sha512-iQC4WNWjWMz7cVVFqzEBNisUQ/EEEJrWysJ2hRAMTnfXJx6Y11UXdmtz4dHIzvGL0z27XCCaJrcApDPH0KaZEg==}
     hasBin: true
     peerDependencies:
       ts-node: '*'
@@ -5844,43 +5800,29 @@ snapshots:
 
   '@nomicfoundation/edr-darwin-arm64@0.12.0-next.17': {}
 
-  '@nomicfoundation/edr-darwin-arm64@0.12.0-next.22': {}
-
   '@nomicfoundation/edr-darwin-arm64@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.17': {}
-
-  '@nomicfoundation/edr-darwin-x64@0.12.0-next.22': {}
 
   '@nomicfoundation/edr-darwin-x64@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.17': {}
 
-  '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.22': {}
-
   '@nomicfoundation/edr-linux-arm64-gnu@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.17': {}
-
-  '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.22': {}
 
   '@nomicfoundation/edr-linux-arm64-musl@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.17': {}
 
-  '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.22': {}
-
   '@nomicfoundation/edr-linux-x64-gnu@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.17': {}
 
-  '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.22': {}
-
   '@nomicfoundation/edr-linux-x64-musl@0.12.0-next.23': {}
 
   '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.17': {}
-
-  '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.22': {}
 
   '@nomicfoundation/edr-win32-x64-msvc@0.12.0-next.23': {}
 
@@ -5893,16 +5835,6 @@ snapshots:
       '@nomicfoundation/edr-linux-x64-gnu': 0.12.0-next.17
       '@nomicfoundation/edr-linux-x64-musl': 0.12.0-next.17
       '@nomicfoundation/edr-win32-x64-msvc': 0.12.0-next.17
-
-  '@nomicfoundation/edr@0.12.0-next.22':
-    dependencies:
-      '@nomicfoundation/edr-darwin-arm64': 0.12.0-next.22
-      '@nomicfoundation/edr-darwin-x64': 0.12.0-next.22
-      '@nomicfoundation/edr-linux-arm64-gnu': 0.12.0-next.22
-      '@nomicfoundation/edr-linux-arm64-musl': 0.12.0-next.22
-      '@nomicfoundation/edr-linux-x64-gnu': 0.12.0-next.22
-      '@nomicfoundation/edr-linux-x64-musl': 0.12.0-next.22
-      '@nomicfoundation/edr-win32-x64-msvc': 0.12.0-next.22
 
   '@nomicfoundation/edr@0.12.0-next.23':
     dependencies:
@@ -8259,55 +8191,6 @@ snapshots:
       '@ethereumjs/util': 9.1.0
       '@ethersproject/abi': 5.8.0
       '@nomicfoundation/edr': 0.12.0-next.17
-      '@nomicfoundation/solidity-analyzer': 0.1.2
-      '@sentry/node': 5.30.0
-      adm-zip: 0.4.16
-      aggregate-error: 3.1.0
-      ansi-escapes: 4.3.2
-      boxen: 5.1.2
-      chokidar: 4.0.3
-      ci-info: 2.0.0
-      debug: 4.4.3(supports-color@8.1.1)
-      enquirer: 2.4.1
-      env-paths: 2.2.1
-      ethereum-cryptography: 1.2.0
-      find-up: 5.0.0
-      fp-ts: 1.19.3
-      fs-extra: 7.0.1
-      immutable: 4.3.7
-      io-ts: 1.10.4
-      json-stream-stringify: 3.1.6
-      keccak: 3.0.4
-      lodash: 4.17.23
-      micro-eth-signer: 0.14.0
-      mnemonist: 0.38.5
-      mocha: 10.8.2
-      p-map: 4.0.0
-      picocolors: 1.1.1
-      raw-body: 2.5.3
-      resolve: 1.17.0
-      semver: 6.3.1
-      solc: 0.8.26(debug@4.4.3)
-      source-map-support: 0.5.21
-      stacktrace-parser: 0.1.11
-      tinyglobby: 0.2.15
-      tsort: 0.0.1
-      undici: 5.29.0
-      uuid: 8.3.2
-      ws: 7.5.10
-    optionalDependencies:
-      ts-node: 10.9.2(@types/node@22.15.3)(typescript@5.9.2)
-      typescript: 5.9.2
-    transitivePeerDependencies:
-      - bufferutil
-      - supports-color
-      - utf-8-validate
-
-  hardhat@2.28.4(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2):
-    dependencies:
-      '@ethereumjs/util': 9.1.0
-      '@ethersproject/abi': 5.8.0
-      '@nomicfoundation/edr': 0.12.0-next.22
       '@nomicfoundation/solidity-analyzer': 0.1.2
       '@sentry/node': 5.30.0
       adm-zip: 0.4.16
