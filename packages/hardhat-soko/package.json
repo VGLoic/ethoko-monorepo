@@ -1,7 +1,7 @@
 {
-  "name": "@soko/hardhat-v2-soko",
+  "name": "@soko/hardhat-soko",
   "version": "0.1.0",
-  "description": "Hardhat V2 plugin in order to interact with Soko, warehouse for smart contract compilation artifacts.",
+  "description": "Hardhat V3 plugin in order to interact with Soko, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
   "homepage": "https://github.com/VGLoic/soko-monorepo",
   "bugs": {
@@ -44,7 +44,7 @@
     "zod": "^3.23.8"
   },
   "peerDependencies": {
-    "hardhat": "^2.x"
+    "hardhat": "^3.x"
   },
   "devDependencies": {
     "@soko/eslint-config": "workspace:*",
