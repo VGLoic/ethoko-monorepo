@@ -112,11 +112,12 @@ export async function push(
   // Step 4: Upload artifact
   steps.start("Uploading artifact...");
   const pushResult = await toAsyncResult(
-    storageProvider.uploadArtifact(project, sokoArtifact, tag, {
-      buildInfoPath: buildInfoPathResult.value,
-      additionalArtifactsPaths:
-        sokoArtifactParsingResult.value.additionalArtifactsPaths,
-    }),
+    storageProvider.uploadArtifact(
+      project,
+      sokoArtifact,
+      tag,
+      sokoArtifactParsingResult.value.originalContentPaths,
+    ),
     { debug: opts.debug },
   );
 

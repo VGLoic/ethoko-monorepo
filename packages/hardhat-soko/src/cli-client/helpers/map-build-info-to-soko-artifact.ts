@@ -27,7 +27,7 @@ import { BuildInfoPath } from "@/utils/build-info-path";
  *
  * This function is meant to be used in other CLI client methods, since it throws a CliError, it can be used without any wrapping, i.e.
  * ```ts
- * const sokoArtifact = await mapBuildInfoToSokoArtifact(buildInfoPath);
+ * const {artifact, originalContentPaths} = await mapBuildInfoToSokoArtifact(buildInfoPath);
  * ```
  *
  * The format of the build info has already been detected previously by the caller.
@@ -35,13 +35,13 @@ import { BuildInfoPath } from "@/utils/build-info-path";
  *
  * @param buildInfoPath The candidate build info path to parse and map to a SokoArtifact, it contains both the format and the path to the build info JSON files
  * @param debug Whether to enable debug logging
- * @return The SokoArtifact mapped from the build info JSON file
+ * @return The SokoArtifact mapped from the build info JSON file and the paths to the original content files
  * @throws A CliError if the file cannot be parsed, if the build info is not valid or if the mapping fails
  */
 export async function mapBuildInfoToSokoArtifact(
   buildInfoPath: BuildInfoPath,
   debug: boolean,
-): Promise<{ artifact: SokoArtifact; additionalArtifactsPaths: string[] }> {
+): Promise<{ artifact: SokoArtifact; originalContentPaths: string[] }> {
   if (buildInfoPath.format === "hardhat-v3") {
     throw new CliError("REMIND ME Not implemented yet");
   }
@@ -93,7 +93,7 @@ export async function mapBuildInfoToSokoArtifact(
         input: parsingResult.data.input,
         output: parsingResult.data.output,
       },
-      additionalArtifactsPaths: [],
+      originalContentPaths: [buildInfoPath.path],
     };
   }
 
@@ -123,7 +123,7 @@ export async function mapBuildInfoToSokoArtifact(
         input: parsingResult.data.input,
         output: parsingResult.data.output,
       },
-      additionalArtifactsPaths: [],
+      originalContentPaths: [buildInfoPath.path],
     };
   }
 
@@ -157,7 +157,9 @@ export async function mapBuildInfoToSokoArtifact(
     }
     return {
       artifact: mappingResult.value.artifact,
-      additionalArtifactsPaths: mappingResult.value.additionalArtifactsPaths,
+      originalContentPaths: mappingResult.value.additionalArtifactsPaths.concat(
+        buildInfoPath.path,
+      ),
     };
   }
 

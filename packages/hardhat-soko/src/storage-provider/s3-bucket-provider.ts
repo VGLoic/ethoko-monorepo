@@ -14,7 +14,6 @@ import { LOG_COLORS } from "../utils/colors";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
 import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";
-import { BuildInfoPath } from "@/utils/build-info-path";
 
 type S3BucketProviderConfig = {
   bucketName: string;
@@ -227,10 +226,7 @@ export class S3BucketProvider implements StorageProvider {
     project: string,
     artifact: SokoArtifact,
     tag: string | undefined,
-    originalContentPaths: {
-      buildInfoPath: BuildInfoPath;
-      additionalArtifactsPaths: string[];
-    },
+    originalContentPaths: string[],
   ): Promise<void> {
     const client = await this.getClient();
     const idKey = `${this.rootPath}/${project}/ids/${artifact.id}.json`;
@@ -253,34 +249,9 @@ export class S3BucketProvider implements StorageProvider {
 
     // Upload original content files as well, using the artifact ID as reference
     // These files are stored under `${this.rootPath}/${project}/ids/${artifact.id}/original-content/` prefix, so they don't interfere with the main artifact JSON file and can be easily retrieved when downloading the artifact
-    // We start with the build info file
-    if (originalContentPaths.buildInfoPath.format === "hardhat-v3") {
-      throw new Error("[REMIND ME]: not implemented");
-    }
-    const buildInfoContent = await fs.readFile(
-      originalContentPaths.buildInfoPath.path,
-    );
-    let sanitizedBuildInfoPath = originalContentPaths.buildInfoPath.path;
-    // We remove any leading `/` or `./` from the path to avoid creating unnecessary folders in the storage and to ensure the key is valid
-    if (sanitizedBuildInfoPath.startsWith("/")) {
-      sanitizedBuildInfoPath = sanitizedBuildInfoPath.substring(1);
-    }
-    if (sanitizedBuildInfoPath.startsWith("./")) {
-      sanitizedBuildInfoPath = sanitizedBuildInfoPath.substring(2);
-    }
-    const putBuildInfoCommand = new PutObjectCommand({
-      Bucket: this.config.bucketName,
-      Key: `${this.rootPath}/${project}/ids/${artifact.id}/original-content/${sanitizedBuildInfoPath}`,
-      Body: buildInfoContent,
-    });
-    await client.send(putBuildInfoCommand);
-    // Then we upload the additional artifact files (e.g. metadata files for forge)
-    // The key is `${this.rootPath}/${project}/ids/${artifact.id}/original-content/${sanitizedPath}`
-    for (const additionalArtifactPath of originalContentPaths.additionalArtifactsPaths) {
-      const additionalArtifactContent = await fs.readFile(
-        additionalArtifactPath,
-      );
-      let sanitizedPath = additionalArtifactPath;
+    for (const originalContentPath of originalContentPaths) {
+      const content = await fs.readFile(originalContentPath);
+      let sanitizedPath = originalContentPath;
       // We remove any leading `/` or `./` from the path to avoid creating unnecessary folders in the storage and to ensure the key is valid
       if (sanitizedPath.startsWith("/")) {
         sanitizedPath = sanitizedPath.substring(1);
@@ -288,12 +259,12 @@ export class S3BucketProvider implements StorageProvider {
       if (sanitizedPath.startsWith("./")) {
         sanitizedPath = sanitizedPath.substring(2);
       }
-      const putAdditionalArtifactCommand = new PutObjectCommand({
+      const putCommand = new PutObjectCommand({
         Bucket: this.config.bucketName,
         Key: `${this.rootPath}/${project}/ids/${artifact.id}/original-content/${sanitizedPath}`,
-        Body: additionalArtifactContent,
+        Body: content,
       });
-      await client.send(putAdditionalArtifactCommand);
+      await client.send(putCommand);
     }
   }
 

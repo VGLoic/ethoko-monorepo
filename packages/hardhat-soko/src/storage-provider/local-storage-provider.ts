@@ -6,7 +6,6 @@ import { styleText } from "node:util";
 import { LOG_COLORS } from "../utils/colors";
 import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
 import { StorageProvider } from "./storage-provider.interface";
-import { BuildInfoPath } from "@/utils/build-info-path";
 
 type LocalStorageProviderConfig = {
   path: string;
@@ -59,10 +58,7 @@ export class LocalStorageProvider implements StorageProvider {
     project: string,
     artifact: SokoArtifact,
     tag: string | undefined,
-    originalContentPaths: {
-      buildInfoPath: BuildInfoPath;
-      additionalArtifactsPaths: string[];
-    },
+    originalContentPaths: string[],
   ): Promise<void> {
     await this.ensureProjectSetup(project);
 
@@ -74,27 +70,13 @@ export class LocalStorageProvider implements StorageProvider {
       await fs.copyFile(idFilePath, tagFilePath);
     }
 
-    if (originalContentPaths.buildInfoPath.format === "hardhat-v3") {
-      throw new Error("REMIND ME Not implemented yet");
-    }
-
-    const buildInfoTargetPath = this.originalContentPath(
-      project,
-      artifact.id,
-      originalContentPaths.buildInfoPath.path,
-    );
-    await this.copyOriginalContent(
-      originalContentPaths.buildInfoPath.path,
-      buildInfoTargetPath,
-    );
-
-    for (const additionalArtifactPath of originalContentPaths.additionalArtifactsPaths) {
+    for (const originalContentPath of originalContentPaths) {
       const targetPath = this.originalContentPath(
         project,
         artifact.id,
-        additionalArtifactPath,
+        originalContentPath,
       );
-      await this.copyOriginalContent(additionalArtifactPath, targetPath);
+      await this.copyOriginalContent(originalContentPath, targetPath);
     }
 
     if (this.debug) {
