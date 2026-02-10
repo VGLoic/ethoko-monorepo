@@ -74,13 +74,13 @@ export default deployScript(
       );
     }
 
-    await deploy("Counter", {
+    await deploy(`Counter@${TARGET_RELEASE}`, {
       account: deployer,
       artifact: {
         // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         abi: counterArtifact.abi as any,
-        bytecode: counterArtifact.evm.bytecode.object,
+        bytecode: `0x${counterArtifact.evm.bytecode.object}`,
         metadata,
       },
     });
