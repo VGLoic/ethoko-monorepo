@@ -107,17 +107,17 @@ Integration examples with Foundry or Hardhat can be found in the `apps/` folder:
 ### When to use Soko?
 
 Use Soko when you want to
-
-- **decouple compilation from deployment**: development and compilation is in a different phase than deployment and maintenance,
-- **safely and transparently deploy** smart-contracts using static compilation artifacts, no bad surprises,
-- **collaborate easily** across your team by sharing ABIs and compilation artifacts, no compile into copy-pasting wrong ABIs.
+- decouple the compilation process from the operation processes,
+- organize and version your compilation artifacts within your team(s),
+- build scripts or automation on top of static compilation artifacts.
 
 ### When NOT to use Soko?
 
 Don't use Soko when
 
 - you are prototyping and iterating fast, Soko adds some friction that is not needed at this stage,
-- you don't care about transparency and reproducibility of your deployments or scripts.
+- you don't care about transparency and reproducibility of your deployments or scripts,
+- you are perfectly fine with your process.
 
 ## Contributing
 
