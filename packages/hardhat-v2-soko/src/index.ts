@@ -1,6 +1,5 @@
-import "hardhat/types/config";
 import { extendConfig, scope } from "hardhat/config";
-import { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
+import type { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
 import { styleText } from "node:util";
 import { LocalStorage } from "@soko/core/local-storage";
@@ -25,19 +24,10 @@ import {
   pull,
   push,
 } from "@soko/core/cli-client";
-import { SokoHardhatConfigSchema, SokoHardhatUserConfig } from "./config";
+import { type SokoHardhatUserConfig, SokoHardhatConfigSchema } from "./config";
+import "./type-extension.js";
 
 export { type SokoHardhatUserConfig };
-
-declare module "hardhat/types/config" {
-  export interface HardhatUserConfig {
-    soko?: SokoHardhatUserConfig;
-  }
-
-  export interface HardhatConfig {
-    soko?: z.infer<typeof SokoHardhatConfigSchema>;
-  }
-}
 
 extendConfig(
   (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
