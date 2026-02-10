@@ -11,10 +11,10 @@ export default defineConfig({
     compilationOutputPath: "./out",
     storageConfiguration: {
       type: "aws",
-      awsRegion: process.env.AWS_REGION || "",
-      awsBucketName: process.env.AWS_S3_BUCKET || "",
-      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || "",
-      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "",
+      awsRegion: process.env.AWS_REGION || "abc",
+      awsBucketName: process.env.AWS_S3_BUCKET || "abc",
+      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || "abc",
+      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "abc",
       awsRole: process.env.AWS_ROLE_ARN
         ? {
             roleArn: process.env.AWS_ROLE_ARN,
