@@ -206,9 +206,6 @@ importers:
       '@soko/hardhat-soko':
         specifier: workspace:*
         version: link:../../packages/hardhat-soko
-      '@soko/hardhat-v2-soko':
-        specifier: workspace:*
-        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
