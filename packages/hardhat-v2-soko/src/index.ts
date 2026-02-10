@@ -1,3 +1,4 @@
+import "hardhat/types/config";
 import { extendConfig, scope } from "hardhat/config";
 import type { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
