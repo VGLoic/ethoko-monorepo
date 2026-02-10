@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { SokoHardhatConfigSchema, type SokoHardhatUserConfig } from "./config";
+import { SokoHardhatConfigSchema, SokoHardhatUserConfig } from "./config";
 
 declare module "hardhat/types/config" {
   export interface HardhatUserConfig {

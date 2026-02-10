@@ -1,4 +1,4 @@
-import "hardhat/types/config";
+import "./type-extension.d";
 import { extendConfig, scope } from "hardhat/config";
 import type { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
@@ -26,7 +26,6 @@ import {
   push,
 } from "@soko/core/cli-client";
 import { type SokoHardhatUserConfig, SokoHardhatConfigSchema } from "./config";
-import "./type-extension.js";
 
 export { type SokoHardhatUserConfig };
 
