@@ -1,6 +1,6 @@
 {
   "name": "@soko/hardhat-v2-soko",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": false,
   "description": "Hardhat V2 plugin in order to interact with Soko, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
