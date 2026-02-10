@@ -29,3 +29,16 @@ Check the available scripts in the root `package.json` file. The most used ones 
 - `check-format`: check code formatting for all packages,
 - `check-types`: typecheck all packages,
 - `test:e2e`: run end-to-end tests.
+
+### Changesets
+
+We use [Changesets](https://github.com/changesets/changesets) to manage versioning and release notes.
+
+- Changes under `apps/` do not require a changeset (integration examples only).
+- Any change that impacts `@soko/hardhat-soko` or `@soko/hardhat-v2-soko` must include a changeset.
+
+If a changeset is required, add one before opening your PR:
+
+```bash
+pnpm changeset
+```
