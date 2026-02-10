@@ -1,6 +1,7 @@
 {
   "name": "@soko/core",
   "version": "0.1.0",
+  "private": true,
   "description": "Core utilities and libraries for Soko CLI and plugins.",
   "author": "Loïc Vincent-Genod",
   "homepage": "https://github.com/VGLoic/soko-monorepo",
