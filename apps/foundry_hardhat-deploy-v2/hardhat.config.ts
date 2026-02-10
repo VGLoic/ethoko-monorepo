@@ -1,16 +1,27 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 import HardhatSoko from "@soko/hardhat-soko";
+import HardhatDeploy from "hardhat-deploy";
+import "dotenv/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin, HardhatSoko],
+  plugins: [hardhatToolboxViemPlugin, HardhatSoko, HardhatDeploy],
   soko: {
-    project: "curious-counter",
-    compilationOutputPath: "./artifacts",
+    project: "forge-counter",
+    compilationOutputPath: "./out",
     storageConfiguration: {
-      type: "local",
-      path: "./soko-storage",
-    }
+      type: "aws",
+      awsRegion: process.env.AWS_REGION || "abc",
+      awsBucketName: process.env.AWS_S3_BUCKET || "abc",
+      awsAccessKeyId: process.env.AWS_ACCESS_KEY_ID || "abc",
+      awsSecretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || "abc",
+      awsRole: process.env.AWS_ROLE_ARN
+        ? {
+            roleArn: process.env.AWS_ROLE_ARN,
+          }
+        : undefined,
+    },
+    debug: true,
   },
   solidity: {
     profiles: {
@@ -41,7 +52,12 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      accounts: {
+        mnemonic: configVariable("SEPOLIA_MNEMONIC"),
+      },
     },
+  },
+  paths: {
+    sources: "./src", // Use ./src rather than ./contracts as Hardhat expects
   },
 });

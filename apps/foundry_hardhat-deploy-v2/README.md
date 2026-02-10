@@ -4,7 +4,7 @@ This is an example of integration between [Foundry](https://getfoundry.sh/) and 
 
 The static compilation artifacts from `Soko` are used to deploy a simple `Counter` contract, see [Counter.sol](./src/Counter.sol).
 
-The [Hardhat-Deploy](https://rocketh.dev/hardhat-deploy/) (`hardhat-deploy@0.12.4` i.e. `v0`) plugin is used to manage deployments.
+The [Hardhat-Deploy](https://rocketh.dev/hardhat-deploy/) (`hardhat-deploy@2.0.0-next.76` i.e. `v2`) plugin is used to manage deployments.
 
 ## Workflow
 
@@ -51,49 +51,50 @@ npx hardhat soko typings
 Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-2026-02-04.ts](./deploy/00-deploy-counter-2026-02-04.ts), that will retrieve the compilation artifacts from `Soko` and deploy the contract accordingly.
 
 ```ts
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { deployScript } from "../rocketh/deploy.js";
 import { project } from "../.soko-typings";
 
 const TARGET_RELEASE = "2026-02-04";
 
-const deployCounter: DeployFunction = async function (
-  hre: HardhatRuntimeEnvironment,
-) {
-  const { deployer } = await hre.getNamedAccounts();
+export default deployScript(
+  async ({ deploy, namedAccounts }) => {
+    const { deployer } = namedAccounts;
 
-  const balance = await hre.ethers.provider.getBalance(deployer);
+    // Get project utilities for the target release
+    const projectUtils = project("forge-counter").tag(TARGET_RELEASE);
 
-  console.log("Deploying contracts with account: ", {
-    address: deployer,
-    balance: hre.ethers.formatEther(balance),
-  });
+    const counterArtifact = await projectUtils.getContractArtifact(
+      "src/Counter.sol:Counter",
+    );
 
-  // Get project utilities for the target release
-  const projectUtils = project("dummy-counter").tag(TARGET_RELEASE);
+    const metadata = counterArtifact.metadata;
+    if (!metadata) {
+      throw new Error(
+        "Metadata is required for deployment, but was not found in the artifact",
+      );
+    }
 
-  // Get the `Counter` artifact for the target release and deploy it
-  const counterArtifact = await projectUtils.getContractArtifact(
-    "src/Counter.sol:Counter",
-  );
-  await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
-    contract: {
-      abi: counterArtifact.abi,
-      bytecode: counterArtifact.evm.bytecode.object,
-      metadata: counterArtifact.metadata,
-    },
-    from: deployer,
-    log: true,
-  });
-};
+    await deploy(`Counter@${TARGET_RELEASE}`, {
+      account: deployer,
+      artifact: {
+        // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        abi: counterArtifact.abi as any,
+        bytecode: `0x${counterArtifact.evm.bytecode.object}`,
+        metadata,
+      },
+    });
+  },
+  { tags: ["Counter", "Counter_deploy", TARGET_RELEASE] },
+);
 ```
 
 The deployment script can be executed using the Hardhat-Deploy plugin:
 
 ```bash
-npx hardhat deploy --no-compile --network <network-name>
+npx hardhat deploy --network <network-name>
 ```
 
-The `no-compile` flag is optional and here to highlight that no compilation is needed since we are working with static artifacts from `Soko`.
+No additional compilation step is needed since the deployment script directly uses the static artifacts from `Soko`.
 
 The deployment is by nature idempotent, this is guaranteed by the fact that the used artifacts are static and the Hardhat-Deploy plugin.

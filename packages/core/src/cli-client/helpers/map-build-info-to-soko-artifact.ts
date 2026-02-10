@@ -398,8 +398,16 @@ async function forgeDefaultBuildInfoToSokoArtifact(
       evm: {
         assembly: undefined, // not handled
         legacyAssembly: undefined, // not handled
-        bytecode: contract.bytecode,
-        deployedBytecode: contract.deployedBytecode,
+        bytecode: {
+          ...contract.bytecode,
+          // The bytecode in the default Forge output is 0x-prefixed, but the SokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
+          object: strip0xPrefix(contract.bytecode.object),
+        },
+        deployedBytecode: {
+          ...contract.deployedBytecode,
+          // The bytecode in the default Forge output is 0x-prefixed, but the SokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
+          object: strip0xPrefix(contract.deployedBytecode.object),
+        },
         methodIdentifiers: contract.methodIdentifiers,
         gasEstimates: undefined, // not handled
       },
@@ -449,6 +457,13 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     artifact: sokoArtifactResult.data,
     additionalArtifactsPaths,
   };
+}
+
+function strip0xPrefix(bytecode: string): string {
+  if (bytecode.startsWith("0x")) {
+    return bytecode.slice(2);
+  }
+  return bytecode;
 }
 
 async function* lookForContractArtifactPath(

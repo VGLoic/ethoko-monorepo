@@ -96,10 +96,10 @@ for a complete guide of the plugin, its commands, configuration options and feat
 
 Examples of projects using Hardhat Soko can be found in the `apps/` folder:
 
-- [hardhat-v3](apps/hardhat-v3/README.md): compile a contract using Hardhat V3,
-- [foundry_hardhat-deploy-v0](apps/foundry_hardhat-deploy-v0/README.md): compile a contract with Foundry, deploy using Hardhat Deploy V0.12,
-- [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat V2, deploy using Hardhat Deploy V0.12,
-- [hardhat-v2_hardhat-deploy-v0_external-lib](apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat V2, deploy using Hardhat Deploy V0.12.
+- [hardhat-v3_hardhat-deploy-v2](apps/hardhat-v3_hardhat-deploy-v2/README.md): compile a contract using Hardhat v3, deploy using Hardhat Deploy v2,
+- [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Foundry, deploy using Hardhat Deploy v2,
+- [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat v2, deploy using Hardhat Deploy v0.12,
+- [hardhat-v2_hardhat-deploy-v0_external-lib](apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat v2, deploy using Hardhat Deploy v0.12.
 
 ## FAQ
 
