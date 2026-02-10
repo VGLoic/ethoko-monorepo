@@ -4,6 +4,8 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+packageExtensionsChecksum: 6fe93001d6cdf5ce375a6f708c6b59cd
+
 importers:
 
   .:
@@ -115,7 +117,7 @@ importers:
         version: 2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       hardhat-deploy:
         specifier: ^0.12.4
-        version: 0.12.4
+        version: 0.12.4(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       prettier-plugin-solidity:
         specifier: ^2.2.1
         version: 2.2.1(prettier@3.7.4)
@@ -163,7 +165,7 @@ importers:
         version: 2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       hardhat-deploy:
         specifier: ^0.12.4
-        version: 0.12.4
+        version: 0.12.4(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       prettier-plugin-solidity:
         specifier: ^2.2.1
         version: 2.2.1(prettier@3.7.4)
@@ -8354,7 +8356,7 @@ snapshots:
     optionalDependencies:
       uglify-js: 3.19.3
 
-  hardhat-deploy@0.12.4:
+  hardhat-deploy@0.12.4(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2):
     dependencies:
       '@ethersproject/abi': 5.8.0
       '@ethersproject/abstract-signer': 5.8.0
@@ -8376,6 +8378,7 @@ snapshots:
       ethers: 5.8.0
       form-data: 4.0.5
       fs-extra: 10.1.0
+      hardhat: 2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)
       match-all: 1.2.7
       murmur-128: 0.2.1
       qs: 6.14.1
@@ -8383,6 +8386,8 @@ snapshots:
     transitivePeerDependencies:
       - bufferutil
       - supports-color
+      - ts-node
+      - typescript
       - utf-8-validate
 
   hardhat-deploy@2.0.0-next.76(@rocketh/node@0.18.2(rocketh@0.18.1(typescript@5.8.3)(zod@4.3.6))(typescript@5.8.3)(zod@4.3.6))(hardhat@3.1.7):
