@@ -1,9 +1,11 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
 import HardhatSoko from "@soko/hardhat-soko";
+import HardhatDeploy from "hardhat-deploy";
+import "dotenv/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin, HardhatSoko],
+  plugins: [hardhatToolboxViemPlugin, HardhatSoko, HardhatDeploy],
   soko: {
     project: "curious-counter",
     compilationOutputPath: "./artifacts",
@@ -41,7 +43,9 @@ export default defineConfig({
       type: "http",
       chainType: "l1",
       url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: [configVariable("SEPOLIA_PRIVATE_KEY")],
+      accounts: {
+        mnemonic: configVariable("SEPOLIA_MNEMONIC"),
+      }
     },
   },
 });
