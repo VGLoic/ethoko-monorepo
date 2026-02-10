@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - main
+concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -72,3 +73,19 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm test:e2e
+  release:
+    name: Release
+    needs: [build, check-format, check-types, lint, test, test-e2e]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm build
+      - name: Create Release Pull Request
+        uses: changesets/action@v1
+

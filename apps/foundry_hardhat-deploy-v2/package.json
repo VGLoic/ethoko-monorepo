@@ -2,6 +2,7 @@
   "name": "foundry_hardhat-deploy-v2",
   "version": "1.0.0",
   "type": "module",
+  "private": true,
   "scripts": {
     "soko-typings": "hardhat soko typings",
     "lint": "pnpm run soko-typings && eslint . --max-warnings 0",

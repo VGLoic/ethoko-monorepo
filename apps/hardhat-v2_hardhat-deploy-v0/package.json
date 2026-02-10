@@ -1,6 +1,7 @@
 {
   "name": "hardhat-v2_hardhat-deploy-v0",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "soko-typings": "hardhat soko typings",
     "test": "hardhat test",
