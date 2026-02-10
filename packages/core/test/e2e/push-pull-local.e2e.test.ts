@@ -391,7 +391,6 @@ describe("Push-Pull E2E Tests (Local Storage)", () => {
     const providerRoot = storageProvider.getPath();
     const storedBuildInfo = path.join(
       providerRoot,
-      "projects",
       project,
       "ids",
       artifactId,

@@ -14,12 +14,10 @@ type LocalStorageProviderConfig = {
 
 export class LocalStorageProvider implements StorageProvider {
   private readonly storagePath: string;
-  private readonly rootPath: string;
   private readonly debug: boolean;
 
   constructor(config: LocalStorageProviderConfig) {
     this.storagePath = config.path;
-    this.rootPath = "projects";
     this.debug = config.debug ?? false;
   }
 
@@ -106,11 +104,11 @@ export class LocalStorageProvider implements StorageProvider {
   }
 
   private idsPath(project: string): string {
-    return path.join(this.storagePath, this.rootPath, project, "ids");
+    return path.join(this.storagePath, project, "ids");
   }
 
   private tagsPath(project: string): string {
-    return path.join(this.storagePath, this.rootPath, project, "tags");
+    return path.join(this.storagePath, project, "tags");
   }
 
   private idFilePath(project: string, id: string): string {
@@ -150,8 +148,8 @@ export class LocalStorageProvider implements StorageProvider {
 
   private async ensureProjectSetup(project: string): Promise<void> {
     const pathsToEnsure = [
-      path.join(this.storagePath, this.rootPath),
-      path.join(this.storagePath, this.rootPath, project),
+      this.storagePath,
+      path.join(this.storagePath, project),
       this.idsPath(project),
       this.tagsPath(project),
     ];

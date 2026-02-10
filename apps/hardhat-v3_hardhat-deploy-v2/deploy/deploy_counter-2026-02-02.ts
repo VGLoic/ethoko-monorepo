@@ -22,6 +22,7 @@ import { project } from "../.soko-typings"
  *  - `npx hardhat soko typings` to generate the typings for the project.
  */
 
+const TARGET_RELEASE_TAG = "2026-02-02";
 
 export default deployScript(
   async ({ deploy, namedAccounts }) => {
@@ -29,14 +30,14 @@ export default deployScript(
 
     const projectUtils = project("curious-counter")
 
-    const counterArtifact = await projectUtils.tag("2026-02-02").getContractArtifact("project/contracts/Counter.sol:Counter")
+    const counterArtifact = await projectUtils.tag(TARGET_RELEASE_TAG).getContractArtifact("project/contracts/Counter.sol:Counter")
 
     const metadata = counterArtifact.metadata;
     if (!metadata) {
       throw new Error("Metadata is required for deployment, but was not found in the artifact");
     }
 
-    await deploy("Counter", {
+    await deploy(`Counter@${TARGET_RELEASE_TAG}`, {
       account: deployer,
       artifact: {
         // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
@@ -47,6 +48,6 @@ export default deployScript(
       },
     });
   },
-  { tags: ["Counter", "Counter_deploy", "2026-02-02"] },
+  { tags: ["Counter", "Counter_deploy", TARGET_RELEASE_TAG] },
 );
 
