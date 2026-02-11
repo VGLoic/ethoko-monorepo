@@ -1,36 +1,53 @@
 import fs from "fs/promises";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import path from "path";
+import { beforeEach, describe, expect, test } from "vitest";
 import { pull, push } from "@/cli-client/index";
-import { createTestS3Provider } from "@test/helpers/s3-provider-factory";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
+import {
+  createTestLocalStorageProvider,
+  createTestS3StorageProvider,
+} from "@test/helpers/storage-provider-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
-import type { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
 import type { LocalStorage } from "@/local-storage";
+import { LocalStorageProvider, StorageProvider } from "@/storage-provider";
 
-describe("Push-Pull E2E Tests (S3 Storage)", () => {
-  let storageProvider: S3BucketProvider;
+describe.each([
+  ["Local Storage Provider", "local" as const, createTestLocalStorageProvider],
+  ["Amazon S3 Storage Provider", "s3" as const, createTestS3StorageProvider],
+])("Push-Pull E2E Tests (%s)", (_, providerType, createStorageProvider) => {
+  let storageProvider: StorageProvider;
   let localStorage: LocalStorage;
-  let localStorageCleanup: (() => Promise<void>) | null = null;
 
   beforeEach(async () => {
-    storageProvider = createTestS3Provider();
+    const providerSetup = await createStorageProvider();
+    storageProvider = providerSetup.storageProvider;
+
     const localStorageSetup = await createTestLocalStorage();
     localStorage = localStorageSetup.localStorage;
-    localStorageCleanup = localStorageSetup.cleanup;
+
+    return async () => {
+      await localStorageSetup.cleanup();
+      await providerSetup.cleanup();
+    };
   });
 
-  afterEach(async () => {
-    if (localStorageCleanup) {
-      await localStorageCleanup();
-      localStorageCleanup = null;
-    }
-  });
-
-  test("push artifact [Hardhat V2 Counter] without tag → pull by ID", async () => {
+  test.each([
+    [
+      "Hardhat V2 Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER,
+    ],
+    ["Foundry Counter", TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER],
+    [
+      "Hardhat V3 Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER,
+    ],
+    [
+      "Foundry Build Info Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_BUILD_INFO_COUNTER,
+    ],
+  ])("push artifact [%s] without tag → pull by ID", async (_, artifactPath) => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -41,114 +58,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
       storageProvider,
       {
         force: false,
-        debug: false,
-      },
-    );
-
-    expect(artifactId).toBeTruthy();
-    expect(artifactId).toHaveLength(12);
-
-    const hasArtifact = await storageProvider.hasArtifactById(
-      project,
-      artifactId,
-    );
-    expect(hasArtifact).toBe(true);
-
-    const pullResult = await pull(
-      project,
-      artifactId,
-      storageProvider,
-      localStorage,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(pullResult.pulledIds).toContain(artifactId);
-    expect(pullResult.failedIds).toHaveLength(0);
-
-    const hasLocal = await localStorage.hasId(project, artifactId);
-    expect(hasLocal).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactById(
-      project,
-      artifactId,
-    );
-    const originalContent = await fs.readFile(artifactPath, "utf-8");
-    const originalJson = JSON.parse(originalContent) as { id: string };
-
-    expect(localArtifact.origin.id).toBe(originalJson.id);
-  });
-
-  test("push artifact [Foundry Counter] without tag → pull by ID", async () => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER;
-
-    await localStorage.ensureProjectSetup(project);
-
-    const artifactId = await push(
-      artifactPath,
-      project,
-      undefined,
-      storageProvider,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(artifactId).toBeTruthy();
-    expect(artifactId).toHaveLength(12);
-
-    const hasArtifact = await storageProvider.hasArtifactById(
-      project,
-      artifactId,
-    );
-    expect(hasArtifact).toBe(true);
-
-    const pullResult = await pull(
-      project,
-      artifactId,
-      storageProvider,
-      localStorage,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(pullResult.pulledIds).toContain(artifactId);
-    expect(pullResult.failedIds).toHaveLength(0);
-
-    const hasLocal = await localStorage.hasId(project, artifactId);
-    expect(hasLocal).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactById(
-      project,
-      artifactId,
-    );
-    const originalContent = await fs.readFile(artifactPath, "utf-8");
-    const originalJson = JSON.parse(originalContent) as { id: string };
-
-    expect(localArtifact.origin.id).toBe(originalJson.id);
-  });
-
-  test("push artifact [Hardhat V3 Counter] without tag -> pull by ID", async () => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
-
-    await localStorage.ensureProjectSetup(project);
-
-    const artifactId = await push(
-      artifactPath,
-      project,
-      undefined,
-      storageProvider,
-      {
-        force: false,
-        debug: false,
+        debug: true,
       },
     );
 
@@ -192,7 +102,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -229,7 +139,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
       TEST_CONSTANTS.PROJECTS.MULTI_ARTIFACT,
     );
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -262,7 +172,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.FORCE_TEST);
     const tag = TEST_CONSTANTS.TAGS.LATEST;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -293,7 +203,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -335,7 +245,7 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
   test("list operations work correctly", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -360,4 +270,40 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
     expect(remoteIds).toHaveLength(1);
     expect(remoteIds).toContain(id1);
   });
+
+  test.runIf(providerType === "local")(
+    "stores original content files",
+    async () => {
+      const localStorageProvider = storageProvider as LocalStorageProvider;
+      const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+      const artifactPath =
+        TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+
+      await localStorage.ensureProjectSetup(project);
+
+      const artifactId = await push(
+        artifactPath,
+        project,
+        undefined,
+        storageProvider,
+        {
+          force: false,
+          debug: false,
+        },
+      );
+
+      const providerRoot = localStorageProvider.getPath();
+      const storedBuildInfo = path.join(
+        providerRoot,
+        project,
+        "ids",
+        artifactId,
+        "original-content",
+        artifactPath.replace(/^\.\//, ""),
+      );
+
+      const stored = await fs.stat(storedBuildInfo);
+      expect(stored.isFile()).toBe(true);
+    },
+  );
 });
