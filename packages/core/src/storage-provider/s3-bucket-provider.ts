@@ -95,7 +95,7 @@ export class S3BucketProvider implements StorageProvider {
       },
     });
 
-    const sessionName = role.sessionName || "soko-hardhat-session";
+    const sessionName = role.sessionName || "ethoko-hardhat-session";
 
     const assumeRoleCommand = new AssumeRoleCommand({
       RoleArn: role.roleArn,

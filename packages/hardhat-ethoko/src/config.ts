@@ -62,8 +62,8 @@ export type EthokoHardhatUserConfig = {
 
 export const EthokoHardhatConfigSchema = z.object({
   project: z.string().min(1),
-  pulledArtifactsPath: z.string().default(".soko"),
-  typingsPath: z.string().default(".soko-typings"),
+  pulledArtifactsPath: z.string().default(".ethoko"),
+  typingsPath: z.string().default(".ethoko-typings"),
   compilationOutputPath: z.string().optional(),
   storageConfiguration: z.discriminatedUnion("type", [
     z.object({
@@ -76,7 +76,7 @@ export const EthokoHardhatConfigSchema = z.object({
         .object({
           roleArn: z.string().min(1),
           externalId: z.string().min(1).optional(),
-          sessionName: z.string().min(1).default("soko-hardhat-session"),
+          sessionName: z.string().min(1).default("ethoko-hardhat-session"),
           durationSeconds: z.number().int().min(900).max(43200).default(3600),
         })
         .optional(),
