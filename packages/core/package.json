@@ -1,7 +1,7 @@
 {
-  "name": "@ethoko/core",
+  "name": "ethoko-core",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Core utilities and libraries for Ethoko CLI and plugins.",
   "author": "Loïc Vincent-Genod",
   "homepage": "https://github.com/VGLoic/ethoko-monorepo",

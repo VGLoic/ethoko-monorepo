@@ -4,12 +4,12 @@ import {
   boxHeader,
   error as cliError,
   displayPushResult,
-} from "@ethoko/core/cli-ui";
-import { CliError, push } from "@ethoko/core/cli-client";
+} from "ethoko-core/cli-ui";
+import { CliError, push } from "ethoko-core/cli-client";
 import {
   LocalStorageProvider,
   S3BucketProvider,
-} from "@ethoko/core/storage-provider";
+} from "ethoko-core/storage-provider";
 
 interface PushTaskArguments {
   artifactPath?: string;

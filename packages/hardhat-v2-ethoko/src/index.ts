@@ -3,11 +3,11 @@ import { extendConfig, scope } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
 import { styleText } from "node:util";
-import { LocalStorage } from "@ethoko/core/local-storage";
+import { LocalStorage } from "ethoko-core/local-storage";
 import {
   LocalStorageProvider,
   S3BucketProvider,
-} from "@ethoko/core/storage-provider";
+} from "ethoko-core/storage-provider";
 import {
   boxHeader,
   error as cliError,
@@ -16,7 +16,7 @@ import {
   displayPullResults,
   displayPushResult,
   displayDifferences,
-} from "@ethoko/core/cli-ui";
+} from "ethoko-core/cli-ui";
 import {
   CliError,
   generateArtifactsSummariesAndTypings,
@@ -24,7 +24,7 @@ import {
   listPulledArtifacts,
   pull,
   push,
-} from "@ethoko/core/cli-client";
+} from "ethoko-core/cli-client";
 import { EthokoHardhatConfigSchema, EthokoHardhatUserConfig } from "./config";
 
 export { type EthokoHardhatUserConfig };
