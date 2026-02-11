@@ -39,6 +39,7 @@ For Hardhat v2 projects, refer to the [Hardhat v2 Ethoko plugin documentation](p
 ### Development process
 
 Once compilation is done, push the artifacts to Ethoko under a specific tag
+
 <picture>
   <img alt="Push example" src="images/push-example.png">
 </picture>

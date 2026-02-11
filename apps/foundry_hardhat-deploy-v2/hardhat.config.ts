@@ -21,7 +21,7 @@ export default defineConfig({
           }
         : undefined,
     },
-    debug: true,
+    debug: false,
   },
   solidity: {
     profiles: {
