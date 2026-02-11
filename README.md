@@ -71,7 +71,7 @@ import { deploy } from "my-favorite-deploy-lib";
 
 async function deployFoo() {
     // Get project utilities for the target tag
-    const projectUtils = project("doubtful-project").tag("2026-02-04");
+    const projectUtils = project("forge-counter").tag("2026-02-04");
 
     // Get `Foo` static artifact for the target release
     const myContractArtifact = await projectUtils.getContractArtifact(
