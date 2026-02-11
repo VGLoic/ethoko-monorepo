@@ -8,7 +8,7 @@ import { SokoHardhatUserConfig } from "@soko/hardhat-v2-soko";
 const sokoConfig: SokoHardhatUserConfig = {
   project: "doubtful-counter",
   pulledArtifactsPath: ".soko",
-  typingsPath: ".soko-typings",
+  typingsPath: ".ethoko-typings",
   compilationOutputPath: "./artifacts",
   storageConfiguration: {
     type: "aws",
