@@ -67,6 +67,7 @@ Write scripts in a fully typed and transparent manner
 ```ts
 ...
 import { project } from "../.ethoko-typings";
+import { deploy } from "my-favorite-deploy-lib";
 
 async function deployFoo() {
     // Get project utilities for the target tag
@@ -78,7 +79,7 @@ async function deployFoo() {
     );
 
     // Deploy `Foo` using the static artifact
-    // "À la Hardhat Deploy"
+    // `deploy` is an arbitrary util, "À la Hardhat Deploy"
     await deploy("Foo@2026-02-04", {
       contract: {
         abi: myContractArtifact.abi,
