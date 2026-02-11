@@ -1,6 +1,6 @@
 {
-  "name": "@ethoko/hardhat-ethoko",
-  "version": "0.2.0",
+  "name": "hardhat-ethoko",
+  "version": "0.1.0",
   "private": false,
   "description": "Hardhat V3 plugin in order to interact with Ethoko, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
