@@ -16,8 +16,8 @@ export default async function (
   taskArguments: ListTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const sokoConfig = hre.config.ethoko;
-  if (!sokoConfig) {
+  const ethokoConfig = hre.config.ethoko;
+  if (!ethokoConfig) {
     cliError("Ethoko is not configured");
     process.exitCode = 1;
     return;
@@ -25,13 +25,13 @@ export default async function (
 
   const parsingResult = z
     .object({
-      debug: z.boolean().default(sokoConfig.debug),
+      debug: z.boolean().default(ethokoConfig.debug),
     })
     .safeParse(taskArguments);
 
   if (!parsingResult.success) {
     cliError("Invalid arguments");
-    if (sokoConfig.debug) {
+    if (ethokoConfig.debug) {
       console.error(parsingResult.error);
     }
     process.exitCode = 1;
@@ -40,7 +40,7 @@ export default async function (
 
   boxHeader("Listing artifacts");
 
-  const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+  const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
   await listPulledArtifacts(localStorage, {
     debug: parsingResult.data.debug,

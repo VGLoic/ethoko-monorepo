@@ -28,10 +28,10 @@ const OriginSchema = z.discriminatedUnion("format", [
 ]);
 
 /**
- * This is the schema for an artifact stored on Soko
+ * This is the schema for an artifact stored on Ethoko
  */
 export const EthokoArtifactSchema = z.object({
-  // ID derived by Soko
+  // ID derived by Ethoko
   id: z.string(),
   // Origin of the artifact, can be used to revert to the original compiler output JSON structure if needed.
   origin: OriginSchema,

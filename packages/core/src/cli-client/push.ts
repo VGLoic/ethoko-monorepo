@@ -67,17 +67,17 @@ export async function push(
   }
   steps.succeed(buildInfoPathToSuccessText(buildInfoPathResult.value));
 
-  // Step 2: Parse the compilation artifact, mapping it to the Soko format
+  // Step 2: Parse the compilation artifact, mapping it to the Ethoko format
   steps.start("Analyzing compilation artifact...");
-  const sokoArtifactParsingResult = await toAsyncResult(
+  const ethokoArtifactParsingResult = await toAsyncResult(
     mapBuildInfoToEthokoArtifact(buildInfoPathResult.value, opts.debug),
   );
-  if (!sokoArtifactParsingResult.success) {
+  if (!ethokoArtifactParsingResult.success) {
     steps.fail("Unable to handle the provided compilation artifact");
     // @dev the mapBuildInfoToEthokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
-    throw sokoArtifactParsingResult.error;
+    throw ethokoArtifactParsingResult.error;
   }
-  const sokoArtifact = sokoArtifactParsingResult.value.artifact;
+  const ethokoArtifact = ethokoArtifactParsingResult.value.artifact;
   steps.succeed("Compilation artifact is valid");
 
   // Step 3: Check if tag exists
@@ -114,9 +114,9 @@ export async function push(
   const pushResult = await toAsyncResult(
     storageProvider.uploadArtifact(
       project,
-      sokoArtifact,
+      ethokoArtifact,
       tag,
-      sokoArtifactParsingResult.value.originalContentPaths,
+      ethokoArtifactParsingResult.value.originalContentPaths,
     ),
     { debug: opts.debug },
   );
@@ -124,10 +124,10 @@ export async function push(
   if (!pushResult.success) {
     steps.fail("Failed to upload artifact");
     throw new CliError(
-      `Error pushing the artifact "${project}:${tag || sokoArtifact.id}" to the storage, please check the storage configuration or run with debug mode for more info`,
+      `Error pushing the artifact "${project}:${tag || ethokoArtifact.id}" to the storage, please check the storage configuration or run with debug mode for more info`,
     );
   }
   steps.succeed("Artifact uploaded successfully");
 
-  return sokoArtifact.id;
+  return ethokoArtifact.id;
 }

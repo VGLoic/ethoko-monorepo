@@ -46,15 +46,15 @@ extendConfig(
       return;
     }
 
-    const sokoParsingResult = EthokoHardhatConfigSchema.safeParse(
+    const ethokoParsingResult = EthokoHardhatConfigSchema.safeParse(
       userConfig.ethoko,
     );
 
-    if (!sokoParsingResult.success) {
+    if (!ethokoParsingResult.success) {
       console.error(
         styleText(
           LOG_COLORS.warn,
-          `Configuration for Ethoko has been found but seems invalid. Please consult the below errors: \n${sokoParsingResult.error.errors.map(
+          `Configuration for Ethoko has been found but seems invalid. Please consult the below errors: \n${ethokoParsingResult.error.errors.map(
             (error) => {
               return `  - ${error.path.join(".")}: ${error.message} (${error.code})`;
             },
@@ -64,13 +64,13 @@ extendConfig(
       return;
     }
 
-    config.ethoko = sokoParsingResult.data;
+    config.ethoko = ethokoParsingResult.data;
   },
 );
 
-const sokoScope = scope("ethoko", "Ethoko Hardhat tasks");
+const ethokoScope = scope("ethoko", "Ethoko Hardhat tasks");
 
-sokoScope
+ethokoScope
   .task("pull", "Pull one or many artifacts of a project.")
   .setDescription(
     `Pull one or many artifacts of a project.
@@ -111,8 +111,8 @@ Already downloaded artifacts are not downloaded again by default, enable the for
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.ethoko;
-    if (!sokoConfig) {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
       cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
@@ -122,14 +122,14 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       .object({
         id: z.string().optional(),
         tag: z.string().optional(),
-        project: z.string().optional().default(sokoConfig.project),
+        project: z.string().optional().default(ethokoConfig.project),
         force: z.boolean().default(false),
-        debug: z.boolean().default(sokoConfig.debug),
+        debug: z.boolean().default(ethokoConfig.debug),
       })
       .safeParse(opts);
     if (!optsParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug) {
+      if (ethokoConfig.debug) {
         console.error(optsParsingResult.error);
       }
       process.exitCode = 1;
@@ -151,20 +151,20 @@ Already downloaded artifacts are not downloaded again by default, enable the for
     }
 
     const storageProvider =
-      sokoConfig.storageConfiguration.type === "aws"
+      ethokoConfig.storageConfiguration.type === "aws"
         ? new S3BucketProvider({
-            bucketName: sokoConfig.storageConfiguration.awsBucketName,
-            bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-            accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-            role: sokoConfig.storageConfiguration.awsRole,
+            bucketName: ethokoConfig.storageConfiguration.awsBucketName,
+            bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
+            accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
+            secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+            role: ethokoConfig.storageConfiguration.awsRole,
             debug: optsParsingResult.data.debug,
           })
         : new LocalStorageProvider({
-            path: sokoConfig.storageConfiguration.path,
+            path: ethokoConfig.storageConfiguration.path,
             debug: optsParsingResult.data.debug,
           });
-    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
     await pull(
       optsParsingResult.data.project,
       optsParsingResult.data.id || optsParsingResult.data.tag,
@@ -172,7 +172,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       localStorage,
       {
         force: optsParsingResult.data.force,
-        debug: sokoConfig.debug || optsParsingResult.data.debug,
+        debug: ethokoConfig.debug || optsParsingResult.data.debug,
       },
     )
       .then((result) =>
@@ -191,7 +191,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       });
   });
 
-sokoScope
+ethokoScope
   .task("push", "Push a compilation artifact.")
   .setDescription(
     `Push a compilation artifact.
@@ -216,8 +216,8 @@ If the provided tag already exists in the storage, the push will be aborted unle
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.ethoko;
-    if (!sokoConfig) {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
       cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
@@ -228,13 +228,13 @@ If the provided tag already exists in the storage, the push will be aborted unle
         artifactPath: z.string().min(1).optional(),
         tag: z.string().optional(),
         force: z.boolean().default(false),
-        debug: z.boolean().default(sokoConfig.debug),
+        debug: z.boolean().default(ethokoConfig.debug),
       })
       .safeParse(opts);
 
     if (!optsParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug) {
+      if (ethokoConfig.debug) {
         console.error(optsParsingResult.error);
       }
       process.exitCode = 1;
@@ -242,7 +242,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
     }
 
     const finalArtifactPath =
-      optsParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+      optsParsingResult.data.artifactPath || ethokoConfig.compilationOutputPath;
 
     if (!finalArtifactPath) {
       cliError(
@@ -253,38 +253,38 @@ If the provided tag already exists in the storage, the push will be aborted unle
     }
 
     boxHeader(
-      `Pushing artifact to "${sokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+      `Pushing artifact to "${ethokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
     );
 
     const storageProvider =
-      sokoConfig.storageConfiguration.type === "aws"
+      ethokoConfig.storageConfiguration.type === "aws"
         ? new S3BucketProvider({
-            bucketName: sokoConfig.storageConfiguration.awsBucketName,
-            bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-            accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-            role: sokoConfig.storageConfiguration.awsRole,
+            bucketName: ethokoConfig.storageConfiguration.awsBucketName,
+            bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
+            accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
+            secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+            role: ethokoConfig.storageConfiguration.awsRole,
             debug: optsParsingResult.data.debug,
           })
         : new LocalStorageProvider({
-            path: sokoConfig.storageConfiguration.path,
+            path: ethokoConfig.storageConfiguration.path,
             debug: optsParsingResult.data.debug,
           });
 
     await push(
       finalArtifactPath,
-      sokoConfig.project,
+      ethokoConfig.project,
       optsParsingResult.data.tag,
       storageProvider,
       {
         force: optsParsingResult.data.force,
-        debug: sokoConfig.debug || optsParsingResult.data.debug,
+        debug: ethokoConfig.debug || optsParsingResult.data.debug,
         isCI: process.env.CI === "true" || process.env.CI === "1",
       },
     )
       .then((result) =>
         displayPushResult(
-          sokoConfig.project,
+          ethokoConfig.project,
           optsParsingResult.data.tag,
           result,
         ),
@@ -302,7 +302,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
       });
   });
 
-sokoScope
+ethokoScope
   .task("typings", "Generate typings based on the existing artifacts.")
   .setDescription(
     `Generate typings based on the existing artifacts.
@@ -311,8 +311,8 @@ The typings will be generated in the configured typings path.
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.ethoko;
-    if (!sokoConfig) {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
       cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
@@ -320,13 +320,13 @@ The typings will be generated in the configured typings path.
 
     const parsingResult = z
       .object({
-        debug: z.boolean().default(sokoConfig.debug),
+        debug: z.boolean().default(ethokoConfig.debug),
       })
       .safeParse(opts);
 
     if (!parsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug || opts.debug) {
+      if (ethokoConfig.debug || opts.debug) {
         console.error(parsingResult.error);
       }
       process.exitCode = 1;
@@ -335,10 +335,10 @@ The typings will be generated in the configured typings path.
 
     boxHeader("Generating typings");
 
-    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
     await generateArtifactsSummariesAndTypings(
-      sokoConfig.typingsPath,
+      ethokoConfig.typingsPath,
       localStorage,
       {
         debug: parsingResult.data.debug,
@@ -360,15 +360,15 @@ The typings will be generated in the configured typings path.
       });
   });
 
-sokoScope
+ethokoScope
   .task(
     "list",
     "List the artifacts that have been pulled with their associated projects.",
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.ethoko;
-    if (!sokoConfig) {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
       cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
@@ -376,13 +376,13 @@ sokoScope
 
     const parsingResult = z
       .object({
-        debug: z.boolean().default(sokoConfig.debug),
+        debug: z.boolean().default(ethokoConfig.debug),
       })
       .safeParse(opts);
 
     if (!parsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug) {
+      if (ethokoConfig.debug) {
         console.error(parsingResult.error);
       }
       process.exitCode = 1;
@@ -391,7 +391,7 @@ sokoScope
 
     boxHeader("Listing artifacts");
 
-    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
     await listPulledArtifacts(localStorage, {
       debug: parsingResult.data.debug,
@@ -410,7 +410,7 @@ sokoScope
       });
   });
 
-sokoScope
+ethokoScope
   .task(
     "diff",
     "Compare a local compilation artifacts with an existing release.",
@@ -426,8 +426,8 @@ sokoScope
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.ethoko;
-    if (!sokoConfig) {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
       cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
@@ -438,12 +438,12 @@ sokoScope
         artifactPath: z.string().min(1).optional(),
         id: z.string().optional(),
         tag: z.string().optional(),
-        debug: z.boolean().default(sokoConfig.debug),
+        debug: z.boolean().default(ethokoConfig.debug),
       })
       .safeParse(opts);
     if (!paramParsingResult.success) {
       cliError("Invalid arguments");
-      if (sokoConfig.debug) {
+      if (ethokoConfig.debug) {
         console.error(paramParsingResult.error);
       }
       process.exitCode = 1;
@@ -462,7 +462,7 @@ sokoScope
     }
 
     const finalArtifactPath =
-      paramParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+      paramParsingResult.data.artifactPath || ethokoConfig.compilationOutputPath;
 
     if (!finalArtifactPath) {
       cliError(
@@ -479,13 +479,13 @@ sokoScope
       return;
     }
 
-    boxHeader(`Comparing with artifact "${sokoConfig.project}:${tagOrId}"`);
+    boxHeader(`Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`);
 
-    const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
     await generateDiffWithTargetRelease(
       finalArtifactPath,
-      { project: sokoConfig.project, tagOrId },
+      { project: ethokoConfig.project, tagOrId },
       localStorage,
       {
         debug: paramParsingResult.data.debug,
@@ -506,11 +506,11 @@ sokoScope
       });
   });
 
-sokoScope
-  .task("help", "Use `npx hardhat help soko` instead")
+ethokoScope
+  .task("help", "Use `npx hardhat help ethoko` instead")
   .setAction(async () => {
     cliInfo(
-      "This help format is not supported by Hardhat.\nPlease use `npx hardhat help soko` instead (change `npx` with what you use).\nHelp on a specific task can be obtained by using `npx hardhat help soko <command>`.",
+      "This help format is not supported by Hardhat.\nPlease use `npx hardhat help ethoko` instead (change `npx` with what you use).\nHelp on a specific task can be obtained by using `npx hardhat help ethoko <command>`.",
     );
   });
 

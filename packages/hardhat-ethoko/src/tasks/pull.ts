@@ -24,8 +24,8 @@ export default async function (
   taskArguments: PullTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const sokoConfig = hre.config.ethoko;
-  if (!sokoConfig) {
+  const ethokoConfig = hre.config.ethoko;
+  if (!ethokoConfig) {
     cliError("Ethoko is not configured");
     process.exitCode = 1;
     return;
@@ -35,14 +35,14 @@ export default async function (
     .object({
       id: z.string().optional(),
       tag: z.string().optional(),
-      project: z.string().optional().default(sokoConfig.project),
+      project: z.string().optional().default(ethokoConfig.project),
       force: z.boolean().default(false),
-      debug: z.boolean().default(sokoConfig.debug),
+      debug: z.boolean().default(ethokoConfig.debug),
     })
     .safeParse(taskArguments);
   if (!optsParsingResult.success) {
     cliError("Invalid arguments");
-    if (sokoConfig.debug) {
+    if (ethokoConfig.debug) {
       console.error(optsParsingResult.error);
     }
     process.exitCode = 1;
@@ -64,20 +64,20 @@ export default async function (
   }
 
   const storageProvider =
-    sokoConfig.storageConfiguration.type === "aws"
+    ethokoConfig.storageConfiguration.type === "aws"
       ? new S3BucketProvider({
-          bucketName: sokoConfig.storageConfiguration.awsBucketName,
-          bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-          accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-          secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-          role: sokoConfig.storageConfiguration.awsRole,
+          bucketName: ethokoConfig.storageConfiguration.awsBucketName,
+          bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
+          accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
+          secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+          role: ethokoConfig.storageConfiguration.awsRole,
           debug: optsParsingResult.data.debug,
         })
       : new LocalStorageProvider({
-          path: sokoConfig.storageConfiguration.path,
+          path: ethokoConfig.storageConfiguration.path,
           debug: optsParsingResult.data.debug,
         });
-  const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+  const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
   await pull(
     optsParsingResult.data.project,
     optsParsingResult.data.id || optsParsingResult.data.tag,
@@ -85,7 +85,7 @@ export default async function (
     localStorage,
     {
       force: optsParsingResult.data.force,
-      debug: sokoConfig.debug || optsParsingResult.data.debug,
+      debug: ethokoConfig.debug || optsParsingResult.data.debug,
     },
   )
     .then((result) =>

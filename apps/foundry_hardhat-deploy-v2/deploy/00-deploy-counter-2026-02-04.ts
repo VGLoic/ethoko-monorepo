@@ -15,11 +15,11 @@ import { project } from "../.ethoko-typings";
  * It is assumed that the tag `2026-02-04` exists in the Ethoko registry for this project.
  * It could have been created by running:
  * ```
- * npx hardhat soko push --tag 2026-02-04 --artifact-path ./out
+ * npx hardhat ethoko push --tag 2026-02-04 --artifact-path ./out
  * ```
  * The assumed commands that have been run prior to this deployment are:
- *  - `npx hardhat soko pull` to pull the project from the Ethoko registry,
- *  - `npx hardhat soko typings` to generate the typings for the project.
+ *  - `npx hardhat ethoko pull` to pull the project from the Ethoko registry,
+ *  - `npx hardhat ethoko typings` to generate the typings for the project.
  */
 
 const TARGET_RELEASE = "2026-02-04";

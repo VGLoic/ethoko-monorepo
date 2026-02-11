@@ -1,7 +1,7 @@
 import z from "zod";
 
 /**
- * The Soko Hardhat user configuration
+ * The Ethoko Hardhat user configuration
  */
 export type EthokoHardhatUserConfig = {
   /**
@@ -11,13 +11,13 @@ export type EthokoHardhatUserConfig = {
   /**
    * The local path in which artifacts will be pulled
    *
-   * Default to `.soko`
+   * Default to `.ethoko`
    */
   pulledArtifactsPath?: string;
   /**
    * The local path in which typings will be generated
    *
-   * Default to `.soko-typings`
+   * Default to `.ethoko-typings`
    */
   typingsPath?: string;
   /**

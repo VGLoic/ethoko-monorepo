@@ -435,7 +435,7 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
     contracts: outputContracts,
   } satisfies z.infer<typeof SolcJsonOutputSchema>;
 
-  const sokoArtifact = {
+  const ethokoArtifact = {
     id: deriveEthokoArtifactId(output),
     solcLongVersion,
     origin: {
@@ -446,15 +446,15 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
     output,
   };
 
-  const sokoArtifactResult = EthokoArtifactSchema.safeParse(sokoArtifact);
-  if (!sokoArtifactResult.success) {
+  const ethokoArtifactResult = EthokoArtifactSchema.safeParse(ethokoArtifact);
+  if (!ethokoArtifactResult.success) {
     throw new Error(
-      `Failed to parse the reconstructed EthokoArtifact from the Forge build info default format. Error: ${sokoArtifactResult.error}`,
+      `Failed to parse the reconstructed EthokoArtifact from the Forge build info default format. Error: ${ethokoArtifactResult.error}`,
     );
   }
 
   return {
-    artifact: sokoArtifactResult.data,
+    artifact: ethokoArtifactResult.data,
     additionalArtifactsPaths,
   };
 }

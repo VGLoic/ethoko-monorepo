@@ -4,7 +4,7 @@ import { HardhatConfig } from "hardhat/types/config";
 import { HardhatUserConfigValidationError } from "hardhat/types/hooks";
 
 /**
- * The Soko Hardhat user configuration
+ * The Ethoko Hardhat user configuration
  */
 export type EthokoHardhatUserConfig = {
   /**
@@ -14,13 +14,13 @@ export type EthokoHardhatUserConfig = {
   /**
    * The local path in which artifacts will be pulled
    *
-   * Default to `.soko`
+   * Default to `.ethoko`
    */
   pulledArtifactsPath?: string;
   /**
    * The local path in which typings will be generated
    *
-   * Default to `.soko-typings`
+   * Default to `.ethoko-typings`
    */
   typingsPath?: string;
   /**
@@ -111,7 +111,7 @@ export async function validatePluginConfig(
   if (!parsingResult.success) {
     const errors: HardhatUserConfigValidationError[] =
       parsingResult.error.errors.map((zodError) => ({
-        path: ["soko", ...zodError.path],
+        path: ["ethoko", ...zodError.path],
         message: zodError.message,
       }));
     return errors;
@@ -141,10 +141,10 @@ export async function resolvePluginConfig(
   }
 
   // Else, the parse is guaranteed to succeed, because the config is already validated in the
-  const sokoConfig = EthokoHardhatConfigSchema.parse(userConfig.ethoko);
+  const ethokoConfig = EthokoHardhatConfigSchema.parse(userConfig.ethoko);
 
   return {
     ...partiallyResolvedConfig,
-    ethoko: sokoConfig,
+    ethoko: ethokoConfig,
   };
 }

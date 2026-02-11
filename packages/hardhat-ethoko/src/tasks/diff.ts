@@ -22,8 +22,8 @@ export default async function (
   taskArguments: DiffTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const sokoConfig = hre.config.ethoko;
-  if (!sokoConfig) {
+  const ethokoConfig = hre.config.ethoko;
+  if (!ethokoConfig) {
     cliError("Ethoko is not configured");
     process.exitCode = 1;
     return;
@@ -34,12 +34,12 @@ export default async function (
       artifactPath: z.string().min(1).optional(),
       id: z.string().optional(),
       tag: z.string().optional(),
-      debug: z.boolean().default(sokoConfig.debug),
+      debug: z.boolean().default(ethokoConfig.debug),
     })
     .safeParse(taskArguments);
   if (!paramParsingResult.success) {
     cliError("Invalid arguments");
-    if (sokoConfig.debug) {
+    if (ethokoConfig.debug) {
       console.error(paramParsingResult.error);
     }
     process.exitCode = 1;
@@ -58,7 +58,7 @@ export default async function (
   }
 
   const finalArtifactPath =
-    paramParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+    paramParsingResult.data.artifactPath || ethokoConfig.compilationOutputPath;
 
   if (!finalArtifactPath) {
     cliError(
@@ -75,13 +75,13 @@ export default async function (
     return;
   }
 
-  boxHeader(`Comparing with artifact "${sokoConfig.project}:${tagOrId}"`);
+  boxHeader(`Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`);
 
-  const localStorage = new LocalStorage(sokoConfig.pulledArtifactsPath);
+  const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
   await generateDiffWithTargetRelease(
     finalArtifactPath,
-    { project: sokoConfig.project, tagOrId },
+    { project: ethokoConfig.project, tagOrId },
     localStorage,
     {
       debug: paramParsingResult.data.debug,

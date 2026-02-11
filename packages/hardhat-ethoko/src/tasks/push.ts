@@ -22,8 +22,8 @@ export default async function (
   taskArguments: PushTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const sokoConfig = hre.config.ethoko;
-  if (!sokoConfig) {
+  const ethokoConfig = hre.config.ethoko;
+  if (!ethokoConfig) {
     cliError("Ethoko is not configured");
     process.exitCode = 1;
     return;
@@ -34,13 +34,13 @@ export default async function (
       artifactPath: z.string().min(1).optional(),
       tag: z.string().optional(),
       force: z.boolean().default(false),
-      debug: z.boolean().default(sokoConfig.debug),
+      debug: z.boolean().default(ethokoConfig.debug),
     })
     .safeParse(taskArguments);
 
   if (!optsParsingResult.success) {
     cliError("Invalid arguments");
-    if (sokoConfig.debug) {
+    if (ethokoConfig.debug) {
       console.error(optsParsingResult.error);
     }
     process.exitCode = 1;
@@ -48,7 +48,7 @@ export default async function (
   }
 
   const finalArtifactPath =
-    optsParsingResult.data.artifactPath || sokoConfig.compilationOutputPath;
+    optsParsingResult.data.artifactPath || ethokoConfig.compilationOutputPath;
 
   if (!finalArtifactPath) {
     cliError(
@@ -59,37 +59,37 @@ export default async function (
   }
 
   boxHeader(
-    `Pushing artifact to "${sokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+    `Pushing artifact to "${ethokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
   );
 
   const storageProvider =
-    sokoConfig.storageConfiguration.type === "aws"
+    ethokoConfig.storageConfiguration.type === "aws"
       ? new S3BucketProvider({
-          bucketName: sokoConfig.storageConfiguration.awsBucketName,
-          bucketRegion: sokoConfig.storageConfiguration.awsRegion,
-          accessKeyId: sokoConfig.storageConfiguration.awsAccessKeyId,
-          secretAccessKey: sokoConfig.storageConfiguration.awsSecretAccessKey,
-          role: sokoConfig.storageConfiguration.awsRole,
+          bucketName: ethokoConfig.storageConfiguration.awsBucketName,
+          bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
+          accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
+          secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+          role: ethokoConfig.storageConfiguration.awsRole,
           debug: optsParsingResult.data.debug,
         })
       : new LocalStorageProvider({
-          path: sokoConfig.storageConfiguration.path,
+          path: ethokoConfig.storageConfiguration.path,
           debug: optsParsingResult.data.debug,
         });
 
   await push(
     finalArtifactPath,
-    sokoConfig.project,
+    ethokoConfig.project,
     optsParsingResult.data.tag,
     storageProvider,
     {
       force: optsParsingResult.data.force,
-      debug: sokoConfig.debug || optsParsingResult.data.debug,
+      debug: ethokoConfig.debug || optsParsingResult.data.debug,
       isCI: process.env.CI === "true" || process.env.CI === "1",
     },
   )
     .then((result) =>
-      displayPushResult(sokoConfig.project, optsParsingResult.data.tag, result),
+      displayPushResult(ethokoConfig.project, optsParsingResult.data.tag, result),
     )
     .catch((err) => {
       if (err instanceof CliError) {
