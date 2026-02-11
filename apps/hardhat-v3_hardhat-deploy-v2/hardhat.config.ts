@@ -1,18 +1,18 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
-import HardhatEthoko from "@soko/hardhat-soko";
+import HardhatEthoko from "@ethoko/hardhat-ethoko";
 import HardhatDeploy from "hardhat-deploy";
 import "dotenv/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin, HardhatSoko, HardhatDeploy],
-  soko: {
+  plugins: [hardhatToolboxViemPlugin, HardhatEthoko, HardhatDeploy],
+  ethoko: {
     project: "curious-counter",
     compilationOutputPath: "./artifacts",
     storageConfiguration: {
       type: "local",
-      path: "./soko-storage",
-    }
+      path: "./ethoko-storage",
+    },
   },
   solidity: {
     profiles: {
@@ -45,7 +45,7 @@ export default defineConfig({
       url: configVariable("SEPOLIA_RPC_URL"),
       accounts: {
         mnemonic: configVariable("SEPOLIA_MNEMONIC"),
-      }
+      },
     },
   },
 });

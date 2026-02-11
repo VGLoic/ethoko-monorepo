@@ -145,6 +145,6 @@ export async function resolvePluginConfig(
 
   return {
     ...partiallyResolvedConfig,
-    soko: sokoConfig,
+    ethoko: sokoConfig,
   };
 }

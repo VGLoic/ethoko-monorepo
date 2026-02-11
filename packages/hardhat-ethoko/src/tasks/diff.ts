@@ -4,9 +4,12 @@ import {
   boxHeader,
   error as cliError,
   displayDifferences,
-} from "@soko/core/cli-ui";
-import { CliError, generateDiffWithTargetRelease } from "@soko/core/cli-client";
-import { LocalStorage } from "@soko/core/local-storage";
+} from "@ethoko/core/cli-ui";
+import {
+  CliError,
+  generateDiffWithTargetRelease,
+} from "@ethoko/core/cli-client";
+import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface DiffTaskArguments {
   artifactPath?: string;

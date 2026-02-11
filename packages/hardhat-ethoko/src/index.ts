@@ -4,15 +4,15 @@ import type { HardhatPlugin } from "hardhat/types/plugins";
 
 import "./type-extension.js";
 
-const hardhatSoko: HardhatPlugin = {
-  id: "hardhat-soko",
+const hardhatEthoko: HardhatPlugin = {
+  id: "hardhat-ethoko",
   hookHandlers: {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     config: () => import("./hooks/config.js") as any,
   },
   tasks: [
     emptyTask("ethoko", "Ethoko plugin tasks").build(),
-    task(["soko", "pull"], "Pull one or many artifacts of a project.")
+    task(["ethoko", "pull"], "Pull one or many artifacts of a project.")
       .addOption({
         name: "id",
         description:
@@ -47,7 +47,7 @@ const hardhatSoko: HardhatPlugin = {
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/pull.js"))
       .build(),
-    task(["soko", "push"], "Push one or many artifacts of a project.")
+    task(["ethoko", "push"], "Push one or many artifacts of a project.")
       .addOption({
         name: "artifactPath",
         description: "The path of the compilation artifact to push",
@@ -73,7 +73,10 @@ const hardhatSoko: HardhatPlugin = {
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/push.js"))
       .build(),
-    task(["soko", "typings"], "Generate typings based on the pulled artifacts.")
+    task(
+      ["ethoko", "typings"],
+      "Generate typings based on the pulled artifacts.",
+    )
       .addFlag({
         name: "debug",
         description: "Enable debug mode",
@@ -83,7 +86,7 @@ const hardhatSoko: HardhatPlugin = {
       .setAction(() => import("./tasks/typings.js"))
       .build(),
     task(
-      ["soko", "list"],
+      ["ethoko", "list"],
       "List the artifacts that have been pulled with their associated projects.",
     )
       .addFlag({
@@ -95,7 +98,7 @@ const hardhatSoko: HardhatPlugin = {
       .setAction(() => import("./tasks/list.js"))
       .build(),
     task(
-      ["soko", "diff"],
+      ["ethoko", "diff"],
       "Compare a local compilation artifacts with an existing release.",
     )
       .addOption({
@@ -129,4 +132,4 @@ const hardhatSoko: HardhatPlugin = {
   ],
 };
 
-export { hardhatSoko as default };
+export { hardhatEthoko as default };

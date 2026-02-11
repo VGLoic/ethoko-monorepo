@@ -4,9 +4,9 @@ import {
   boxHeader,
   error as cliError,
   displayListResults,
-} from "@soko/core/cli-ui";
-import { CliError, listPulledArtifacts } from "@soko/core/cli-client";
-import { LocalStorage } from "@soko/core/local-storage";
+} from "@ethoko/core/cli-ui";
+import { CliError, listPulledArtifacts } from "@ethoko/core/cli-client";
+import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface ListTaskArguments {
   debug?: boolean;
