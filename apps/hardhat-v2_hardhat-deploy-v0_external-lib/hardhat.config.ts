@@ -1,9 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
 import "hardhat-deploy";
-import "@ethoko/hardhat-v2-ethoko";
+import "hardhat-v2-ethoko";
 import "dotenv/config";
-import { EthokoHardhatUserConfig } from "@ethoko/hardhat-v2-ethoko";
+import { EthokoHardhatUserConfig } from "hardhat-v2-ethoko";
 
 const ethokoConfig: EthokoHardhatUserConfig = {
   project: "doubtful-counter",

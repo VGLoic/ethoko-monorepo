@@ -21,7 +21,7 @@
     "@nomicfoundation/hardhat-verify": "^2.1.0",
     "@nomicfoundation/ignition-core": "^0.15.15",
     "@ethoko/eslint-config": "workspace:*",
-    "@ethoko/hardhat-v2-ethoko": "workspace:*",
+    "hardhat-v2-ethoko": "workspace:*",
     "@types/node": "^22.8.5",
     "eslint": "^9.39.1",
     "ethers": "^6.16.0",

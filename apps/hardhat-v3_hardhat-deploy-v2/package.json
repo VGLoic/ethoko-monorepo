@@ -21,7 +21,7 @@
     "@rocketh/node": "^0.18.2",
     "@rocketh/read-execute": "^0.18.0",
     "@ethoko/eslint-config": "workspace:*",
-    "@ethoko/hardhat-ethoko": "workspace:*",
+    "hardhat-ethoko": "workspace:*",
     "@types/node": "^22.8.5",
     "dotenv": "^17.2.4",
     "eslint": "^9.39.1",

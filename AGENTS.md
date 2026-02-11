@@ -176,7 +176,7 @@ type Result<T> =
 
 **Use custom error classes for CLI methods:**
 
-All CLI methods (@ethoko/core/src/cli-client/\*) MUST throw `CliError` class instance.
+All CLI methods (packages/core/src/cli-client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {

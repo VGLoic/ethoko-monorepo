@@ -7,19 +7,19 @@ Hardhat plugin in order to interact with Ethoko, warehouse for smart contract co
 Installation can be made using any package manager
 
 ```bash
-pnpm install @ethoko/hardhat-ethoko
-npm install @ethoko/hardhat-ethoko
-yarn add @ethoko/hardhat-ethoko
+pnpm install hardhat-ethoko
+npm install hardhat-ethoko
+yarn add hardhat-ethoko
 ```
 
 ## Configuration
 
-In the `hardhat.config.ts/js` file, one should import the `@ethoko/hardhat-ethoko` plugin and fill the Ethoko configuration.
+In the `hardhat.config.ts/js` file, one should import the `hardhat-ethoko` plugin and fill the Ethoko configuration.
 
 ```ts
 import { HardhatUserConfig } from "hardhat/config";
 ...
-import "@ethoko/hardhat-ethoko";
+import "hardhat-ethoko";
 
 export const config: HardhatUserConfig = {
   ... // Existing configuration
