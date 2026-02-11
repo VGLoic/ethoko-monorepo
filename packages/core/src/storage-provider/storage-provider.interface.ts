@@ -1,5 +1,5 @@
 import { Stream } from "stream";
-import { SokoArtifact } from "../utils/artifacts-schemas/soko-v0";
+import { SokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;

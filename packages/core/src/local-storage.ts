@@ -4,7 +4,7 @@ import crypto from "crypto";
 import {
   SokoArtifact,
   SokoArtifactSchema,
-} from "./utils/artifacts-schemas/soko-v0";
+} from "./utils/artifacts-schemas/ethoko-v0";
 
 /**
  * Local storage implementation for storing artifacts on the local filesystem.

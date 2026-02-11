@@ -5,8 +5,8 @@ import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
-import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-soko-artifact";
-import { SokoArtifact } from "@/utils/artifacts-schemas/soko-v0";
+import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
+import { SokoArtifact } from "@/utils/artifacts-schemas/ethoko-v0";
 import { BuildInfoPath } from "@/utils/build-info-path";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {

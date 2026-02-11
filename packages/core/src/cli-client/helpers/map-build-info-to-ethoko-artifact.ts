@@ -1,7 +1,7 @@
 import {
   SokoArtifact,
   SokoArtifactSchema,
-} from "@/utils/artifacts-schemas/soko-v0";
+} from "@/utils/artifacts-schemas/ethoko-v0";
 import fs from "fs/promises";
 import { CliError } from "../error";
 import { toAsyncResult, toResult } from "@/utils/result";
@@ -12,7 +12,7 @@ import {
   ForgeCompilerDefaultOutputSchema,
   ForgeCompilerOutputWithBuildInfoOptionSchema,
 } from "@/utils/artifacts-schemas/forge-v1";
-import { deriveSokoArtifactId } from "@/utils/derive-soko-artifact-id";
+import { deriveSokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import z from "zod";
 import path from "path";
 import { SettingsSchema } from "@/utils/artifacts-schemas/solc-v0.8.33/input-json";

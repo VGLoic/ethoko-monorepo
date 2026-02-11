@@ -3,7 +3,7 @@ import { StepTracker } from "@/cli-ui/utils";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
-import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-soko-artifact";
+import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
 import { BuildInfoPath } from "@/utils/build-info-path";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
