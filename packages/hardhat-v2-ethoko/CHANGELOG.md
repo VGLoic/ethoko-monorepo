@@ -1,4 +1,4 @@
-# @soko/hardhat-v2-soko
+# @ethoko/hardhat-v2-ethoko
 
 ## 0.2.0
 

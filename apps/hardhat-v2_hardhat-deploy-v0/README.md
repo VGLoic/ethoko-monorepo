@@ -1,8 +1,8 @@
-# Hardhat Soko - Example - Deploy Counter
+# Hardhat Ethoko - Example - Deploy Counter
 
-This is an example of integration between [Hardhat V2](https://v2.hardhat.org/) and [Soko](https://github.com/VGLoic/soko-monorepo).
+This is an example of integration between [Hardhat V2](https://v2.hardhat.org/) and [Ethoko](https://github.com/VGLoic/ethoko-monorepo).
 
-The static compilation artifacts from `Soko` are used to deploy a simple `Counter` contract, see [Counter.sol](./src/Counter.sol).
+The static compilation artifacts from `Ethoko` are used to deploy a simple `Counter` contract, see [Counter.sol](./src/Counter.sol).
 
 The [Hardhat-Deploy](https://rocketh.dev/hardhat-deploy/) (`hardhat-deploy@0.12.4` i.e. `v0`) plugin is used to manage deployments.
 
@@ -24,34 +24,34 @@ Once the development is considered done, one can create the compilation artifact
 npx hardhat compile
 ```
 
-The compilation artifacts will be pushed to `Soko`, hence freezing them for later use.
+The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.
 
 ```bash
 # The tag 2026-02-04 is arbitrary, it can be any string identifying the release
-npx hardhat soko push --artifact-path ./artifacts --tag 2026-02-04
+npx hardhat ethoko push --artifact-path ./artifacts --tag 2026-02-04
 ```
 
 ### Deployment phase
 
 Later on, the same developper or another one wants to deploy the contracts for the `2026-02-04` release.
-It will first pull the compilation artifacts from `Soko`:
+It will first pull the compilation artifacts from `Ethoko`:
 
 ```bash
-npx hardhat soko pull
+npx hardhat ethoko pull
 ```
 
 Then, generates the typings in order to write a type-safe deployment script:
 
 ```bash
-npx hardhat soko typings
+npx hardhat ethoko typings
 ```
 
-Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-2026-02-04.ts](./deploy/00-deploy-counter-2026-02-04.ts), that will retrieve the compilation artifacts from `Soko` and deploy the contract accordingly.
+Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-2026-02-04.ts](./deploy/00-deploy-counter-2026-02-04.ts), that will retrieve the compilation artifacts from `Ethoko` and deploy the contract accordingly.
 
 ```ts
 import { HardhatRuntimeEnvironment } from "hardhat/types";
 import { DeployFunction } from "hardhat-deploy/types";
-import { project } from "../.soko-typings";
+import { project } from "../.ethoko-typings";
 
 const TARGET_RELEASE = "2026-02-04";
 
@@ -92,6 +92,6 @@ The deployment script can be executed using the Hardhat-Deploy plugin:
 npx hardhat deploy --no-compile --network <network-name>
 ```
 
-The `no-compile` flag is optional and here to highlight that no compilation is needed since we are working with static artifacts from `Soko`.
+The `no-compile` flag is optional and here to highlight that no compilation is needed since we are working with static artifacts from `Ethoko`.
 
 The deployment is by nature idempotent, this is guaranteed by the fact that the used artifacts are static and the Hardhat-Deploy plugin.
