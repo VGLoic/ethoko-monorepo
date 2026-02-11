@@ -7,7 +7,7 @@ import {
 
 // ----------------------------------------------------------------------------
 // we re-export the artifacts, so they are easily available from the alias
-// ######## Commented out as we will use Soko ########
+// ######## Commented out as we will use Ethoko ########
 // import * as artifacts from "../generated/artifacts/index.js";
 // export { artifacts };
 // ----------------------------------------------------------------------------

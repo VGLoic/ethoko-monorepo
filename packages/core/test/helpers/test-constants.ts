@@ -7,7 +7,7 @@ export const TEST_CONSTANTS = {
     ACCESS_KEY_ID: "test",
     SECRET_ACCESS_KEY: "test",
   },
-  BUCKET_NAME: "soko-test-bucket",
+  BUCKET_NAME: "ethoko-test-bucket",
   PROJECTS: {
     DEFAULT: "default-project",
     MULTI_ARTIFACT: "multi-artifact-project",
@@ -19,7 +19,7 @@ export const TEST_CONSTANTS = {
     LATEST: "latest",
   },
   PATHS: {
-    TEMP_DIR_PREFIX: "soko-test-",
+    TEMP_DIR_PREFIX: "ethoko-test-",
     FIXTURES: path.resolve(process.cwd(), "test/fixtures"),
     SAMPLE_ARTIFACT: {
       HARDHAT_V2_COUNTER: path.resolve(

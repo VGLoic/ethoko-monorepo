@@ -1,6 +1,6 @@
-# Contributing to Soko
+# Contributing to Ethoko
 
-Thank you for your interest in contributing to Soko! We welcome contributions from the community to help improve and enhance the project. Below are some guidelines to help you get started.
+Thank you for your interest in contributing to Ethoko! We welcome contributions from the community to help improve and enhance the project. Below are some guidelines to help you get started.
 
 ### Prerequisites
 
@@ -14,10 +14,10 @@ nvm use
 
 ### Apps and Packages
 
-- `apps/`: integration example of Soko with Hardhat v2, Hardhat v3 and Foundry with Soko,
-- `@soko/eslint-config`: `eslint` configurations,
-- `@soko/typescript-config`: `tsconfig.json`s used throughout the monorepo,
-- `@soko/hardhat-v2-soko`: Hardhat Plugin to integrate Soko with Hardhat V2.
+- `apps/`: integration example of Ethoko with Hardhat v2, Hardhat v3 and Foundry with Ethoko,
+- `@ethoko/eslint-config`: `eslint` configurations,
+- `@ethoko/typescript-config`: `tsconfig.json`s used throughout the monorepo,
+- `@ethoko/hardhat-v2-ethoko`: Hardhat Plugin to integrate Ethoko with Hardhat V2.
 
 ### Scripts
 
@@ -35,7 +35,7 @@ Check the available scripts in the root `package.json` file. The most used ones 
 We use [Changesets](https://github.com/changesets/changesets) to manage versioning and release notes.
 
 - Changes under `apps/` do not require a changeset (integration examples only).
-- Any change that impacts `@soko/hardhat-soko` or `@soko/hardhat-v2-soko` must include a changeset.
+- Any change that impacts `hardhat-ethoko` or `hardhat-v2-ethoko` must include a changeset.
 
 If a changeset is required, add one before opening your PR:
 

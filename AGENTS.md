@@ -1,15 +1,15 @@
-# Agent Guidelines for Soko Monorepo
+# Agent Guidelines for Ethoko Monorepo
 
-Guidelines for AI coding agents working in the Soko monorepo.
+Guidelines for AI coding agents working in the Ethoko monorepo.
 
 ## Project Overview
 
-Soko is a warehouse for smart-contract compilation artifacts. It enables teams to version, store, and share smart-contract compilation artifacts, decoupling compilation from deployment.
-
+Ethoko is a warehouse for smart-contract compilation artifacts. It enables teams to version, store, and share smart-contract compilation artifacts, decoupling compilation from deployment.
 **Monorepo Structure:**
 
-- `packages/core`: Core functionalities of the Soko CLI (main package)
-- `packages/hardhat-v2-soko`: Hardhat V2 plugin for Soko
+- `packages/core`: Core functionalities of the Ethoko CLI (main package)
+- `packages/hardhat-ethoko`: Hardhat V3 plugin for Ethoko
+- `packages/hardhat-v2-ethoko`: Hardhat V2 plugin for Ethoko
 - `packages/eslint-config`: Shared ESLint configurations
 - `packages/typescript-config`: Shared TypeScript configurations
 - `apps/*`: Integration examples with different frameworks (e.g., Foundry, Hardhat V2, Hardhat V3)
@@ -26,7 +26,7 @@ Soko is a warehouse for smart-contract compilation artifacts. It enables teams t
 # Root level
 pnpm build              # Build all packages
 pnpm test               # Run all tests
-pnpm test:e2e           # Run E2E tests for hardhat-soko
+pnpm test:e2e           # Run E2E tests for @ethoko/core
 pnpm lint               # Lint all packages
 pnpm format             # Format all packages
 pnpm check-types        # Typecheck all packages
@@ -52,7 +52,7 @@ pnpm vitest run -t "test name pattern"
 
 ### TypeScript Configuration
 
-**Base Config:** All packages extend `@soko/typescript-config/node-base.json`
+**Base Config:** All packages extend `@ethoko/typescript-config/node-base.json`
 
 Key compiler options:
 
@@ -93,7 +93,7 @@ import { S3BucketProvider } from "./storage-provider/s3-bucket-provider";
 
 ### ESLint Configuration
 
-**Base:** `@soko/eslint-config/base` which includes:
+**Base:** `@ethoko/eslint-config/base` which includes:
 
 - `@eslint/js` recommended rules
 - `typescript-eslint` recommended rules
@@ -143,7 +143,7 @@ export const LOG_COLORS = {
 **Use explicit types for public APIs:**
 
 ```typescript
-export type SokoHardhatUserConfig = {
+export type EthokoHardhatUserConfig = {
   project: string;
   pulledArtifactsPath?: string;
   // ...
@@ -153,12 +153,12 @@ export type SokoHardhatUserConfig = {
 **Prefer Zod schemas for runtime validation:**
 
 ```typescript
-const SokoHardhatConfig = z.object({
+const EthokoHardhatConfig = z.object({
   project: z.string().min(1),
-  pulledArtifactsPath: z.string().default(".soko"),
+  pulledArtifactsPath: z.string().default(".ethoko"),
 });
 
-const result = SokoHardhatConfig.safeParse(userInput);
+const result = EthokoHardhatConfig.safeParse(userInput);
 if (!result.success) {
   // Handle validation error
 }
@@ -176,7 +176,7 @@ type Result<T> =
 
 **Use custom error classes for CLI methods:**
 
-All CLI methods (@soko/core/src/cli-client/\*) MUST throw `CliError` class instance.
+All CLI methods (@ethoko/core/src/cli-client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {
@@ -241,7 +241,7 @@ await pull(
   localStorage,
   {
     force: optsParsingResult.data.force,
-    debug: sokoConfig.debug || optsParsingResult.data.debug,
+    debug: ethokoConfig.debug || optsParsingResult.data.debug,
   },
 )
   .then((result) => displayPullResults(optsParsingResult.data.project, result))
@@ -301,7 +301,7 @@ packages/core/
 
 - Commit messages should be concise and descriptive
 - Always run `pnpm lint` and `pnpm check-types` before committing
-- Generated files in `.soko/` and `.soko-typings/` are gitignored
+- Generated files in `.ethoko/` and `.ethoko-typings/` are gitignored
 - Build outputs (`dist/`, `.next/`, etc.) are gitignored
 
 ## Plan Mode

@@ -1,4 +1,4 @@
-# Contributing to @soko/soko-cli-client
+# Contributing to @ethoko/ethoko-cli-client
 
 ## Running Tests
 

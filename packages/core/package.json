@@ -1,12 +1,12 @@
 {
-  "name": "@soko/core",
+  "name": "@ethoko/core",
   "version": "0.1.0",
   "private": true,
-  "description": "Core utilities and libraries for Soko CLI and plugins.",
+  "description": "Core utilities and libraries for Ethoko CLI and plugins.",
   "author": "Loïc Vincent-Genod",
-  "homepage": "https://github.com/VGLoic/soko-monorepo",
+  "homepage": "https://github.com/VGLoic/ethoko-monorepo",
   "bugs": {
-    "url": "https://github.com/VGLoic/soko-monorepo/issues"
+    "url": "https://github.com/VGLoic/ethoko-monorepo/issues"
   },
   "keywords": [
     "web3",
@@ -67,8 +67,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@soko/eslint-config": "workspace:*",
-    "@soko/typescript-config": "workspace:*",
+    "@ethoko/eslint-config": "workspace:*",
+    "@ethoko/typescript-config": "workspace:*",
     "@types/node": "^22.1.0",
     "eslint": "^9.39.1",
     "tsup": "^8.2.4",

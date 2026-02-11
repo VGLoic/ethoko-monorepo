@@ -4,15 +4,15 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "soko-typings": "hardhat soko typings",
-    "lint": "pnpm run soko-typings && eslint . --max-warnings 0",
+    "ethoko-typings": "hardhat ethoko typings",
+    "lint": "pnpm run ethoko-typings && eslint . --max-warnings 0",
     "check-format": "forge fmt --check",
     "format-contracts": "forge fmt",
     "format": "forge fmt",
     "deploy-contracts": "hardhat deploy --no-compile",
     "hardhat": "hardhat",
     "compile": "forge build --skip test --skip script --force",
-    "check-types": "pnpm run soko-typings && tsc --noEmit"
+    "check-types": "pnpm run ethoko-typings && tsc --noEmit"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
@@ -22,8 +22,8 @@
     "@rocketh/deploy": "^0.18.0",
     "@rocketh/node": "^0.18.2",
     "@rocketh/read-execute": "^0.18.0",
-    "@soko/eslint-config": "workspace:*",
-    "@soko/hardhat-soko": "workspace:*",
+    "@ethoko/eslint-config": "workspace:*",
+    "@ethoko/hardhat-ethoko": "workspace:*",
     "@types/node": "^22.8.5",
     "dotenv": "^17.2.4",
     "eslint": "^9.39.1",

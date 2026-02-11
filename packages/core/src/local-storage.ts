@@ -2,9 +2,9 @@ import fs from "fs/promises";
 import { Stream } from "stream";
 import crypto from "crypto";
 import {
-  SokoArtifact,
-  SokoArtifactSchema,
-} from "./utils/artifacts-schemas/soko-v0";
+  EthokoArtifact,
+  EthokoArtifactSchema,
+} from "./utils/artifacts-schemas/ethoko-v0";
 
 /**
  * Local storage implementation for storing artifacts on the local filesystem.
@@ -152,13 +152,13 @@ export class LocalStorage {
   public async retrieveArtifactByTag(
     project: string,
     tag: string,
-  ): Promise<SokoArtifact> {
+  ): Promise<EthokoArtifact> {
     const artifactContent = await fs.readFile(
       `${this.rootPath}/${project}/tags/${tag}.json`,
       "utf-8",
     );
     const rawArtifact = JSON.parse(artifactContent);
-    return SokoArtifactSchema.parse(rawArtifact);
+    return EthokoArtifactSchema.parse(rawArtifact);
   }
 
   /**
@@ -170,13 +170,13 @@ export class LocalStorage {
   public async retrieveArtifactById(
     project: string,
     id: string,
-  ): Promise<SokoArtifact> {
+  ): Promise<EthokoArtifact> {
     const artifactContent = await fs.readFile(
       `${this.rootPath}/${project}/ids/${id}.json`,
       "utf-8",
     );
     const rawArtifact = JSON.parse(artifactContent);
-    return SokoArtifactSchema.parse(rawArtifact);
+    return EthokoArtifactSchema.parse(rawArtifact);
   }
 
   /**

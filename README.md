@@ -1,53 +1,51 @@
 <p align="center">
     <picture>
-        <source srcset="images/soko-logo-dark.svg" media="(prefers-color-scheme: dark)">
-        <source srcset="images/soko-logo-light.svg" media="(prefers-color-scheme: light)">
-        <img alt="Soko Logo" src="images/soko-logo-light.svg" />
+        <source srcset="images/ethoko-logo-dark.svg" media="(prefers-color-scheme: dark)">
+        <source srcset="images/ethoko-logo-light.svg" media="(prefers-color-scheme: light)">
+        <img alt="Ethoko Logo" src="images/ethoko-logo-light.svg" />
     </picture>
 <div>
 <p align="center">
     <strong>Warehouse for smart-contract compilation artifacts.</strong>
 </p>
 
-## What is Soko?
+## What is Ethoko?
 
-Soko enables teams to **store** and **share** versionned smart-contract compilation artifacts.  
+Ethoko enables teams to **store** and **share** versionned smart-contract compilation artifacts.  
 As such, it decouples the compilation process from the operation processes.
 
-Define the storage backend of your choice, push your compilation artifacts to Soko and pull them back when you need them, in a safe and transparent way.  
+Define the storage backend of your choice, push your compilation artifacts to Ethoko and pull them back when you need them, in a safe and transparent way.  
 
-Soko supports both Hardhat and Foundry development environments, compile once, operates safely.
+Ethoko supports both Hardhat and Foundry development environments, compile once, operates safely.
 
 <picture>
-    <source srcset="images/soko-workflow-dark.svg" media="(prefers-color-scheme: dark)">
-    <source srcset="images/soko-workflow-light.svg" media="(prefers-color-scheme: light)">
-    <img alt="Soko workflow" src="images/soko-workflow-light.svg" />
+    <source srcset="images/ethoko-workflow-dark.svg" media="(prefers-color-scheme: dark)">
+    <source srcset="images/ethoko-workflow-light.svg" media="(prefers-color-scheme: light)">
+    <img alt="Ethoko workflow" src="images/ethoko-workflow-light.svg" />
 </picture>
 
-## Hardhat Soko
+## Hardhat Ethoko
 
-Soko is for now available as a Hardhat plugin.
+Ethoko is for now available as a Hardhat plugin.
 
 It supports Hardhat v3, Hardhat v2 and Foundry as development environments.
 
-Soko stores compilation artifacts in your storage backend of choice, supporting AWS S3 and local filesystem storage providers.
-
-See the [Hardhat Soko documentation](packages/hardhat-soko/README.md)
+Ethoko stores compilation artifacts in your storage backend of choice, supporting AWS S3 and local filesystem storage providers.
+See the [Hardhat Ethoko documentation](packages/hardhat-ethoko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
 
-For Hardhat v2 projects, refer to the [Hardhat v2 Soko plugin documentation](packages/hardhat-v2-soko/README.md).
+For Hardhat v2 projects, refer to the [Hardhat v2 Ethoko plugin documentation](packages/hardhat-v2-ethoko/README.md).
 
 ### Development process
 
-Once compilation is done, push the artifacts to Soko under a specific tag
-
+Once compilation is done, push the artifacts to Ethoko under a specific tag
 <picture>
   <img alt="Push example" src="images/push-example.png">
 </picture>
 
 ### Operation processes
 
-Pull the project artifacts from Soko locally
+Pull the project artifacts from Ethoko locally
 
 <picture>
   <img alt="Pull example" src="images/pull-example.png">
@@ -67,7 +65,7 @@ Write scripts in a fully typed and transparent manner
 
 ```ts
 ...
-import { project } from "../.soko-typings";
+import { project } from "../.ethoko-typings";
 
 async function deployFoo() {
     // Get project utilities for the target tag
@@ -92,7 +90,7 @@ async function deployFoo() {
 
 ### Complete guide and examples
 
-Please refer to the [Hardhat Soko documentation](packages/hardhat-soko/README.md)
+Please refer to the [Hardhat Ethoko documentation](packages/hardhat-ethoko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
 
 Integration examples with Foundry or Hardhat can be found in the `apps/` folder:
@@ -104,21 +102,21 @@ Integration examples with Foundry or Hardhat can be found in the `apps/` folder:
 
 ## FAQ
 
-### When to use Soko?
+### When to use Ethoko?
 
-Use Soko when you want to
+Use Ethoko when you want to
 - decouple the compilation process from the operation processes,
 - organize and version your compilation artifacts within your team(s),
 - build scripts or automation on top of static compilation artifacts.
 
-### When NOT to use Soko?
+### When NOT to use Ethoko?
 
-Don't use Soko when
+Don't use Ethoko when
 
-- you are prototyping and iterating fast, Soko adds some friction that is not needed at this stage,
+- you are prototyping and iterating fast, Ethoko adds some friction that is not needed at this stage,
 - you don't care about transparency and reproducibility of your deployments or scripts,
 - you are perfectly fine with your process.
 
 ## Contributing
 
-Thank you for your interest in contributing to Soko! Please see our [contributing guidelines](CONTRIBUTING.md) for more information.
+Thank you for your interest in contributing to Ethoko! Please see our [contributing guidelines](CONTRIBUTING.md) for more information.

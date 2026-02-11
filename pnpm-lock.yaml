@@ -25,6 +25,12 @@ importers:
 
   apps/foundry_hardhat-deploy-v2:
     devDependencies:
+      '@ethoko/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ethoko/hardhat-ethoko':
+        specifier: workspace:*
+        version: link:../../packages/hardhat-ethoko
       '@nomicfoundation/hardhat-ignition':
         specifier: ^3.0.7
         version: 3.0.7(@nomicfoundation/hardhat-verify@3.0.9(hardhat@3.1.7))(hardhat@3.1.7)
@@ -46,12 +52,6 @@ importers:
       '@rocketh/read-execute':
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.8.3)(zod@4.3.6)
-      '@soko/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
-        specifier: workspace:*
-        version: link:../../packages/hardhat-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -85,6 +85,12 @@ importers:
 
   apps/hardhat-v2_hardhat-deploy-v0:
     devDependencies:
+      '@ethoko/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ethoko/hardhat-v2-ethoko':
+        specifier: workspace:*
+        version: link:../../packages/hardhat-v2-ethoko
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.16
         version: 0.15.16(@nomicfoundation/hardhat-verify@2.1.3(hardhat@2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)))(hardhat@2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2))
@@ -100,12 +106,6 @@ importers:
       '@nomicfoundation/ignition-core':
         specifier: ^0.15.15
         version: 0.15.15
-      '@soko/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@soko/hardhat-v2-soko':
-        specifier: workspace:*
-        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -133,6 +133,12 @@ importers:
 
   apps/hardhat-v2_hardhat-deploy-v0_external-lib:
     devDependencies:
+      '@ethoko/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ethoko/hardhat-v2-ethoko':
+        specifier: workspace:*
+        version: link:../../packages/hardhat-v2-ethoko
       '@nomicfoundation/hardhat-ignition':
         specifier: ^0.15.16
         version: 0.15.16(@nomicfoundation/hardhat-verify@2.1.3(hardhat@2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2)))(hardhat@2.28.0(ts-node@10.9.2(@types/node@22.15.3)(typescript@5.9.2))(typescript@5.9.2))
@@ -148,12 +154,6 @@ importers:
       '@nomicfoundation/ignition-core':
         specifier: ^0.15.15
         version: 0.15.15
-      '@soko/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@soko/hardhat-v2-soko':
-        specifier: workspace:*
-        version: link:../../packages/hardhat-v2-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -181,6 +181,12 @@ importers:
 
   apps/hardhat-v3_hardhat-deploy-v2:
     devDependencies:
+      '@ethoko/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@ethoko/hardhat-ethoko':
+        specifier: workspace:*
+        version: link:../../packages/hardhat-ethoko
       '@nomicfoundation/hardhat-ignition':
         specifier: ^3.0.7
         version: 3.0.7(@nomicfoundation/hardhat-verify@3.0.9(hardhat@3.1.7))(hardhat@3.1.7)
@@ -202,12 +208,6 @@ importers:
       '@rocketh/read-execute':
         specifier: ^0.18.0
         version: 0.18.0(typescript@5.8.3)(zod@4.3.6)
-      '@soko/eslint-config':
-        specifier: workspace:*
-        version: link:../../packages/eslint-config
-      '@soko/hardhat-soko':
-        specifier: workspace:*
-        version: link:../../packages/hardhat-soko
       '@types/node':
         specifier: ^22.8.5
         version: 22.15.3
@@ -266,10 +266,10 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@soko/eslint-config':
+      '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@soko/typescript-config':
+      '@ethoko/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
@@ -324,9 +324,9 @@ importers:
         specifier: ^8.50.0
         version: 8.50.0(eslint@9.39.1)(typescript@5.9.2)
 
-  packages/hardhat-soko:
+  packages/hardhat-ethoko:
     dependencies:
-      '@soko/core':
+      '@ethoko/core':
         specifier: workspace:*
         version: link:../core
       hardhat:
@@ -336,10 +336,10 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@soko/eslint-config':
+      '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@soko/typescript-config':
+      '@ethoko/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':
@@ -355,9 +355,9 @@ importers:
         specifier: 5.9.2
         version: 5.9.2
 
-  packages/hardhat-v2-soko:
+  packages/hardhat-v2-ethoko:
     dependencies:
-      '@soko/core':
+      '@ethoko/core':
         specifier: workspace:*
         version: link:../core
       hardhat:
@@ -367,10 +367,10 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
     devDependencies:
-      '@soko/eslint-config':
+      '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
-      '@soko/typescript-config':
+      '@ethoko/typescript-config':
         specifier: workspace:*
         version: link:../typescript-config
       '@types/node':

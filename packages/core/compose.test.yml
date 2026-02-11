@@ -1,6 +1,6 @@
 services:
   localstack:
-    container_name: soko-localstack
+    container_name: ethoko-localstack
     image: localstack/localstack:latest
     ports:
       - "4566:4566"

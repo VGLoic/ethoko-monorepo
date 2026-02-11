@@ -1,7 +1,0 @@
-{
-  "extends": "@soko/typescript-config/node-base.json",
-  "compilerOptions": {
-    "types": ["node"]
-  },
-  "include": ["src"]
-}

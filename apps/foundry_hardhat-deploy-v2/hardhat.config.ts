@@ -1,12 +1,12 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
-import HardhatSoko from "@soko/hardhat-soko";
+import HardhatEthoko from "@ethoko/hardhat-ethoko";
 import HardhatDeploy from "hardhat-deploy";
 import "dotenv/config";
 
 export default defineConfig({
-  plugins: [hardhatToolboxViemPlugin, HardhatSoko, HardhatDeploy],
-  soko: {
+  plugins: [hardhatToolboxViemPlugin, HardhatEthoko, HardhatDeploy],
+  ethoko: {
     project: "forge-counter",
     compilationOutputPath: "./out",
     storageConfiguration: {
