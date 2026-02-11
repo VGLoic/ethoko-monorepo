@@ -1,5 +1,5 @@
 {
-  "name": "ethoko",
+  "name": "ethoko-monorepo",
   "description": "Monorepo for Ethoko packages and applications, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
   "homepage": "https://github.com/VGLoic/ethoko-monorepo",
