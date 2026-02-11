@@ -1,30 +1,35 @@
 import fs from "fs/promises";
-import { afterEach, beforeEach, describe, expect, test } from "vitest";
+import path from "path";
+import { beforeEach, describe, expect, test } from "vitest";
 import { pull, push } from "@/cli-client/index";
-import { createTestS3Provider } from "@test/helpers/s3-provider-factory";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
+import {
+  createTestLocalStorageProvider,
+  createTestS3StorageProvider,
+} from "@test/helpers/storage-provider-factory";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
-import type { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
 import type { LocalStorage } from "@/local-storage";
+import { LocalStorageProvider, StorageProvider } from "@/storage-provider";
 
-describe("Push-Pull E2E Tests (S3 Storage)", () => {
-  let storageProvider: S3BucketProvider;
+describe.each([
+  ["Local Storage Provider", "local" as const, createTestLocalStorageProvider],
+  ["Amazon S3 Storage Provider", "s3" as const, createTestS3StorageProvider],
+])("Push-Pull E2E Tests (%s)", (_, providerType, createStorageProvider) => {
+  let storageProvider: StorageProvider;
   let localStorage: LocalStorage;
-  let localStorageCleanup: (() => Promise<void>) | null = null;
 
   beforeEach(async () => {
-    storageProvider = createTestS3Provider();
+    const providerSetup = await createStorageProvider();
+    storageProvider = providerSetup.storageProvider;
+
     const localStorageSetup = await createTestLocalStorage();
     localStorage = localStorageSetup.localStorage;
-    localStorageCleanup = localStorageSetup.cleanup;
-  });
 
-  afterEach(async () => {
-    if (localStorageCleanup) {
-      await localStorageCleanup();
-      localStorageCleanup = null;
-    }
+    return async () => {
+      await localStorageSetup.cleanup();
+      await providerSetup.cleanup();
+    };
   });
 
   test("push artifact [Hardhat V2 Counter] without tag → pull by ID", async () => {
@@ -360,4 +365,40 @@ describe("Push-Pull E2E Tests (S3 Storage)", () => {
     expect(remoteIds).toHaveLength(1);
     expect(remoteIds).toContain(id1);
   });
+
+  test.runIf(providerType === "local")(
+    "stores original content files",
+    async () => {
+      const localStorageProvider = storageProvider as LocalStorageProvider;
+      const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+      const artifactPath =
+        TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+
+      await localStorage.ensureProjectSetup(project);
+
+      const artifactId = await push(
+        artifactPath,
+        project,
+        undefined,
+        storageProvider,
+        {
+          force: false,
+          debug: false,
+        },
+      );
+
+      const providerRoot = localStorageProvider.getPath();
+      const storedBuildInfo = path.join(
+        providerRoot,
+        project,
+        "ids",
+        artifactId,
+        "original-content",
+        artifactPath.replace(/^\.\//, ""),
+      );
+
+      const stored = await fs.stat(storedBuildInfo);
+      expect(stored.isFile()).toBe(true);
+    },
+  );
 });
