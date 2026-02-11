@@ -36,7 +36,7 @@ Check the available scripts in the root `package.json` file. The most used ones 
 We use [Changesets](https://github.com/changesets/changesets) to manage versioning and release notes.
 
 - Changes under `apps/` do not require a changeset (integration examples only).
-- Any change that impacts `hardhat-ethoko` or `hardhat-v2-ethoko` must include a changeset.
+- Any change that impacts `@ethoko/core`, `hardhat-ethoko` or `hardhat-v2-ethoko` must include a changeset.
 
 If a changeset is required, add one before opening your PR:
 
