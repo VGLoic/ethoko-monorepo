@@ -1,12 +1,12 @@
 {
-  "name": "@soko/hardhat-v2-soko",
+  "name": "@ethoko/hardhat-v2-ethoko",
   "version": "0.2.0",
   "private": false,
-  "description": "Hardhat V2 plugin in order to interact with Soko, warehouse for smart contract compilation artifacts.",
+  "description": "Hardhat V2 plugin in order to interact with Ethoko, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
-  "homepage": "https://github.com/VGLoic/soko-monorepo",
+  "homepage": "https://github.com/VGLoic/ethoko-monorepo",
   "bugs": {
-    "url": "https://github.com/VGLoic/soko-monorepo/issues"
+    "url": "https://github.com/VGLoic/ethoko-monorepo/issues"
   },
   "keywords": [
     "web3",
@@ -41,15 +41,15 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "@soko/core": "workspace:*",
+    "@ethoko/core": "workspace:*",
     "zod": "^3.23.8"
   },
   "peerDependencies": {
     "hardhat": "^2.x"
   },
   "devDependencies": {
-    "@soko/eslint-config": "workspace:*",
-    "@soko/typescript-config": "workspace:*",
+    "@ethoko/eslint-config": "workspace:*",
+    "@ethoko/typescript-config": "workspace:*",
     "@types/node": "^22.1.0",
     "eslint": "^9.39.1",
     "tsup": "^8.2.4",

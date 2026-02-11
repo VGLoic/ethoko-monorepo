@@ -1,5 +1,5 @@
 {
-  "extends": "@soko/typescript-config/node-base.json",
+  "extends": "@ethoko/typescript-config/node-base.json",
   "compilerOptions": {
     "types": ["node"]
   },
