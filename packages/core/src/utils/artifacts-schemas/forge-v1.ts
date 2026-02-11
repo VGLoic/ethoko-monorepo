@@ -36,13 +36,15 @@ export const ForgeCompilerOutputWithBuildInfoOptionSchema = z.object({
   solcVersion: z.string().optional(),
 });
 
-export const ForgeCompilerDefaultOutputSchema = z.object({
-  id: z.string(),
-  // Mapping from contract "number" (e.g. "0", "1", etc.) to the source file path
-  // This is needed to resolve the source files when the output JSON doesn't include the source file paths.
-  source_id_to_path: z.record(z.string(), z.string()),
-  language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
-});
+export const ForgeCompilerDefaultOutputSchema = z
+  .object({
+    id: z.string(),
+    // Mapping from contract "number" (e.g. "0", "1", etc.) to the source file path
+    // This is needed to resolve the source files when the output JSON doesn't include the source file paths.
+    source_id_to_path: z.record(z.string(), z.string()),
+    language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
+  })
+  .strict();
 
 export const ForgeCompilerContractOutputSchema = z.object({
   abi: z.array(AbiItemSchema),

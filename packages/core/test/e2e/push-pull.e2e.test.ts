@@ -42,10 +42,10 @@ describe.each([
       "Hardhat V3 Counter",
       TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER,
     ],
-    // [
-    //   "Foundry Build Info Counter",
-    //   TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_BUILD_INFO_COUNTER,
-    // ],
+    [
+      "Foundry Build Info Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_BUILD_INFO_COUNTER,
+    ],
   ])("push artifact [%s] without tag → pull by ID", async (_, artifactPath) => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
@@ -58,7 +58,7 @@ describe.each([
       storageProvider,
       {
         force: false,
-        debug: false,
+        debug: true,
       },
     );
 
