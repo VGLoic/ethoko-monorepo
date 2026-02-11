@@ -31,9 +31,9 @@ build
 dist
 
 
-# Soko
-.soko/
-.soko-typings/
+# Ethoko
+.ethoko/
+.ethoko-typings/
 
 
 # Debug

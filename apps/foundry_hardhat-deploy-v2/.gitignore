@@ -22,6 +22,6 @@ docs/
 # Hardhat compilation (v2) support directory
 /cache
 
-# Soko files
-.soko/
-.soko-typings/
+# Ethoko files
+.ethoko/
+.ethoko-typings/
