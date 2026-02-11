@@ -1,10 +1,10 @@
 {
-  "name": "soko-monorepo",
-  "description": "Monorepo for Soko packages and applications, warehouse for smart contract compilation artifacts.",
+  "name": "ethoko",
+  "description": "Monorepo for Ethoko packages and applications, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
-  "homepage": "https://github.com/VGLoic/soko-monorepo",
+  "homepage": "https://github.com/VGLoic/ethoko-monorepo",
   "bugs": {
-    "url": "https://github.com/VGLoic/soko-monorepo/issues"
+    "url": "https://github.com/VGLoic/ethoko-monorepo/issues"
   },
   "private": true,
   "keywords": [
@@ -20,7 +20,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
-    "test:e2e": "pnpm --filter @soko/core test:e2e",
+    "test:e2e": "pnpm --filter @ethoko/core test:e2e",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "check-format": "turbo run check-format",
