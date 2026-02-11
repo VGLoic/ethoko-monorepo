@@ -3,7 +3,7 @@ import z from "zod";
 /**
  * The Soko Hardhat user configuration
  */
-export type SokoHardhatUserConfig = {
+export type EthokoHardhatUserConfig = {
   /**
    * The project name
    */
@@ -57,7 +57,7 @@ export type SokoHardhatUserConfig = {
   debug?: boolean;
 };
 
-export const SokoHardhatConfigSchema = z.object({
+export const EthokoHardhatConfigSchema = z.object({
   project: z.string().min(1),
   pulledArtifactsPath: z.string().default(".soko"),
   typingsPath: z.string().default(".soko-typings"),

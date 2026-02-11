@@ -9,7 +9,7 @@ import crypto from "crypto";
  * We finalize the hash, encode it as hex and returns the first 12 characters as the artifact ID.
  * @param output
  */
-export function deriveSokoArtifactId(
+export function deriveEthokoArtifactId(
   output: z.infer<typeof SolcJsonOutputSchema>,
 ): string {
   const hash = crypto.createHash("sha256");

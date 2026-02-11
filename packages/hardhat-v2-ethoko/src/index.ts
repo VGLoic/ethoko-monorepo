@@ -25,29 +25,29 @@ import {
   pull,
   push,
 } from "@soko/core/cli-client";
-import { SokoHardhatConfigSchema, SokoHardhatUserConfig } from "./config";
+import { EthokoHardhatConfigSchema, EthokoHardhatUserConfig } from "./config";
 
-export { type SokoHardhatUserConfig };
+export { type EthokoHardhatUserConfig };
 
 declare module "hardhat/types/config" {
   export interface HardhatUserConfig {
-    soko?: SokoHardhatUserConfig;
+    soko?: EthokoHardhatUserConfig;
   }
 
   export interface HardhatConfig {
-    soko?: z.infer<typeof SokoHardhatConfigSchema>;
+    soko?: z.infer<typeof EthokoHardhatConfigSchema>;
   }
 }
 
 extendConfig(
   (config: HardhatConfig, userConfig: Readonly<HardhatUserConfig>) => {
-    if (userConfig.soko === undefined) {
-      config.soko = undefined;
+    if (userConfig.ethoko === undefined) {
+      config.ethoko = undefined;
       return;
     }
 
-    const sokoParsingResult = SokoHardhatConfigSchema.safeParse(
-      userConfig.soko,
+    const sokoParsingResult = EthokoHardhatConfigSchema.safeParse(
+      userConfig.ethoko,
     );
 
     if (!sokoParsingResult.success) {
@@ -64,7 +64,7 @@ extendConfig(
       return;
     }
 
-    config.soko = sokoParsingResult.data;
+    config.ethoko = sokoParsingResult.data;
   },
 );
 
@@ -111,7 +111,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.soko;
+    const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
       cliError("Soko is not configured");
       process.exitCode = 1;
@@ -216,7 +216,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.soko;
+    const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
       cliError("Soko is not configured");
       process.exitCode = 1;
@@ -311,7 +311,7 @@ The typings will be generated in the configured typings path.
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.soko;
+    const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
       cliError("Soko is not configured");
       process.exitCode = 1;
@@ -367,7 +367,7 @@ sokoScope
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.soko;
+    const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
       cliError("Soko is not configured");
       process.exitCode = 1;
@@ -426,7 +426,7 @@ sokoScope
   )
   .addFlag("debug", "Enable debug mode")
   .setAction(async (opts, hre) => {
-    const sokoConfig = hre.config.soko;
+    const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
       cliError("Soko is not configured");
       process.exitCode = 1;

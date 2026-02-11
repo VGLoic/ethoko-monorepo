@@ -1,5 +1,5 @@
 import { Stream } from "stream";
-import { SokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
+import { EthokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;
@@ -8,7 +8,7 @@ export interface StorageProvider {
   hasArtifactById(project: string, id: string): Promise<boolean>;
   uploadArtifact(
     project: string,
-    artifact: SokoArtifact,
+    artifact: EthokoArtifact,
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void>;

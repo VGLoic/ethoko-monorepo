@@ -6,7 +6,7 @@ import { HardhatUserConfigValidationError } from "hardhat/types/hooks";
 /**
  * The Soko Hardhat user configuration
  */
-export type SokoHardhatUserConfig = {
+export type EthokoHardhatUserConfig = {
   /**
    * The project name
    */
@@ -60,7 +60,7 @@ export type SokoHardhatUserConfig = {
   debug?: boolean;
 };
 
-export const SokoHardhatConfigSchema = z.object({
+export const EthokoHardhatConfigSchema = z.object({
   project: z.string().min(1),
   pulledArtifactsPath: z.string().default(".soko"),
   typingsPath: z.string().default(".soko-typings"),
@@ -101,13 +101,13 @@ export const SokoHardhatConfigSchema = z.object({
 export async function validatePluginConfig(
   userConfig: HardhatUserConfig,
 ): Promise<HardhatUserConfigValidationError[]> {
-  if (userConfig.soko === undefined) {
+  if (userConfig.ethoko === undefined) {
     // If there's no networks field or it's invalid, we don't validate anything
     // in this plugin
     return [];
   }
 
-  const parsingResult = SokoHardhatConfigSchema.safeParse(userConfig.soko);
+  const parsingResult = EthokoHardhatConfigSchema.safeParse(userConfig.ethoko);
   if (!parsingResult.success) {
     const errors: HardhatUserConfigValidationError[] =
       parsingResult.error.errors.map((zodError) => ({
@@ -135,13 +135,13 @@ export async function resolvePluginConfig(
   userConfig: HardhatUserConfig,
   partiallyResolvedConfig: HardhatConfig,
 ): Promise<HardhatConfig> {
-  if (userConfig.soko === undefined) {
+  if (userConfig.ethoko === undefined) {
     // If there's no soko field, we return the config as is
     return partiallyResolvedConfig;
   }
 
   // Else, the parse is guaranteed to succeed, because the config is already validated in the
-  const sokoConfig = SokoHardhatConfigSchema.parse(userConfig.soko);
+  const sokoConfig = EthokoHardhatConfigSchema.parse(userConfig.ethoko);
 
   return {
     ...partiallyResolvedConfig,

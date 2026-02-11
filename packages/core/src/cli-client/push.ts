@@ -3,7 +3,7 @@ import { StepTracker } from "@/cli-ui/utils";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
-import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
+import { mapBuildInfoToEthokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
 import { BuildInfoPath } from "@/utils/build-info-path";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
@@ -70,11 +70,11 @@ export async function push(
   // Step 2: Parse the compilation artifact, mapping it to the Soko format
   steps.start("Analyzing compilation artifact...");
   const sokoArtifactParsingResult = await toAsyncResult(
-    mapBuildInfoToSokoArtifact(buildInfoPathResult.value, opts.debug),
+    mapBuildInfoToEthokoArtifact(buildInfoPathResult.value, opts.debug),
   );
   if (!sokoArtifactParsingResult.success) {
     steps.fail("Unable to handle the provided compilation artifact");
-    // @dev the mapBuildInfoToSokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
+    // @dev the mapBuildInfoToEthokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw sokoArtifactParsingResult.error;
   }
   const sokoArtifact = sokoArtifactParsingResult.value.artifact;

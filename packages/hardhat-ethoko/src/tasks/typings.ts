@@ -15,7 +15,7 @@ export default async function (
   taskArguments: TypingsTaskArguments,
   hre: HardhatRuntimeEnvironment,
 ) {
-  const sokoConfig = hre.config.soko;
+  const sokoConfig = hre.config.ethoko;
   if (!sokoConfig) {
     cliError("Soko is not configured");
     process.exitCode = 1;

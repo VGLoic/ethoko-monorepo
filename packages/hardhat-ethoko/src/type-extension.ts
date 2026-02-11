@@ -1,12 +1,12 @@
 import { z } from "zod";
-import { SokoHardhatConfigSchema, SokoHardhatUserConfig } from "./config";
+import { EthokoHardhatConfigSchema, EthokoHardhatUserConfig } from "./config";
 
 declare module "hardhat/types/config" {
   export interface HardhatUserConfig {
-    soko?: SokoHardhatUserConfig;
+    soko?: EthokoHardhatUserConfig;
   }
 
   export interface HardhatConfig {
-    soko?: z.infer<typeof SokoHardhatConfigSchema>;
+    soko?: z.infer<typeof EthokoHardhatConfigSchema>;
   }
 }

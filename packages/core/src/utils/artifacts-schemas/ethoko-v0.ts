@@ -30,7 +30,7 @@ const OriginSchema = z.discriminatedUnion("format", [
 /**
  * This is the schema for an artifact stored on Soko
  */
-export const SokoArtifactSchema = z.object({
+export const EthokoArtifactSchema = z.object({
   // ID derived by Soko
   id: z.string(),
   // Origin of the artifact, can be used to revert to the original compiler output JSON structure if needed.
@@ -40,4 +40,4 @@ export const SokoArtifactSchema = z.object({
   output: SolcJsonOutputSchema,
 });
 
-export type SokoArtifact = z.infer<typeof SokoArtifactSchema>;
+export type EthokoArtifact = z.infer<typeof EthokoArtifactSchema>;

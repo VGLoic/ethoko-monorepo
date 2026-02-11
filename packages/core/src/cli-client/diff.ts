@@ -5,8 +5,8 @@ import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
-import { mapBuildInfoToSokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
-import { SokoArtifact } from "@/utils/artifacts-schemas/ethoko-v0";
+import { mapBuildInfoToEthokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
+import { EthokoArtifact } from "@/utils/artifacts-schemas/ethoko-v0";
 import { BuildInfoPath } from "@/utils/build-info-path";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
@@ -191,11 +191,11 @@ export async function generateDiffWithTargetRelease(
   // Step 3: Parse the compilation artifact, mapping it to the Soko format
   steps.start("Analyzing compilation artifact...");
   const sokoArtifactParsingResult = await toAsyncResult(
-    mapBuildInfoToSokoArtifact(buildInfoPathResult.value, opts.debug),
+    mapBuildInfoToEthokoArtifact(buildInfoPathResult.value, opts.debug),
   );
   if (!sokoArtifactParsingResult.success) {
     steps.fail("Unable to handle the provided compilation artifact");
-    // @dev the mapBuildInfoToSokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
+    // @dev the mapBuildInfoToEthokoArtifact function throws an Error with a user-friendly message, so we can directly re-throw it here without wrapping it in another error or modifying the message
     throw sokoArtifactParsingResult.error;
   }
   const sokoArtifact = sokoArtifactParsingResult.value.artifact;
@@ -279,7 +279,7 @@ export async function generateDiffWithTargetRelease(
 }
 
 async function generateContractHashes(
-  artifact: SokoArtifact,
+  artifact: EthokoArtifact,
 ): Promise<Map<string, string>> {
   const contractHashes = new Map<string, string>();
   for (const contractPath in artifact.output.contracts) {
@@ -299,7 +299,7 @@ async function generateContractHashes(
   return contractHashes;
 }
 
-type Contract = SokoArtifact["output"]["contracts"][string][string];
+type Contract = EthokoArtifact["output"]["contracts"][string][string];
 function hashContract(contract: Contract): string {
   const hash = createHash("sha256");
 

@@ -4,7 +4,7 @@ import { createReadStream, Dirent } from "fs";
 import { Stream } from "stream";
 import { styleText } from "node:util";
 import { LOG_COLORS } from "@/cli-ui/utils";
-import { SokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
+import { EthokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
 import { StorageProvider } from "./storage-provider.interface";
 
 type LocalStorageProviderConfig = {
@@ -54,7 +54,7 @@ export class LocalStorageProvider implements StorageProvider {
 
   public async uploadArtifact(
     project: string,
-    artifact: SokoArtifact,
+    artifact: EthokoArtifact,
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void> {

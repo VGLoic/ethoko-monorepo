@@ -1,6 +1,6 @@
 import {
-  SokoArtifact,
-  SokoArtifactSchema,
+  EthokoArtifact,
+  EthokoArtifactSchema,
 } from "@/utils/artifacts-schemas/ethoko-v0";
 import fs from "fs/promises";
 import { CliError } from "../error";
@@ -12,7 +12,7 @@ import {
   ForgeCompilerDefaultOutputSchema,
   ForgeCompilerOutputWithBuildInfoOptionSchema,
 } from "@/utils/artifacts-schemas/forge-v1";
-import { deriveSokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
+import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import z from "zod";
 import path from "path";
 import { SettingsSchema } from "@/utils/artifacts-schemas/solc-v0.8.33/input-json";
@@ -27,25 +27,25 @@ import {
 } from "@/utils/artifacts-schemas/hardhat-v3";
 
 /**
- * Given a path to a candidate build info JSON file, try to output a SokoArtifact.
+ * Given a path to a candidate build info JSON file, try to output a EthokoArtifact.
  *
  * This function is meant to be used in other CLI client methods, since it throws a CliError, it can be used without any wrapping, i.e.
  * ```ts
- * const {artifact, originalContentPaths} = await mapBuildInfoToSokoArtifact(buildInfoPath);
+ * const {artifact, originalContentPaths} = await mapBuildInfoToEthokoArtifact(buildInfoPath);
  * ```
  *
  * The format of the build info has already been detected previously by the caller.
- * According to the detected format, this function will fully satisfy the build info content, validate it and map it to the SokoArtifact format.
+ * According to the detected format, this function will fully satisfy the build info content, validate it and map it to the EthokoArtifact format.
  *
- * @param buildInfoPath The candidate build info path to parse and map to a SokoArtifact, it contains both the format and the path to the build info JSON files
+ * @param buildInfoPath The candidate build info path to parse and map to a EthokoArtifact, it contains both the format and the path to the build info JSON files
  * @param debug Whether to enable debug logging
- * @return The SokoArtifact mapped from the build info JSON file and the paths to the original content files
+ * @return The EthokoArtifact mapped from the build info JSON file and the paths to the original content files
  * @throws A CliError if the file cannot be parsed, if the build info is not valid or if the mapping fails
  */
-export async function mapBuildInfoToSokoArtifact(
+export async function mapBuildInfoToEthokoArtifact(
   buildInfoPath: BuildInfoPath,
   debug: boolean,
-): Promise<{ artifact: SokoArtifact; originalContentPaths: string[] }> {
+): Promise<{ artifact: EthokoArtifact; originalContentPaths: string[] }> {
   if (buildInfoPath.format === "hardhat-v3") {
     // @dev readJsonFile throws a CliError so it is safe to use it directly without wrapping it in a try catch block
     const inputJsonContent = await readJsonFile(
@@ -100,7 +100,7 @@ export async function mapBuildInfoToSokoArtifact(
 
     return {
       artifact: {
-        id: deriveSokoArtifactId(outputParsingResult.data.output),
+        id: deriveEthokoArtifactId(outputParsingResult.data.output),
         origin: {
           id: inputParsingResult.data.id,
           format: inputParsingResult.data._format,
@@ -121,7 +121,7 @@ export async function mapBuildInfoToSokoArtifact(
     debug,
   );
 
-  // We validate the content and map it to the SokoArtifact format based on the previously detected format
+  // We validate the content and map it to the EthokoArtifact format based on the previously detected format
 
   if (buildInfoPath.format === "hardhat-v2") {
     const parsingResult = HardhatV2CompilerOutputSchema.safeParse(jsonContent);
@@ -137,7 +137,7 @@ export async function mapBuildInfoToSokoArtifact(
     }
     return {
       artifact: {
-        id: deriveSokoArtifactId(parsingResult.data.output),
+        id: deriveEthokoArtifactId(parsingResult.data.output),
         origin: {
           id: parsingResult.data.id,
           format: parsingResult.data._format,
@@ -165,7 +165,7 @@ export async function mapBuildInfoToSokoArtifact(
     }
     return {
       artifact: {
-        id: deriveSokoArtifactId(parsingResult.data.output),
+        id: deriveEthokoArtifactId(parsingResult.data.output),
         origin: {
           id: parsingResult.data.id,
           format: parsingResult.data._format,
@@ -193,7 +193,7 @@ export async function mapBuildInfoToSokoArtifact(
     }
     // The mapping is not straightforward as we need to reconstruct the input and output from the scattered contract pieces
     const mappingResult = await toAsyncResult(
-      forgeDefaultBuildInfoToSokoArtifact(
+      forgeDefaultBuildInfoToEthokoArtifact(
         buildInfoPath.path,
         parsingResult.data,
         debug,
@@ -257,22 +257,22 @@ async function readJsonFile(
  *   - <contract-name>.json (contains the output for the contract)
  * - ...
  *
- * To reconstruct the SokoArtifact, we need to read the build info file, then read all the contract output files, and reconstruct the input and output in the SokoArtifact format.
+ * To reconstruct the EthokoArtifact, we need to read the build info file, then read all the contract output files, and reconstruct the input and output in the EthokoArtifact format.
  *
  * For this:
  * - we place ourselves in the root folder (one level above the build-info folder),
  * - we recursively look for all the .json files (except the one in the build-info folder), each of them corresponds to a contract output, for each of them:
  *  - we look for the .json files, each of them corresponds to a contract output, for each of them:
  *    - we parse the content, we reconstruct the output and input parts
- * At the end, we compare the contracts we explored with the mapping in the build info file, if they match, we can be confident that we reconstructed the input and output correctly, and we can return the SokoArtifact.
+ * At the end, we compare the contracts we explored with the mapping in the build info file, if they match, we can be confident that we reconstructed the input and output correctly, and we can return the EthokoArtifact.
  * @param buildInfoPath The path to the Forge build info JSON file (the one in the build-info folder)
  * @param forgeBuildInfo The parsed content of the Forge build info JSON file
  */
-async function forgeDefaultBuildInfoToSokoArtifact(
+async function forgeDefaultBuildInfoToEthokoArtifact(
   buildInfoPath: string,
   forgeBuildInfo: z.infer<typeof ForgeCompilerDefaultOutputSchema>,
   debug: boolean,
-): Promise<{ artifact: SokoArtifact; additionalArtifactsPaths: string[] }> {
+): Promise<{ artifact: EthokoArtifact; additionalArtifactsPaths: string[] }> {
   const expectedContractPaths = new Set(
     Object.values(forgeBuildInfo.source_id_to_path),
   );
@@ -400,12 +400,12 @@ async function forgeDefaultBuildInfoToSokoArtifact(
         legacyAssembly: undefined, // not handled
         bytecode: {
           ...contract.bytecode,
-          // The bytecode in the default Forge output is 0x-prefixed, but the SokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
+          // The bytecode in the default Forge output is 0x-prefixed, but the EthokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
           object: strip0xPrefix(contract.bytecode.object),
         },
         deployedBytecode: {
           ...contract.deployedBytecode,
-          // The bytecode in the default Forge output is 0x-prefixed, but the SokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
+          // The bytecode in the default Forge output is 0x-prefixed, but the EthokoArtifact format expects it to be non-prefixed, so we strip the 0x prefix here.
           object: strip0xPrefix(contract.deployedBytecode.object),
         },
         methodIdentifiers: contract.methodIdentifiers,
@@ -436,7 +436,7 @@ async function forgeDefaultBuildInfoToSokoArtifact(
   } satisfies z.infer<typeof SolcJsonOutputSchema>;
 
   const sokoArtifact = {
-    id: deriveSokoArtifactId(output),
+    id: deriveEthokoArtifactId(output),
     solcLongVersion,
     origin: {
       id: forgeBuildInfo.id,
@@ -446,10 +446,10 @@ async function forgeDefaultBuildInfoToSokoArtifact(
     output,
   };
 
-  const sokoArtifactResult = SokoArtifactSchema.safeParse(sokoArtifact);
+  const sokoArtifactResult = EthokoArtifactSchema.safeParse(sokoArtifact);
   if (!sokoArtifactResult.success) {
     throw new Error(
-      `Failed to parse the reconstructed SokoArtifact from the Forge build info default format. Error: ${sokoArtifactResult.error}`,
+      `Failed to parse the reconstructed EthokoArtifact from the Forge build info default format. Error: ${sokoArtifactResult.error}`,
     );
   }
 
