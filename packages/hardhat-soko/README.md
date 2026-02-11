@@ -194,37 +194,40 @@ In case there are no projects or the projects have not been pulled, the generate
 
 The full compilation artifact of a tag can be retrieved using the `project("doubtful-project").tag("2026-02-02").getCompilationArtifact` method.
 
-### Example with hardhat-deploy v0
+### Example with hardhat-deploy v2
 
 An example can be made with the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin for deploying a released smart contract.
 
 The advantage of this deployment is that it only works with frozen artifacts. New development will never have an impact on it.
 
 ```ts
-import { HardhatRuntimeEnvironment } from "hardhat/types";
-import { DeployFunction } from "hardhat-deploy/types";
+import { deployScript } from "../rocketh/deploy.js";
 import { project } from "../.soko-typings";
 
-const deployMyExample: DeployFunction = async function (
-  hre: HardhatRuntimeEnvironment,
-) {
-  const { deployer } = await hre.getNamedAccounts();
+export default deployScript(
+  async ({ deploy, namedAccounts }) => {
+    const { deployer } = namedAccounts;
 
-  const fooArtifact = await project("doubtful-project")
-    .contract("src/Example.sol:Foo")
-    .getArtifact("2026-02-02");
+    const fooArtifact = await project("doubtful-project")
+      .tag("2026-02-04")
+      .getContractArtifact("src/Foo.sol:Foo");
 
-  await hre.deployments.deploy(`Foo@2026-02-02`, {
-    contract: {
-      abi: fooArtifact.abi,
-      bytecode: fooArtifact.evm.bytecode.object,
-      metadata: fooArtifact.metadata,
-    },
-    from: deployer,
-  });
-};
+    if (!fooArtifact.metadata)
+      throw new Error("Metadata is required for hardhat-deploy v2");
 
-export default deployMyExample;
+    await deploy(`Foo@2026-02-04`, {
+      account: deployer,
+      artifact: {
+        // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        abi: fooArtifact.abi as any,
+        bytecode: `0x${fooArtifact.evm.bytecode.object}`,
+        metadata: fooArtifact.metadata,
+      },
+    });
+  },
+  { tags: ["Foo", "Foo_deploy", "2026-02-04"] },
+);
 ```
 
 ## Storage configurations
@@ -274,12 +277,7 @@ Use this provider when you want to keep the setup light and local while still tr
 
 ## Integration examples
 
-The monorepo contains example projects using different toolchains:
-
-- [hardhat-v3_hardhat-deploy-v2](apps/hardhat-v3_hardhat-deploy-v2/README.md): compile a contract using Hardhat v3, deploy using Hardhat Deploy v2,
-- [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Foundry, deploy using Hardhat Deploy v2,
-- [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat v2, deploy using Hardhat Deploy v0.12,
-- [hardhat-v2_hardhat-deploy-v0_external-lib](../apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat v2, deploy using Hardhat Deploy v0.12.
+The monorepo contains [integration examples](https://github.com/VGLoic/soko-monorepo/tree/main/apps) that can be used as references.
 
 ## Contributing
 

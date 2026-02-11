@@ -11,13 +11,12 @@
 
 ## What is Soko?
 
-> [!NOTE]
-> Work in progress.
+Soko enables teams to **store** and **share** versionned smart-contract compilation artifacts.  
+As such, it decouples the compilation process from the operation processes.
 
-Soko enables teams to **version**, **store** and **share** smart-contract compilation artifacts.  
-As such, it decouples the compilation process from the deployment process.
+Define the storage backend of your choice, push your compilation artifacts to Soko and pull them back when you need them, in a safe and transparent way.  
 
-Soko supports both Hardhat and Foundry development environments, compile once, deploy safely.
+Soko supports both Hardhat and Foundry development environments, compile once, operates safely.
 
 <picture>
     <source srcset="images/soko-workflow-dark.svg" media="(prefers-color-scheme: dark)">
@@ -29,12 +28,14 @@ Soko supports both Hardhat and Foundry development environments, compile once, d
 
 Soko is for now available as a Hardhat plugin.
 
-It supports Hardhat V3, Hardhat V2 and Foundry as development environments.
+It supports Hardhat v3, Hardhat v2 and Foundry as development environments.
 
 Soko stores compilation artifacts in your storage backend of choice, supporting AWS S3 and local filesystem storage providers.
 
 See the [Hardhat Soko documentation](packages/hardhat-soko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
+
+For Hardhat v2 projects, refer to the [Hardhat v2 Soko plugin documentation](packages/hardhat-v2-soko/README.md).
 
 ### Development process
 
@@ -44,7 +45,7 @@ Once compilation is done, push the artifacts to Soko under a specific tag
   <img alt="Push example" src="images/push-example.png">
 </picture>
 
-### Deployment process
+### Operation processes
 
 Pull the project artifacts from Soko locally
 
@@ -54,7 +55,7 @@ Pull the project artifacts from Soko locally
 
 <br />
 
-Generate TypeScript typings for the pulled artifacts
+In Typescript environment, generate typings for the pulled artifacts
 
 <picture>
   <img alt="Typings example" src="images/typings-example.png">
@@ -94,7 +95,7 @@ async function deployFoo() {
 Please refer to the [Hardhat Soko documentation](packages/hardhat-soko/README.md)
 for a complete guide of the plugin, its commands, configuration options and features.
 
-Examples of projects using Hardhat Soko can be found in the `apps/` folder:
+Integration examples with Foundry or Hardhat can be found in the `apps/` folder:
 
 - [hardhat-v3_hardhat-deploy-v2](apps/hardhat-v3_hardhat-deploy-v2/README.md): compile a contract using Hardhat v3, deploy using Hardhat Deploy v2,
 - [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Foundry, deploy using Hardhat Deploy v2,
@@ -106,17 +107,17 @@ Examples of projects using Hardhat Soko can be found in the `apps/` folder:
 ### When to use Soko?
 
 Use Soko when you want to
-
-- **decouple compilation from deployment**: development and compilation is in a different phase than deployment and maintenance,
-- **safely and transparently deploy** smart-contracts using static compilation artifacts, no bad surprises,
-- **collaborate easily** across your team by sharing ABIs and compilation artifacts, no compile into copy-pasting wrong ABIs.
+- decouple the compilation process from the operation processes,
+- organize and version your compilation artifacts within your team(s),
+- build scripts or automation on top of static compilation artifacts.
 
 ### When NOT to use Soko?
 
 Don't use Soko when
 
 - you are prototyping and iterating fast, Soko adds some friction that is not needed at this stage,
-- you don't care about transparency and reproducibility of your deployments or scripts.
+- you don't care about transparency and reproducibility of your deployments or scripts,
+- you are perfectly fine with your process.
 
 ## Contributing
 

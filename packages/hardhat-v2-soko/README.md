@@ -277,12 +277,7 @@ Use this provider when you want to keep the setup light and local while still tr
 
 ## Integration examples
 
-The monorepo contains example projects using different toolchains:
-
-- [hardhat-v3_hardhat-deploy-v2](apps/hardhat-v3_hardhat-deploy-v2/README.md): compile a contract using Hardhat v3, deploy using Hardhat Deploy v2,
-- [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Foundry, deploy using Hardhat Deploy v2,
-- [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat v2, deploy using Hardhat Deploy v0.12,
-- [hardhat-v2_hardhat-deploy-v0_external-lib](../apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat v2, deploy using Hardhat Deploy v0.12.
+The monorepo contains [integration examples](https://github.com/VGLoic/soko-monorepo/tree/main/apps) that can be used as references.
 
 ## Contributing
 
