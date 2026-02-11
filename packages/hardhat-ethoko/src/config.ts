@@ -136,7 +136,7 @@ export async function resolvePluginConfig(
   partiallyResolvedConfig: HardhatConfig,
 ): Promise<HardhatConfig> {
   if (userConfig.ethoko === undefined) {
-    // If there's no soko field, we return the config as is
+    // If there's no ethoko field, we return the config as is
     return partiallyResolvedConfig;
   }
 

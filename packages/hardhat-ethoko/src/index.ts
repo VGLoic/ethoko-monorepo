@@ -11,7 +11,7 @@ const hardhatSoko: HardhatPlugin = {
     config: () => import("./hooks/config.js") as any,
   },
   tasks: [
-    emptyTask("soko", "Soko plugin tasks").build(),
+    emptyTask("ethoko", "Ethoko plugin tasks").build(),
     task(["soko", "pull"], "Pull one or many artifacts of a project.")
       .addOption({
         name: "id",

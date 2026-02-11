@@ -21,7 +21,7 @@ export default async function (
 ) {
   const sokoConfig = hre.config.ethoko;
   if (!sokoConfig) {
-    cliError("Soko is not configured");
+    cliError("Ethoko is not configured");
     process.exitCode = 1;
     return;
   }

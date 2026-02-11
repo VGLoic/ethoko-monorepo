@@ -54,7 +54,7 @@ extendConfig(
       console.error(
         styleText(
           LOG_COLORS.warn,
-          `Configuration for Soko has been found but seems invalid. Please consult the below errors: \n${sokoParsingResult.error.errors.map(
+          `Configuration for Ethoko has been found but seems invalid. Please consult the below errors: \n${sokoParsingResult.error.errors.map(
             (error) => {
               return `  - ${error.path.join(".")}: ${error.message} (${error.code})`;
             },
@@ -68,7 +68,7 @@ extendConfig(
   },
 );
 
-const sokoScope = scope("soko", "Soko Hardhat tasks");
+const sokoScope = scope("ethoko", "Ethoko Hardhat tasks");
 
 sokoScope
   .task("pull", "Pull one or many artifacts of a project.")
@@ -78,15 +78,15 @@ sokoScope
 By default, the project is the one configured in the Hardhat configuration.
 
 One artifact can be pulled by tag
-  npx hardhat soko pull --tag v1.2.3
+  npx hardhat ethoko pull --tag v1.2.3
 or by ID
-  npx hardhat soko pull --id dcauXtavGLxC
+  npx hardhat ethoko pull --id dcauXtavGLxC
 
 All artifacts for a project can be downloaded
-  npx hardhat soko pull
+  npx hardhat ethoko pull
 
 A different project can be specified
-  npx hardhat soko pull --project another-project
+  npx hardhat ethoko pull --project another-project
 
 Already downloaded artifacts are not downloaded again by default, enable the force flag to force the download.
 
@@ -113,7 +113,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
   .setAction(async (opts, hre) => {
     const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
-      cliError("Soko is not configured");
+      cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
     }
@@ -197,13 +197,13 @@ sokoScope
     `Push a compilation artifact.
 
 The artifact will be stored in the configured project. An identifier is derived for the artifact.
-  npx hardhat soko push --artifact-path ./path/to-my-artifact/artifact.json
+  npx hardhat ethoko push --artifact-path ./path/to-my-artifact/artifact.json
 
 If a compilationOutputPath is configured, the --artifact-path flag is optional:
-  npx hardhat soko push --tag v1.2.3
+  npx hardhat ethoko push --tag v1.2.3
 
 If a tag is provided, the artifact will also be identified by it:
-  npx hardhat soko push --artifact-path ./path/to-my-artifact/artifact.json --tag v1.2.3
+  npx hardhat ethoko push --artifact-path ./path/to-my-artifact/artifact.json --tag v1.2.3
 
 If the provided tag already exists in the storage, the push will be aborted unless the force flag is enabled.
 `,
@@ -218,7 +218,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
   .setAction(async (opts, hre) => {
     const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
-      cliError("Soko is not configured");
+      cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
     }
@@ -313,7 +313,7 @@ The typings will be generated in the configured typings path.
   .setAction(async (opts, hre) => {
     const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
-      cliError("Soko is not configured");
+      cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
     }
@@ -369,7 +369,7 @@ sokoScope
   .setAction(async (opts, hre) => {
     const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
-      cliError("Soko is not configured");
+      cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
     }
@@ -428,7 +428,7 @@ sokoScope
   .setAction(async (opts, hre) => {
     const sokoConfig = hre.config.ethoko;
     if (!sokoConfig) {
-      cliError("Soko is not configured");
+      cliError("Ethoko is not configured");
       process.exitCode = 1;
       return;
     }
