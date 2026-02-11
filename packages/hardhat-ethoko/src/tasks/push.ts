@@ -89,7 +89,11 @@ export default async function (
     },
   )
     .then((result) =>
-      displayPushResult(ethokoConfig.project, optsParsingResult.data.tag, result),
+      displayPushResult(
+        ethokoConfig.project,
+        optsParsingResult.data.tag,
+        result,
+      ),
     )
     .catch((err) => {
       if (err instanceof CliError) {

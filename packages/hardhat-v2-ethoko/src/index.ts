@@ -156,7 +156,8 @@ Already downloaded artifacts are not downloaded again by default, enable the for
             bucketName: ethokoConfig.storageConfiguration.awsBucketName,
             bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
             accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+            secretAccessKey:
+              ethokoConfig.storageConfiguration.awsSecretAccessKey,
             role: ethokoConfig.storageConfiguration.awsRole,
             debug: optsParsingResult.data.debug,
           })
@@ -262,7 +263,8 @@ If the provided tag already exists in the storage, the push will be aborted unle
             bucketName: ethokoConfig.storageConfiguration.awsBucketName,
             bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
             accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
+            secretAccessKey:
+              ethokoConfig.storageConfiguration.awsSecretAccessKey,
             role: ethokoConfig.storageConfiguration.awsRole,
             debug: optsParsingResult.data.debug,
           })
@@ -462,7 +464,8 @@ ethokoScope
     }
 
     const finalArtifactPath =
-      paramParsingResult.data.artifactPath || ethokoConfig.compilationOutputPath;
+      paramParsingResult.data.artifactPath ||
+      ethokoConfig.compilationOutputPath;
 
     if (!finalArtifactPath) {
       cliError(

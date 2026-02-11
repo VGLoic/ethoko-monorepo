@@ -231,7 +231,10 @@ async function writeSummaries(
     }
   >,
 ): Promise<void> {
-  await fs.writeFile(`${ethokoTypingsPath}/summary-exports.ts`, generatedSummary);
+  await fs.writeFile(
+    `${ethokoTypingsPath}/summary-exports.ts`,
+    generatedSummary,
+  );
 
   await fs.writeFile(
     `${ethokoTypingsPath}/summary.json`,
