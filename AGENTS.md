@@ -26,7 +26,7 @@ Ethoko is a warehouse for smart-contract compilation artifacts. It enables teams
 # Root level
 pnpm build              # Build all packages
 pnpm test               # Run all tests
-pnpm test:e2e           # Run E2E tests for ethoko-core
+pnpm test:e2e           # Run E2E tests for @ethoko/core
 pnpm lint               # Lint all packages
 pnpm format             # Format all packages
 pnpm check-types        # Typecheck all packages
@@ -176,7 +176,7 @@ type Result<T> =
 
 **Use custom error classes for CLI methods:**
 
-All CLI methods (ethoko-core/src/cli-client/\*) MUST throw `CliError` class instance.
+All CLI methods (packages/core/src/cli-client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {

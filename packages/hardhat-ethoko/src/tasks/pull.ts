@@ -4,13 +4,13 @@ import {
   boxHeader,
   error as cliError,
   displayPullResults,
-} from "ethoko-core/cli-ui";
-import { CliError, pull } from "ethoko-core/cli-client";
+} from "@ethoko/core/cli-ui";
+import { CliError, pull } from "@ethoko/core/cli-client";
 import {
   LocalStorageProvider,
   S3BucketProvider,
-} from "ethoko-core/storage-provider";
-import { LocalStorage } from "ethoko-core/local-storage";
+} from "@ethoko/core/storage-provider";
+import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface PullTaskArguments {
   id?: string;

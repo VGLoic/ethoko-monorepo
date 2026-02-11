@@ -1,11 +1,11 @@
 import { HardhatRuntimeEnvironment } from "hardhat/types/hre";
 import { z } from "zod";
-import { boxHeader, error as cliError } from "ethoko-core/cli-ui";
+import { boxHeader, error as cliError } from "@ethoko/core/cli-ui";
 import {
   CliError,
   generateArtifactsSummariesAndTypings,
-} from "ethoko-core/cli-client";
-import { LocalStorage } from "ethoko-core/local-storage";
+} from "@ethoko/core/cli-client";
+import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface TypingsTaskArguments {
   debug?: boolean;

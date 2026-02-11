@@ -1,5 +1,5 @@
 {
-  "name": "ethoko-core",
+  "name": "@ethoko/core",
   "version": "0.1.0",
   "private": false,
   "description": "Core utilities and libraries for Ethoko CLI and plugins.",

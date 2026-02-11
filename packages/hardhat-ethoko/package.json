@@ -1,6 +1,6 @@
 {
   "name": "hardhat-ethoko",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": false,
   "description": "Hardhat V3 plugin in order to interact with Ethoko, warehouse for smart contract compilation artifacts.",
   "author": "Loïc Vincent-Genod",
@@ -46,7 +46,7 @@
     "check-types": "tsc --noEmit"
   },
   "dependencies": {
-    "ethoko-core": "workspace:*",
+    "@ethoko/core": "workspace:*",
     "zod": "^3.23.8"
   },
   "peerDependencies": {

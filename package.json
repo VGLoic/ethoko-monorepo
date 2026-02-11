@@ -20,7 +20,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "test": "turbo run test",
-    "test:e2e": "pnpm --filter ethoko-core test:e2e",
+    "test:e2e": "pnpm --filter @ethoko/core test:e2e",
     "lint": "turbo run lint",
     "format": "turbo run format",
     "check-format": "turbo run check-format",

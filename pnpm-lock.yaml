@@ -326,7 +326,7 @@ importers:
 
   packages/hardhat-ethoko:
     dependencies:
-      'ethoko-core':
+      '@ethoko/core':
         specifier: workspace:*
         version: link:../core
       hardhat:
@@ -357,7 +357,7 @@ importers:
 
   packages/hardhat-v2-ethoko:
     dependencies:
-      'ethoko-core':
+      '@ethoko/core':
         specifier: workspace:*
         version: link:../core
       hardhat:
