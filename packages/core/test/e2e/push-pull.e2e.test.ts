@@ -32,117 +32,22 @@ describe.each([
     };
   });
 
-  test("push artifact [Hardhat V2 Counter] without tag → pull by ID", async () => {
+  test.each([
+    [
+      "Hardhat V2 Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER,
+    ],
+    ["Foundry Counter", TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER],
+    [
+      "Hardhat V3 Counter",
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER,
+    ],
+    // [
+    //   "Foundry Build Info Counter",
+    //   TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_BUILD_INFO_COUNTER,
+    // ],
+  ])("push artifact [%s] without tag → pull by ID", async (_, artifactPath) => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
-
-    await localStorage.ensureProjectSetup(project);
-
-    const artifactId = await push(
-      artifactPath,
-      project,
-      undefined,
-      storageProvider,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(artifactId).toBeTruthy();
-    expect(artifactId).toHaveLength(12);
-
-    const hasArtifact = await storageProvider.hasArtifactById(
-      project,
-      artifactId,
-    );
-    expect(hasArtifact).toBe(true);
-
-    const pullResult = await pull(
-      project,
-      artifactId,
-      storageProvider,
-      localStorage,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(pullResult.pulledIds).toContain(artifactId);
-    expect(pullResult.failedIds).toHaveLength(0);
-
-    const hasLocal = await localStorage.hasId(project, artifactId);
-    expect(hasLocal).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactById(
-      project,
-      artifactId,
-    );
-    const originalContent = await fs.readFile(artifactPath, "utf-8");
-    const originalJson = JSON.parse(originalContent) as { id: string };
-
-    expect(localArtifact.origin.id).toBe(originalJson.id);
-  });
-
-  test("push artifact [Foundry Counter] without tag → pull by ID", async () => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER;
-
-    await localStorage.ensureProjectSetup(project);
-
-    const artifactId = await push(
-      artifactPath,
-      project,
-      undefined,
-      storageProvider,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(artifactId).toBeTruthy();
-    expect(artifactId).toHaveLength(12);
-
-    const hasArtifact = await storageProvider.hasArtifactById(
-      project,
-      artifactId,
-    );
-    expect(hasArtifact).toBe(true);
-
-    const pullResult = await pull(
-      project,
-      artifactId,
-      storageProvider,
-      localStorage,
-      {
-        force: false,
-        debug: false,
-      },
-    );
-
-    expect(pullResult.pulledIds).toContain(artifactId);
-    expect(pullResult.failedIds).toHaveLength(0);
-
-    const hasLocal = await localStorage.hasId(project, artifactId);
-    expect(hasLocal).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactById(
-      project,
-      artifactId,
-    );
-    const originalContent = await fs.readFile(artifactPath, "utf-8");
-    const originalJson = JSON.parse(originalContent) as { id: string };
-
-    expect(localArtifact.origin.id).toBe(originalJson.id);
-  });
-
-  test("push artifact [Hardhat V3 Counter] without tag -> pull by ID", async () => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -197,7 +102,7 @@ describe.each([
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -234,7 +139,7 @@ describe.each([
       TEST_CONSTANTS.PROJECTS.MULTI_ARTIFACT,
     );
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -267,7 +172,7 @@ describe.each([
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.FORCE_TEST);
     const tag = TEST_CONSTANTS.TAGS.LATEST;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -298,7 +203,7 @@ describe.each([
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -340,7 +245,7 @@ describe.each([
   test("list operations work correctly", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
@@ -372,7 +277,7 @@ describe.each([
       const localStorageProvider = storageProvider as LocalStorageProvider;
       const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
       const artifactPath =
-        TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER;
+        TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
 
       await localStorage.ensureProjectSetup(project);
 
