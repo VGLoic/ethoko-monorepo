@@ -3,26 +3,26 @@
 Hardhat plugin in order to interact with Ethoko, warehouse for smart contract compilation artifacts.
 
 > [!NOTE]
-> This plugin is compatible with Hardhat V2. For Hardhat V3, please use the [@ethoko/hardhat-ethoko](../hardhat-ethoko/README.md) plugin.
+> This plugin is compatible with Hardhat V2. For Hardhat V3, please use the [hardhat-ethoko](../hardhat-ethoko/README.md) plugin.
 
 ## Installation
 
 Installation can be made using any package manager
 
 ```bash
-pnpm install @ethoko/hardhat-v2-ethoko
-npm install @ethoko/hardhat-v2-ethoko
-yarn add @ethoko/hardhat-v2-ethoko
+pnpm install hardhat-v2-ethoko
+npm install hardhat-v2-ethoko
+yarn add hardhat-v2-ethoko
 ```
 
 ## Configuration
 
-In the `hardhat.config.ts/js` file, one should import the `@ethoko/hardhat-v2-ethoko` plugin and fill the Ethoko configuration.
+In the `hardhat.config.ts/js` file, one should import the `hardhat-v2-ethoko` plugin and fill the Ethoko configuration.
 
 ```ts
 import { HardhatUserConfig } from "hardhat/config";
 ...
-import "@ethoko/hardhat-v2-ethoko";
+import "hardhat-v2-ethoko";
 
 export const config: HardhatUserConfig = {
   ... // Existing configuration

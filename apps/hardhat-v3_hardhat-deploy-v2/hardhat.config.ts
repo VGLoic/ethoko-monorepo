@@ -1,6 +1,6 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
 import { configVariable, defineConfig } from "hardhat/config";
-import HardhatEthoko from "@ethoko/hardhat-ethoko";
+import HardhatEthoko from "hardhat-ethoko";
 import HardhatDeploy from "hardhat-deploy";
 import "dotenv/config";
 

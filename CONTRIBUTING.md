@@ -17,7 +17,8 @@ nvm use
 - `apps/`: integration example of Ethoko with Hardhat v2, Hardhat v3 and Foundry with Ethoko,
 - `@ethoko/eslint-config`: `eslint` configurations,
 - `@ethoko/typescript-config`: `tsconfig.json`s used throughout the monorepo,
-- `@ethoko/hardhat-v2-ethoko`: Hardhat Plugin to integrate Ethoko with Hardhat V2.
+- `hardhat-ethoko`: Hardhat Plugin to integrate Ethoko with Hardhat V3.
+- `hardhat-v2-ethoko`: Hardhat Plugin to integrate Ethoko with Hardhat V2.
 
 ### Scripts
 
