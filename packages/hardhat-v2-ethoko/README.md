@@ -138,12 +138,12 @@ npx hardhat ethoko typings
 > [!NOTE]
 > If no projects have been pulled, one can still generate the default typings using this command. It may be helpful for those who do not care about the scripts involving Ethoko but want to be unblocked in case of missing files.
 
-### List
+### List artifacts
 
-List the pulled projects and their compilation artifacts.
+List the pulled compilation artifacts with their project.
 
 ```bash
-npx hardhat ethoko list
+npx hardhat ethoko artifacts
 ```
 
 ### Diff

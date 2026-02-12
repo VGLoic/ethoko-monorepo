@@ -12,7 +12,7 @@ import {
   boxHeader,
   error as cliError,
   info as cliInfo,
-  displayListResults,
+  displayListArtifactsResults,
   displayPullResults,
   displayPushResult,
   displayDifferences,
@@ -364,7 +364,7 @@ The typings will be generated in the configured typings path.
 
 ethokoScope
   .task(
-    "list",
+    "artifacts",
     "List the artifacts that have been pulled with their associated projects.",
   )
   .addFlag("debug", "Enable debug mode")
@@ -398,7 +398,7 @@ ethokoScope
     await listPulledArtifacts(localStorage, {
       debug: parsingResult.data.debug,
     })
-      .then(displayListResults)
+      .then(displayListArtifactsResults)
       .catch((err) => {
         if (err instanceof CliError) {
           cliError(err.message);

@@ -5,6 +5,6 @@ export { pull, type PullResult } from "./pull";
 export { push } from "./push";
 export {
   listPulledArtifacts,
-  type ListResult,
+  type ListArtifactsResult,
   type ArtifactItem,
 } from "./list-pulled-artifacts";

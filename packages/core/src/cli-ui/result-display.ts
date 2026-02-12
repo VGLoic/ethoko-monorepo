@@ -1,5 +1,9 @@
 import { styleText } from "node:util";
-import { Difference, PullResult, type ListResult } from "./../cli-client";
+import type {
+  Difference,
+  PullResult,
+  ListArtifactsResult,
+} from "./../cli-client";
 import { LOG_COLORS, success, boxSummary, warn } from "./utils";
 
 // ##########################################
@@ -70,7 +74,7 @@ export function displayPushResult(
   console.error("");
 }
 
-export function displayListResults(data: ListResult): void {
+export function displayListArtifactsResults(data: ListArtifactsResult): void {
   if (data.length === 0) {
     warn("No artifacts found");
     return;
