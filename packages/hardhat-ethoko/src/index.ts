@@ -86,7 +86,7 @@ const hardhatEthoko: HardhatPlugin = {
       .setAction(() => import("./tasks/typings.js"))
       .build(),
     task(
-      ["ethoko", "list"],
+      ["ethoko", "artifacts"],
       "List the artifacts that have been pulled with their associated projects.",
     )
       .addFlag({
@@ -95,7 +95,7 @@ const hardhatEthoko: HardhatPlugin = {
       })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
-      .setAction(() => import("./tasks/list.js"))
+      .setAction(() => import("./tasks/artifacts.js"))
       .build(),
     task(
       ["ethoko", "diff"],

@@ -3,7 +3,7 @@ import { z } from "zod";
 import {
   boxHeader,
   error as cliError,
-  displayListResults,
+  displayListArtifactsResults,
 } from "@ethoko/core/cli-ui";
 import { CliError, listPulledArtifacts } from "@ethoko/core/cli-client";
 import { LocalStorage } from "@ethoko/core/local-storage";
@@ -45,7 +45,7 @@ export default async function (
   await listPulledArtifacts(localStorage, {
     debug: parsingResult.data.debug,
   })
-    .then(displayListResults)
+    .then(displayListArtifactsResults)
     .catch((err) => {
       if (err instanceof CliError) {
         cliError(err.message);

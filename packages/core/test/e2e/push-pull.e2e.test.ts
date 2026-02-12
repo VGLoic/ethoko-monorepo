@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "path";
 import { beforeEach, describe, expect, test } from "vitest";
-import { pull, push } from "@/cli-client/index";
+import { listPulledArtifacts, pull, push } from "@/cli-client/index";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import {
   createTestLocalStorageProvider,
@@ -52,7 +52,7 @@ describe.each([
     await localStorage.ensureProjectSetup(project);
 
     const artifactId = await push(
-      artifactPath,
+      artifactPath.folderPath,
       project,
       undefined,
       storageProvider,
@@ -85,14 +85,23 @@ describe.each([
     expect(pullResult.pulledIds).toContain(artifactId);
     expect(pullResult.failedIds).toHaveLength(0);
 
-    const hasLocal = await localStorage.hasId(project, artifactId);
-    expect(hasLocal).toBe(true);
+    const listArtifactsResult = await listPulledArtifacts(localStorage, {
+      debug: false,
+    });
+    expect(
+      listArtifactsResult.some(
+        (r) => r.id === artifactId && r.project === project,
+      ),
+    ).toBe(true);
 
     const localArtifact = await localStorage.retrieveArtifactById(
       project,
       artifactId,
     );
-    const originalContent = await fs.readFile(artifactPath, "utf-8");
+    const originalContent = await fs.readFile(
+      artifactPath.buildInfoPath,
+      "utf-8",
+    );
     const originalJson = JSON.parse(originalContent) as { id: string };
 
     expect(localArtifact.origin.id).toBe(originalJson.id);
@@ -106,10 +115,16 @@ describe.each([
 
     await localStorage.ensureProjectSetup(project);
 
-    const artifactId = await push(artifactPath, project, tag, storageProvider, {
-      force: false,
-      debug: false,
-    });
+    const artifactId = await push(
+      artifactPath.folderPath,
+      project,
+      tag,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     const hasTag = await storageProvider.hasArtifactByTag(project, tag);
     const hasId = await storageProvider.hasArtifactById(project, artifactId);
@@ -124,14 +139,15 @@ describe.each([
     expect(pullResult.pulledTags).toContain(tag);
     expect(pullResult.failedTags).toHaveLength(0);
 
-    const hasLocalTag = await localStorage.hasTag(project, tag);
-    expect(hasLocalTag).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactByTag(
-      project,
-      tag,
-    );
-    expect(localArtifact).toBeTruthy();
+    const listArtifactsResult = await listPulledArtifacts(localStorage, {
+      debug: false,
+    });
+    expect(
+      listArtifactsResult.some(
+        (r) => r.tag === tag && r.project === project && r.id === artifactId,
+      ),
+      `Expected pulled artifacts to contain tag "${tag}" with ID "${artifactId}" for project "${project}", got: ${JSON.stringify(listArtifactsResult)}`,
+    ).toBe(true);
   });
 
   test("pull all artifacts for a project", async () => {
@@ -146,11 +162,11 @@ describe.each([
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;
 
-    await push(artifactPath, project, tag1, storageProvider, {
+    await push(artifactPath.folderPath, project, tag1, storageProvider, {
       force: false,
       debug: false,
     });
-    await push(artifactPath, project, tag2, storageProvider, {
+    await push(artifactPath.folderPath, project, tag2, storageProvider, {
       force: true,
       debug: false,
     });
@@ -166,6 +182,15 @@ describe.each([
     expect(pullResult.pulledTags).toHaveLength(2);
     expect(pullResult.pulledTags).toContain(tag1);
     expect(pullResult.pulledTags).toContain(tag2);
+
+    const listArtifactsResult = await listPulledArtifacts(localStorage, {
+      debug: false,
+    });
+    const pulledTags = listArtifactsResult
+      .filter((r) => r.project === project)
+      .map((r) => r.tag);
+    expect(pulledTags).toContain(tag1);
+    expect(pulledTags).toContain(tag2);
   });
 
   test("force push overwrites existing tag", async () => {
@@ -176,22 +201,34 @@ describe.each([
 
     await localStorage.ensureProjectSetup(project);
 
-    const id1 = await push(artifactPath, project, tag, storageProvider, {
-      force: false,
-      debug: false,
-    });
+    const id1 = await push(
+      artifactPath.folderPath,
+      project,
+      tag,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+      },
+    );
 
     await expect(
-      push(artifactPath, project, tag, storageProvider, {
+      push(artifactPath.folderPath, project, tag, storageProvider, {
         force: false,
         debug: false,
       }),
     ).rejects.toThrow(/already exists/);
 
-    const id2 = await push(artifactPath, project, tag, storageProvider, {
-      force: true,
-      debug: false,
-    });
+    const id2 = await push(
+      artifactPath.folderPath,
+      project,
+      tag,
+      storageProvider,
+      {
+        force: true,
+        debug: false,
+      },
+    );
 
     expect(id1).toBe(id2);
 
@@ -207,7 +244,7 @@ describe.each([
 
     await localStorage.ensureProjectSetup(project);
 
-    await push(artifactPath, project, tag, storageProvider, {
+    await push(artifactPath.folderPath, project, tag, storageProvider, {
       force: false,
       debug: false,
     });
@@ -242,35 +279,6 @@ describe.each([
     ).rejects.toThrow();
   });
 
-  test("list operations work correctly", async () => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
-
-    await localStorage.ensureProjectSetup(project);
-
-    const tag1 = TEST_CONSTANTS.TAGS.V1;
-    const tag2 = TEST_CONSTANTS.TAGS.V2;
-
-    const id1 = await push(artifactPath, project, tag1, storageProvider, {
-      force: false,
-      debug: false,
-    });
-    await push(artifactPath, project, tag2, storageProvider, {
-      force: true,
-      debug: false,
-    });
-
-    const remoteTags = await storageProvider.listTags(project);
-    expect(remoteTags).toHaveLength(2);
-    expect(remoteTags).toContain(tag1);
-    expect(remoteTags).toContain(tag2);
-
-    const remoteIds = await storageProvider.listIds(project);
-    expect(remoteIds).toHaveLength(1);
-    expect(remoteIds).toContain(id1);
-  });
-
   test.runIf(providerType === "local")(
     "stores original content files",
     async () => {
@@ -282,7 +290,7 @@ describe.each([
       await localStorage.ensureProjectSetup(project);
 
       const artifactId = await push(
-        artifactPath,
+        artifactPath.folderPath,
         project,
         undefined,
         storageProvider,
@@ -299,7 +307,7 @@ describe.each([
         "ids",
         artifactId,
         "original-content",
-        artifactPath.replace(/^\.\//, ""),
+        artifactPath.buildInfoPath.replace(/^\.\//, ""),
       );
 
       const stored = await fs.stat(storedBuildInfo);

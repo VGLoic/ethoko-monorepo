@@ -2,7 +2,7 @@ import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 
-export type ListResult = Array<ArtifactItem>;
+export type ListArtifactsResult = Array<ArtifactItem>;
 
 export type ArtifactItem = {
   project: string;
@@ -26,7 +26,7 @@ export type ArtifactItem = {
 export async function listPulledArtifacts(
   localStorage: LocalStorage,
   opts: { debug: boolean },
-): Promise<ListResult> {
+): Promise<ListArtifactsResult> {
   const ensureResult = await toAsyncResult(localStorage.ensureSetup(), {
     debug: opts.debug,
   });
