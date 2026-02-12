@@ -22,22 +22,46 @@ export const TEST_CONSTANTS = {
     TEMP_DIR_PREFIX: "ethoko-test-",
     FIXTURES: path.resolve(process.cwd(), "test/fixtures"),
     SAMPLE_ARTIFACT: {
-      HARDHAT_V2_COUNTER: path.resolve(
-        process.cwd(),
-        "test/fixtures/hardhat-v2-counter/build-info/sample-artifact.json",
-      ),
-      HARDHAT_V3_COUNTER: path.resolve(
-        process.cwd(),
-        "test/fixtures/hardhat-v3-counter/build-info/sample-artifact.json",
-      ),
-      FOUNDRY_COUNTER: path.resolve(
-        process.cwd(),
-        "test/fixtures/foundry-counter/build-info/sample-artifact.json",
-      ),
-      FOUNDRY_BUILD_INFO_COUNTER: path.resolve(
-        process.cwd(),
-        "test/fixtures/foundry-build-info-counter/build-info/sample-artifact.json",
-      ),
+      HARDHAT_V2_COUNTER: {
+        folderPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/hardhat-v2-counter",
+        ),
+        buildInfoPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/hardhat-v2-counter/build-info/sample-artifact.json",
+        ),
+      },
+      HARDHAT_V3_COUNTER: {
+        folderPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/hardhat-v3-counter",
+        ),
+        buildInfoPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/hardhat-v3-counter/build-info/sample-artifact.json",
+        ),
+      },
+      FOUNDRY_COUNTER: {
+        folderPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/foundry-counter",
+        ),
+        buildInfoPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/foundry-counter/build-info/sample-artifact.json",
+        ),
+      },
+      FOUNDRY_BUILD_INFO_COUNTER: {
+        folderPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/foundry-build-info-counter",
+        ),
+        buildInfoPath: path.resolve(
+          process.cwd(),
+          "test/fixtures/foundry-build-info-counter/build-info/sample-artifact.json",
+        ),
+      },
     },
   },
 } as const;

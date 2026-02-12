@@ -1,10 +1,10 @@
 import fs from "fs/promises";
 import { Stream } from "stream";
-import crypto from "crypto";
 import {
   EthokoArtifact,
   EthokoArtifactSchema,
 } from "./utils/artifacts-schemas/ethoko-v0";
+import z from "zod";
 
 /**
  * Local storage implementation for storing artifacts on the local filesystem.
@@ -180,10 +180,10 @@ export class LocalStorage {
   }
 
   /**
-   * Derives the artifact ID from the content of the artifact associated with the given tag.
+   * Retrieve the artifact ID from the content of the artifact associated with the given tag.
    * @param project The project name.
    * @param tag The tag name.
-   * @returns The derived artifact ID.
+   * @returns The retrieved artifact ID.
    */
   public async retrieveArtifactId(
     project: string,
@@ -193,9 +193,9 @@ export class LocalStorage {
       `${this.rootPath}/${project}/tags/${tag}.json`,
       "utf-8",
     );
-    const hash = crypto.createHash("sha256");
-    hash.update(artifactContent);
-    return hash.digest("hex").substring(0, 12);
+    const rawArtifact = JSON.parse(artifactContent);
+    const artifact = z.object({ id: z.string() }).parse(rawArtifact);
+    return artifact.id;
   }
 
   /**
