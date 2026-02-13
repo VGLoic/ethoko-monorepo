@@ -12,6 +12,8 @@ import {
   boxHeader,
   error as cliError,
   info as cliInfo,
+  displayInspectResult,
+  displayInspectResultJson,
   displayListArtifactsResults,
   displayPullResults,
   displayPushResult,
@@ -21,6 +23,7 @@ import {
   CliError,
   generateArtifactsSummariesAndTypings,
   generateDiffWithTargetRelease,
+  inspectArtifact,
   listPulledArtifacts,
   pull,
   push,
@@ -423,6 +426,122 @@ ethokoScope
       .then((result) =>
         displayListArtifactsResults(result, parsingResult.data.silent),
       )
+      .catch((err) => {
+        if (err instanceof CliError) {
+          cliError(err.message);
+        } else {
+          cliError(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(err);
+        }
+        process.exitCode = 1;
+      });
+  });
+
+ethokoScope
+  .task("inspect", "Inspect a local compilation artifact.")
+  .setDescription(
+    `Inspect a locally pulled artifact.
+
+The artifact must be identified by tag or ID. By default, the project is the one configured in the Hardhat configuration.
+
+Inspect by tag
+  npx hardhat ethoko inspect --tag v1.2.3
+
+Inspect by ID
+  npx hardhat ethoko inspect --id dcauXtavGLxC
+
+Target a different project
+  npx hardhat ethoko inspect --project another-project --tag v1.2.3
+
+Output JSON for scripting
+  npx hardhat ethoko inspect --tag v1.2.3 --json
+`,
+  )
+  .addOptionalParam(
+    "id",
+    "The ID of the artifact to inspect, can not be used with the `tag` parameter",
+  )
+  .addOptionalParam(
+    "tag",
+    "The tag of the artifact to inspect, can not be used with the `id` parameter",
+  )
+  .addOptionalParam(
+    "project",
+    "The project to inspect the artifacts from, defaults to the configured project",
+  )
+  .addFlag("json", "Output results in JSON format")
+  .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
+  .setAction(async (opts, hre) => {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
+      cliError("Ethoko is not configured");
+      process.exitCode = 1;
+      return;
+    }
+
+    const optsParsingResult = z
+      .object({
+        id: z.string().optional(),
+        tag: z.string().optional(),
+        project: z.string().optional().default(ethokoConfig.project),
+        json: z.boolean().default(false),
+        debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
+      })
+      .safeParse(opts);
+    if (!optsParsingResult.success) {
+      cliError("Invalid arguments");
+      if (ethokoConfig.debug) {
+        console.error(optsParsingResult.error);
+      }
+      process.exitCode = 1;
+      return;
+    }
+
+    if (optsParsingResult.data.id && optsParsingResult.data.tag) {
+      cliError("The ID and tag parameters can not be used together");
+      process.exitCode = 1;
+      return;
+    }
+
+    if (!optsParsingResult.data.id && !optsParsingResult.data.tag) {
+      cliError("The artifact must be identified by a tag or an ID");
+      process.exitCode = 1;
+      return;
+    }
+
+    const tagOrId = optsParsingResult.data.id || optsParsingResult.data.tag;
+    if (!tagOrId) {
+      cliError("The artifact must be identified by a tag or an ID");
+      process.exitCode = 1;
+      return;
+    }
+
+    boxHeader(
+      `Inspecting artifact "${optsParsingResult.data.project}:${tagOrId}"`,
+      optsParsingResult.data.silent,
+    );
+
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
+
+    await inspectArtifact(
+      { project: optsParsingResult.data.project, tagOrId },
+      localStorage,
+      {
+        debug: optsParsingResult.data.debug,
+        silent: optsParsingResult.data.silent,
+      },
+    )
+      .then((result) => {
+        if (optsParsingResult.data.json) {
+          displayInspectResultJson(result);
+        } else {
+          displayInspectResult(result, optsParsingResult.data.silent);
+        }
+      })
       .catch((err) => {
         if (err instanceof CliError) {
           cliError(err.message);

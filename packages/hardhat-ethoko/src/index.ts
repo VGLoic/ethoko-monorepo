@@ -113,6 +113,44 @@ const hardhatEthoko: HardhatPlugin = {
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/artifacts.js"))
       .build(),
+    task(["ethoko", "inspect"], "Inspect a local compilation artifact.")
+      .addOption({
+        name: "id",
+        description:
+          "The ID of the artifact to inspect, can not be used with the `tag` parameter",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addOption({
+        name: "tag",
+        description:
+          "The tag of the artifact to inspect, can not be used with the `id` parameter",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addOption({
+        name: "project",
+        description:
+          "The project to inspect the artifacts from, defaults to the configured project",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addFlag({
+        name: "json",
+        description: "Output results in JSON format",
+      })
+      .addFlag({
+        name: "debug",
+        description: "Enable debug mode",
+      })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
+      })
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - Dynamic import type inference limitation with tsup
+      .setAction(() => import("./tasks/inspect.js"))
+      .build(),
     task(
       ["ethoko", "diff"],
       "Compare a local compilation artifacts with an existing release.",

@@ -1,0 +1,108 @@
+import { styleText } from "node:util";
+
+import type { InspectResult } from "../cli-client/inspect";
+import { boxSummary, LOG_COLORS } from "./utils";
+
+const ORIGIN_FORMAT_LABELS: Record<InspectResult["origin"]["format"], string> =
+  {
+    "hardhat-v2": "Hardhat v2",
+    "hardhat-v3": "Hardhat v3",
+    forge: "Forge",
+  };
+
+export function displayInspectResult(
+  result: InspectResult,
+  silent = false,
+): void {
+  if (silent) {
+    return;
+  }
+
+  const summaryLines: string[] = [];
+  const artifactLabel = result.tag
+    ? `${result.project}:${result.tag}`
+    : `${result.project}:${result.id}`;
+  summaryLines.push(styleText(LOG_COLORS.log, `Artifact: ${artifactLabel}`));
+  summaryLines.push(styleText(LOG_COLORS.log, `ID: ${result.id}`));
+  summaryLines.push(
+    styleText(
+      LOG_COLORS.log,
+      `Origin: ${ORIGIN_FORMAT_LABELS[result.origin.format]} (${result.origin.id})}`,
+    ),
+  );
+  summaryLines.push(
+    styleText(LOG_COLORS.log, `File size: ${formatBytes(result.fileSize)}`),
+  );
+  summaryLines.push(
+    styleText(LOG_COLORS.log, `File path: ${result.artifactPath}`),
+  );
+  summaryLines.push("");
+  summaryLines.push(styleText(["bold", LOG_COLORS.log], "Compiler Settings:"));
+  summaryLines.push(
+    styleText(
+      LOG_COLORS.log,
+      `  • Solidity: ${result.compiler.solcLongVersion}`,
+    ),
+  );
+  summaryLines.push(
+    styleText(
+      LOG_COLORS.log,
+      `  • Optimizer: ${result.compiler.optimizer.enabled ? "enabled" : "disabled"} (${result.compiler.optimizer.runs} runs)`,
+    ),
+  );
+  summaryLines.push(
+    styleText(LOG_COLORS.log, `  • EVM: ${result.compiler.evmVersion}`),
+  );
+  if (result.compiler.remappings.length > 0) {
+    summaryLines.push(
+      styleText(
+        LOG_COLORS.log,
+        `  • Remappings: ${result.compiler.remappings.join(", ")}`,
+      ),
+    );
+  }
+  summaryLines.push("");
+  summaryLines.push(styleText(["bold", LOG_COLORS.log], "Source Files:"));
+  for (const sourcePath of result.sourceFiles) {
+    summaryLines.push(styleText(LOG_COLORS.log, `  • ${sourcePath}`));
+  }
+  summaryLines.push("");
+  summaryLines.push(
+    styleText(
+      ["bold", LOG_COLORS.log],
+      `Contracts (${countContracts(result)}):`,
+    ),
+  );
+  for (const entry of result.contractsBySource) {
+    for (const contractName of entry.contracts) {
+      summaryLines.push(
+        styleText(LOG_COLORS.log, `  • ${entry.sourcePath}:${contractName}`),
+      );
+    }
+  }
+
+  boxSummary("Inspect Artifact", summaryLines, silent);
+}
+
+export function displayInspectResultJson(result: InspectResult): void {
+  console.error(JSON.stringify(result, null, 2));
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) {
+    return `${bytes} B`;
+  }
+  const kb = bytes / 1024;
+  if (kb < 1024) {
+    return `${kb.toFixed(1)} KB`;
+  }
+  const mb = kb / 1024;
+  return `${mb.toFixed(1)} MB`;
+}
+
+function countContracts(result: InspectResult): number {
+  return result.contractsBySource.reduce(
+    (total, entry) => total + entry.contracts.length,
+    0,
+  );
+}
