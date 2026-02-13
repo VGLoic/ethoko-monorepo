@@ -84,7 +84,7 @@ export default async function (
   )
     .then((result) => {
       if (optsParsingResult.data.json) {
-        displayInspectResultJson(result);
+        displayInspectResultJson(result, optsParsingResult.data.silent);
       } else {
         displayInspectResult(result, optsParsingResult.data.silent);
       }

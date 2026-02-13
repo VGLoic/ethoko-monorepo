@@ -2,6 +2,14 @@ import { styleText } from "node:util";
 import type { ListArtifactsResult } from "../cli-client";
 import { LOG_COLORS, warn } from "./utils";
 
+export function displayListArtifactsResultsJson(
+  data: ListArtifactsResult,
+  silent = false,
+): void {
+  if (silent) return;
+  console.error(JSON.stringify(data, null, 2));
+}
+
 export function displayListArtifactsResults(
   data: ListArtifactsResult,
   silent = false,

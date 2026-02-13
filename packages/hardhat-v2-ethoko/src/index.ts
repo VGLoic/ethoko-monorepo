@@ -18,6 +18,7 @@ import {
   displayPullResults,
   displayPushResult,
   displayDifferences,
+  displayListArtifactsResultsJson,
 } from "@ethoko/core/cli-ui";
 import {
   CliError,
@@ -391,6 +392,7 @@ ethokoScope
   )
   .addFlag("debug", "Enable debug mode")
   .addFlag("silent", "Suppress CLI output (except errors and warnings)")
+  .addFlag("json", "Output results in JSON format")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -403,6 +405,7 @@ ethokoScope
       .object({
         debug: z.boolean().default(ethokoConfig.debug),
         silent: z.boolean().default(false),
+        json: z.boolean().default(false),
       })
       .safeParse(opts);
 
@@ -423,9 +426,13 @@ ethokoScope
       debug: parsingResult.data.debug,
       silent: parsingResult.data.silent,
     })
-      .then((result) =>
-        displayListArtifactsResults(result, parsingResult.data.silent),
-      )
+      .then((result) => {
+        if (parsingResult.data.json) {
+          displayListArtifactsResultsJson(result, parsingResult.data.silent);
+        } else {
+          displayListArtifactsResults(result, parsingResult.data.silent);
+        }
+      })
       .catch((err) => {
         if (err instanceof CliError) {
           cliError(err.message);
@@ -537,7 +544,7 @@ Output JSON for scripting
     )
       .then((result) => {
         if (optsParsingResult.data.json) {
-          displayInspectResultJson(result);
+          displayInspectResultJson(result, optsParsingResult.data.silent);
         } else {
           displayInspectResult(result, optsParsingResult.data.silent);
         }
