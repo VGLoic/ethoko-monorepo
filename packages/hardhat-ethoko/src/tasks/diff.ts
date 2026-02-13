@@ -16,6 +16,7 @@ interface DiffTaskArguments {
   id?: string;
   tag?: string;
   debug?: boolean;
+  silent?: boolean;
 }
 
 export default async function (
@@ -35,6 +36,7 @@ export default async function (
       id: z.string().optional(),
       tag: z.string().optional(),
       debug: z.boolean().default(ethokoConfig.debug),
+      silent: z.boolean().default(false),
     })
     .safeParse(taskArguments);
   if (!paramParsingResult.success) {
@@ -75,7 +77,10 @@ export default async function (
     return;
   }
 
-  boxHeader(`Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`);
+  boxHeader(
+    `Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`,
+    paramParsingResult.data.silent,
+  );
 
   const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
@@ -86,9 +91,12 @@ export default async function (
     {
       debug: paramParsingResult.data.debug,
       isCI: process.env.CI === "true" || process.env.CI === "1",
+      silent: paramParsingResult.data.silent,
     },
   )
-    .then(displayDifferences)
+    .then((result) =>
+      displayDifferences(result, paramParsingResult.data.silent),
+    )
     .catch((err) => {
       if (err instanceof CliError) {
         cliError(err.message);

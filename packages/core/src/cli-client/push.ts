@@ -40,6 +40,7 @@ function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
  * @param opts Options for the push command
  * @param opts.force Force the push of the artifact even if the tag already exists in the storage
  * @param opts.debug Enable debug mode
+ * @param opts.silent Suppress CLI output (errors and warnings still shown)
  * @param opts.isCI Whether running in CI environment (disables interactive prompts)
  * @returns The generated artifact ID
  */
@@ -48,15 +49,16 @@ export async function push(
   project: string,
   tag: string | undefined,
   storageProvider: StorageProvider,
-  opts: { force: boolean; debug: boolean; isCI?: boolean },
+  opts: { force: boolean; debug: boolean; silent?: boolean; isCI?: boolean },
 ): Promise<string> {
-  const steps = new StepTracker(4);
+  const steps = new StepTracker(4, opts.silent);
 
   // Step 1: Look for compilation artifact
   steps.start("Looking for compilation artifact...");
   const buildInfoPathResult = await toAsyncResult(
     lookForBuildInfoJsonFile(artifactPath, steps, {
       debug: opts.debug,
+      silent: opts.silent,
       isCI: opts.isCI,
     }),
   );

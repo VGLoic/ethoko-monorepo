@@ -20,12 +20,14 @@ export type ArtifactItem = {
  *
  * @throws CliError if there is an error fetching the data from the local storage. The error messages are meant to be user-friendly and can be directly shown to the user.
  * @param localStorage The local storage used to retrieve pulled artifacts
- * @param opts Options for the listing, currently only supports the debug flag
+ * @param opts Options for the listing
+ * @param opts.debug Enable debug mode
+ * @param opts.silent Suppress CLI output (errors and warnings still shown)
  * @returns The list of artifacts in the local storage with their project, tag, ID, and last modified date
  */
 export async function listPulledArtifacts(
   localStorage: LocalStorage,
-  opts: { debug: boolean },
+  opts: { debug: boolean; silent?: boolean },
 ): Promise<ListArtifactsResult> {
   const ensureResult = await toAsyncResult(localStorage.ensureSetup(), {
     debug: opts.debug,

@@ -40,9 +40,9 @@ import { CliError } from "./error";
 export async function generateArtifactsSummariesAndTypings(
   ethokoTypingsPath: string,
   localStorage: LocalStorage,
-  opts: { debug: boolean },
+  opts: { debug: boolean; silent?: boolean },
 ): Promise<void> {
-  const steps = new StepTracker(3);
+  const steps = new StepTracker(3, opts.silent);
 
   steps.start("Setting up local storage and typings folder...");
   const ensureLocalStorageResult = await toAsyncResult(

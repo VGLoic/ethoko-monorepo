@@ -9,6 +9,7 @@ import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface TypingsTaskArguments {
   debug?: boolean;
+  silent?: boolean;
 }
 
 export default async function (
@@ -25,6 +26,7 @@ export default async function (
   const parsingResult = z
     .object({
       debug: z.boolean().default(ethokoConfig.debug),
+      silent: z.boolean().default(false),
     })
     .safeParse(taskArguments);
 
@@ -37,7 +39,7 @@ export default async function (
     return;
   }
 
-  boxHeader("Generating typings");
+  boxHeader("Generating typings", parsingResult.data.silent);
 
   const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
@@ -46,6 +48,7 @@ export default async function (
     localStorage,
     {
       debug: parsingResult.data.debug,
+      silent: parsingResult.data.silent,
     },
   )
     .then(() => {

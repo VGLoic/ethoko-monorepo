@@ -43,6 +43,10 @@ const hardhatEthoko: HardhatPlugin = {
         name: "debug",
         description: "Enable debug mode",
       })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
+      })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/pull.js"))
@@ -69,6 +73,10 @@ const hardhatEthoko: HardhatPlugin = {
         name: "debug",
         description: "Enable debug mode",
       })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
+      })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/push.js"))
@@ -81,6 +89,10 @@ const hardhatEthoko: HardhatPlugin = {
         name: "debug",
         description: "Enable debug mode",
       })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
+      })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/typings.js"))
@@ -92,6 +104,10 @@ const hardhatEthoko: HardhatPlugin = {
       .addFlag({
         name: "debug",
         description: "Enable debug mode",
+      })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
       })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
@@ -124,6 +140,10 @@ const hardhatEthoko: HardhatPlugin = {
       .addFlag({
         name: "debug",
         description: "Enable debug mode",
+      })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
       })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup

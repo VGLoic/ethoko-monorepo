@@ -110,6 +110,7 @@ export type Difference = {
  * @param localStorage The local storage used to persist pulled artifacts
  * @param opts Options for the diff command
  * @param opts.debug Enable debug mode for more verbose logging
+ * @param opts.silent Suppress CLI output (errors and warnings still shown)
  * @param opts.isCI Whether running in CI environment (disables interactive prompts)
  * @returns The array of differences between the fresh compilation artifact and the target artifact
  */
@@ -117,9 +118,9 @@ export async function generateDiffWithTargetRelease(
   artifactPath: string,
   artifact: { project: string; tagOrId: string },
   localStorage: LocalStorage,
-  opts: { debug: boolean; isCI?: boolean },
+  opts: { debug: boolean; silent?: boolean; isCI?: boolean },
 ): Promise<Difference[]> {
-  const steps = new StepTracker(4);
+  const steps = new StepTracker(4, opts.silent);
 
   // Step 1: Check if target artifact exists locally
 
@@ -178,6 +179,7 @@ export async function generateDiffWithTargetRelease(
   const buildInfoPathResult = await toAsyncResult(
     lookForBuildInfoJsonFile(artifactPath, steps, {
       debug: opts.debug,
+      silent: opts.silent,
       isCI: opts.isCI,
     }),
   );
