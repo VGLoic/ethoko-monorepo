@@ -342,6 +342,12 @@ describe.each([
     expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
     expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
     expect(inspectResult.fileSize).toBeGreaterThan(0);
+    const fullyQualifiedPathsResult = inspectResult.contractsBySource
+      .map((c) => c.contracts.map((contract) => `${c.sourcePath}:${contract}`))
+      .flat();
+    expect(new Set(fullyQualifiedPathsResult)).toEqual(
+      new Set(artifactFixture.fullyQualifiedContractPaths),
+    );
   });
 
   test("inspect artifact by ID", async () => {
@@ -380,6 +386,12 @@ describe.each([
     expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
     expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
     expect(inspectResult.fileSize).toBeGreaterThan(0);
+    const fullyQualifiedPathsResult = inspectResult.contractsBySource
+      .map((c) => c.contracts.map((contract) => `${c.sourcePath}:${contract}`))
+      .flat();
+    expect(new Set(fullyQualifiedPathsResult)).toEqual(
+      new Set(artifactFixture.fullyQualifiedContractPaths),
+    );
   });
 
   test("inspect non-existent artifact returns error", async () => {
