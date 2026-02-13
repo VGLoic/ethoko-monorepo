@@ -4,6 +4,7 @@ import {
   boxHeader,
   error as cliError,
   displayListArtifactsResults,
+  displayListArtifactsResultsJson,
 } from "@ethoko/core/cli-ui";
 import { CliError, listPulledArtifacts } from "@ethoko/core/cli-client";
 import { LocalStorage } from "@ethoko/core/local-storage";
@@ -11,6 +12,7 @@ import { LocalStorage } from "@ethoko/core/local-storage";
 interface ListTaskArguments {
   debug?: boolean;
   silent?: boolean;
+  json?: boolean;
 }
 
 export default async function (
@@ -28,6 +30,7 @@ export default async function (
     .object({
       debug: z.boolean().default(ethokoConfig.debug),
       silent: z.boolean().default(false),
+      json: z.boolean().default(false),
     })
     .safeParse(taskArguments);
 
@@ -48,9 +51,13 @@ export default async function (
     debug: parsingResult.data.debug,
     silent: parsingResult.data.silent,
   })
-    .then((result) =>
-      displayListArtifactsResults(result, parsingResult.data.silent),
-    )
+    .then((result) => {
+      if (parsingResult.data.json) {
+        displayListArtifactsResultsJson(result, parsingResult.data.silent);
+      } else {
+        displayListArtifactsResults(result, parsingResult.data.silent);
+      }
+    })
     .catch((err) => {
       if (err instanceof CliError) {
         cliError(err.message);

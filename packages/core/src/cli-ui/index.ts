@@ -1,3 +1,4 @@
 export * from "./utils";
-export * from "./result-display";
+export * from "./push-pull-result-display";
 export * from "./inspect-result-display";
+export * from "./artifacts-result-display";

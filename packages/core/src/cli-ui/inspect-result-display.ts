@@ -84,7 +84,11 @@ export function displayInspectResult(
   boxSummary("Inspect Artifact", summaryLines, silent);
 }
 
-export function displayInspectResultJson(result: InspectResult): void {
+export function displayInspectResultJson(
+  result: InspectResult,
+  silent = false,
+): void {
+  if (silent) return;
   console.error(JSON.stringify(result, null, 2));
 }
 

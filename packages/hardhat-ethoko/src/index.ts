@@ -109,6 +109,10 @@ const hardhatEthoko: HardhatPlugin = {
         name: "silent",
         description: "Suppress CLI output (except errors and warnings)",
       })
+      .addFlag({
+        name: "json",
+        description: "Output results in JSON format",
+      })
       // eslint-disable-next-line @typescript-eslint/ban-ts-comment
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/artifacts.js"))
