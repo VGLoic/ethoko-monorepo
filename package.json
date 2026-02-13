@@ -25,7 +25,7 @@
     "format": "turbo run format",
     "check-format": "turbo run check-format",
     "check-types": "turbo run check-types",
-    "release": "pnpm build && changeset publish"
+    "release": "turbo run build && changeset publish"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",
