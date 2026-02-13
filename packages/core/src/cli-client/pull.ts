@@ -23,7 +23,7 @@ export type PullResult = {
  * The method returns an object containing the list of remote tags and IDs, the list of successfully pulled tags and IDs, and the list of tags and IDs that failed to be pulled.
  * @throws CliError if there is an error setting up the local storage, fetching the remote artifacts, checking the local artifacts, or downloading the artifacts. The error messages are meant to be user-friendly and can be directly shown to the user.
  * @param project The project name
- * @param tagOrId The tag or ID of the artifact to pull, if not provided all tags and IDs will be pulled
+ * @param search An optional object to specify a tag or ID to pull, if not provided all tags and IDs will be pulled
  * @param storageProvider The storage provider used to access remote artifacts
  * @param localStorage The local storage used to persist pulled artifacts
  * @param opts Options for the pull command
@@ -35,7 +35,7 @@ export type PullResult = {
  */
 export async function pull(
   project: string,
-  tagOrId: string | undefined,
+  search: { type: "tag"; tag: string } | { type: "id"; id: string } | null,
   storageProvider: StorageProvider,
   localStorage: LocalStorage,
   opts: { force: boolean; debug: boolean; silent?: boolean },
@@ -76,17 +76,17 @@ export async function pull(
 
   let tagsToDownload: string[];
   let idsToDownload: string[];
-  if (tagOrId) {
-    if (remoteTags.includes(tagOrId)) {
-      tagsToDownload = [tagOrId];
+  if (search) {
+    if (search.type === "tag" && remoteTags.includes(search.tag)) {
+      tagsToDownload = [search.tag];
       idsToDownload = [];
-    } else if (remoteIds.includes(tagOrId)) {
+    } else if (search.type === "id" && remoteIds.includes(search.id)) {
       tagsToDownload = [];
-      idsToDownload = [tagOrId];
+      idsToDownload = [search.id];
     } else {
       steps.fail("The tag or ID does not exist in the storage");
       throw new CliError(
-        `The tag or ID "${tagOrId}" does not exist in the storage`,
+        `The tag or ID "${search.type === "tag" ? search.tag : search.id}" does not exist in the storage`,
       );
     }
   } else {

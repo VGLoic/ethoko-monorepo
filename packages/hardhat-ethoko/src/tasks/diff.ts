@@ -70,15 +70,19 @@ export default async function (
     return;
   }
 
-  const tagOrId = paramParsingResult.data.id || paramParsingResult.data.tag;
-  if (!tagOrId) {
+  let search: { type: "id"; id: string } | { type: "tag"; tag: string };
+  if (paramParsingResult.data.id) {
+    search = { type: "id", id: paramParsingResult.data.id };
+  } else if (paramParsingResult.data.tag) {
+    search = { type: "tag", tag: paramParsingResult.data.tag };
+  } else {
     cliError("The artifact must be identified by a tag or an ID");
     process.exitCode = 1;
     return;
   }
 
   boxHeader(
-    `Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`,
+    `Comparing with artifact "${ethokoConfig.project}:${search.type === "id" ? search.id : search.tag}"`,
     paramParsingResult.data.silent,
   );
 
@@ -86,7 +90,7 @@ export default async function (
 
   await generateDiffWithTargetRelease(
     finalArtifactPath,
-    { project: ethokoConfig.project, tagOrId },
+    { project: ethokoConfig.project, search },
     localStorage,
     {
       debug: paramParsingResult.data.debug,

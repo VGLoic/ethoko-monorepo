@@ -81,7 +81,7 @@ describe.each([
 
       const pullResult = await pull(
         project,
-        artifactId,
+        { type: "id", id: artifactId },
         storageProvider,
         localStorage,
         {
@@ -143,11 +143,17 @@ describe.each([
     expect(hasTag).toBe(true);
     expect(hasId).toBe(true);
 
-    const pullResult = await pull(project, tag, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    const pullResult = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
 
     expect(pullResult.pulledTags).toContain(tag);
     expect(pullResult.failedTags).toHaveLength(0);
@@ -189,7 +195,7 @@ describe.each([
 
     const pullResult = await pull(
       project,
-      undefined,
+      null,
       storageProvider,
       localStorage,
       { force: false, debug: false, silent: true },
@@ -269,24 +275,36 @@ describe.each([
       debug: false,
       silent: true,
     });
-    await pull(project, tag, storageProvider, localStorage, {
+    await pull(project, { type: "tag", tag }, storageProvider, localStorage, {
       force: false,
       debug: false,
       silent: true,
     });
 
-    const result1 = await pull(project, tag, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    const result1 = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
     expect(result1.pulledTags).toHaveLength(0);
 
-    const result2 = await pull(project, tag, storageProvider, localStorage, {
-      force: true,
-      debug: false,
-      silent: true,
-    });
+    const result2 = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: true,
+        debug: false,
+        silent: true,
+      },
+    );
     expect(result2.pulledTags).toContain(tag);
   });
 
@@ -296,11 +314,17 @@ describe.each([
     await localStorage.ensureProjectSetup(project);
 
     await expect(
-      pull(project, "non-existent-tag", storageProvider, localStorage, {
-        force: false,
-        debug: false,
-        silent: true,
-      }),
+      pull(
+        project,
+        { tag: "non-existent-tag", type: "tag" },
+        storageProvider,
+        localStorage,
+        {
+          force: false,
+          debug: false,
+          silent: true,
+        },
+      ),
     ).rejects.toThrow();
   });
 
@@ -324,7 +348,7 @@ describe.each([
       },
     );
 
-    await pull(project, tag, storageProvider, localStorage, {
+    await pull(project, { type: "tag", tag }, storageProvider, localStorage, {
       force: false,
       debug: false,
       silent: true,
@@ -369,11 +393,17 @@ describe.each([
       },
     );
 
-    await pull(project, artifactId, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    await pull(
+      project,
+      { type: "id", id: artifactId },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
 
     const inspectResult = await inspectArtifact(
       { project, search: { type: "id", id: artifactId } },

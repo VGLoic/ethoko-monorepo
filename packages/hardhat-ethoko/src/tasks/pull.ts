@@ -57,9 +57,17 @@ export default async function (
     return;
   }
 
-  if (optsParsingResult.data.id || optsParsingResult.data.tag) {
+  let search: { type: "id"; id: string } | { type: "tag"; tag: string } | null =
+    null;
+  if (optsParsingResult.data.id) {
+    search = { type: "id", id: optsParsingResult.data.id };
+  } else if (optsParsingResult.data.tag) {
+    search = { type: "tag", tag: optsParsingResult.data.tag };
+  }
+
+  if (search) {
     boxHeader(
-      `Pulling artifact "${optsParsingResult.data.project}:${optsParsingResult.data.id || optsParsingResult.data.tag}"`,
+      `Pulling artifact "${optsParsingResult.data.project}:${search.type === "id" ? search.id : search.tag}"`,
       optsParsingResult.data.silent,
     );
   } else {
@@ -86,7 +94,7 @@ export default async function (
   const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
   await pull(
     optsParsingResult.data.project,
-    optsParsingResult.data.id || optsParsingResult.data.tag,
+    search,
     storageProvider,
     localStorage,
     {
