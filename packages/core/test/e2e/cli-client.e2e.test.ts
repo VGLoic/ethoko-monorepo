@@ -331,7 +331,7 @@ describe.each([
     });
 
     const inspectResult = await inspectArtifact(
-      { project, tagOrId: tag },
+      { project, search: { type: "tag", tag } },
       localStorage,
       { debug: false, silent: true },
     );
@@ -376,7 +376,7 @@ describe.each([
     });
 
     const inspectResult = await inspectArtifact(
-      { project, tagOrId: artifactId },
+      { project, search: { type: "id", id: artifactId } },
       localStorage,
       { debug: false, silent: true },
     );
@@ -402,10 +402,14 @@ describe.each([
     await localStorage.ensureProjectSetup(project);
 
     await expect(
-      inspectArtifact({ project, tagOrId: "non-existent-tag" }, localStorage, {
-        debug: false,
-        silent: true,
-      }),
+      inspectArtifact(
+        { project, search: { type: "tag", tag: "non-existent-tag" } },
+        localStorage,
+        {
+          debug: false,
+          silent: true,
+        },
+      ),
     ).rejects.toThrow();
   });
 

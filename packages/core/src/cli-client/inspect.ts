@@ -39,7 +39,10 @@ export type InspectResult = {
  * @throws CliError if the artifact cannot be found or read.
  */
 export async function inspectArtifact(
-  artifact: { project: string; tagOrId: string },
+  artifact: {
+    project: string;
+    search: { type: "tag"; tag: string } | { type: "id"; id: string };
+  },
   localStorage: LocalStorage,
   opts: { debug: boolean; silent?: boolean },
 ): Promise<InspectResult> {
@@ -53,43 +56,26 @@ export async function inspectArtifact(
     );
   }
 
-  let type: "tag" | "id" | undefined = undefined;
-  const isIdResult = await toAsyncResult(
-    localStorage.hasId(artifact.project, artifact.tagOrId),
-    { debug: opts.debug },
-  );
-  if (!isIdResult.success) {
-    throw new CliError(
-      "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
-    );
-  }
-  if (isIdResult.value) {
-    type = "id";
-  }
-
-  const isTagResult = await toAsyncResult(
-    localStorage.hasTag(artifact.project, artifact.tagOrId),
-    { debug: opts.debug },
-  );
-  if (!isTagResult.success) {
-    throw new CliError(
-      "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
-    );
-  }
-  if (isTagResult.value) {
-    type = "tag";
-  }
-
-  if (!type) {
-    throw new CliError(
-      `The artifact "${artifact.project}:${artifact.tagOrId}" has not been found locally. Please, make sure to have the artifact locally before running the inspect command. Run with debug mode for more info`,
-    );
-  }
-
   const artifactResult = await toAsyncResult(
-    type === "tag"
-      ? localStorage.retrieveArtifactByTag(artifact.project, artifact.tagOrId)
-      : localStorage.retrieveArtifactById(artifact.project, artifact.tagOrId),
+    artifact.search.type === "tag"
+      ? Promise.all([
+          localStorage.retrieveArtifactByTag(
+            artifact.project,
+            artifact.search.tag,
+          ),
+          Promise.resolve(
+            `${localStorage.rootPath}/${artifact.project}/tags/${artifact.search.tag}.json`,
+          ),
+        ])
+      : Promise.all([
+          localStorage.retrieveArtifactById(
+            artifact.project,
+            artifact.search.id,
+          ),
+          Promise.resolve(
+            `${localStorage.rootPath}/${artifact.project}/ids/${artifact.search.id}.json`,
+          ),
+        ]),
     { debug: opts.debug },
   );
   if (!artifactResult.success) {
@@ -97,11 +83,7 @@ export async function inspectArtifact(
       "Unable to retrieve the artifact content, please ensure it exists locally. Run with debug mode for more info",
     );
   }
-
-  const artifactPath =
-    type === "tag"
-      ? `${localStorage.rootPath}/${artifact.project}/tags/${artifact.tagOrId}.json`
-      : `${localStorage.rootPath}/${artifact.project}/ids/${artifact.tagOrId}.json`;
+  const [sokoArtifact, artifactPath] = artifactResult.value;
 
   const fileStatResult = await toAsyncResult(fs.stat(artifactPath), {
     debug: opts.debug,
@@ -112,27 +94,27 @@ export async function inspectArtifact(
     );
   }
 
-  const compilerSettings = deriveCompilerSettings(artifactResult.value);
+  const compilerSettings = deriveCompilerSettings(sokoArtifact);
 
   const originFormat =
-    artifactResult.value.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
+    sokoArtifact.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
       ? "hardhat-v3"
-      : artifactResult.value.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
+      : sokoArtifact.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
         ? "hardhat-v2"
         : "forge";
 
   return {
     project: artifact.project,
-    tag: type === "tag" ? artifact.tagOrId : null,
-    id: artifactResult.value.id,
+    tag: artifact.search.type === "tag" ? artifact.search.tag : null,
+    id: sokoArtifact.id,
     fileSize: fileStatResult.value.size,
     origin: {
-      id: artifactResult.value.origin.id,
+      id: sokoArtifact.origin.id,
       format: originFormat,
     },
     compiler: compilerSettings,
-    sourceFiles: Object.keys(artifactResult.value.input.sources).sort(),
-    contractsBySource: deriveContractsBySource(artifactResult.value),
+    sourceFiles: Object.keys(sokoArtifact.input.sources).sort(),
+    contractsBySource: deriveContractsBySource(sokoArtifact),
     artifactPath,
   };
 }

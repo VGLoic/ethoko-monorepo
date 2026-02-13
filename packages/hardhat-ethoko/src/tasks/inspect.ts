@@ -54,28 +54,26 @@ export default async function (
     return;
   }
 
-  if (!optsParsingResult.data.id && !optsParsingResult.data.tag) {
-    cliError("The artifact must be identified by a tag or an ID");
-    process.exitCode = 1;
-    return;
-  }
-
-  const tagOrId = optsParsingResult.data.id || optsParsingResult.data.tag;
-  if (!tagOrId) {
+  let search: { type: "tag"; tag: string } | { type: "id"; id: string };
+  if (optsParsingResult.data.id) {
+    search = { type: "id", id: optsParsingResult.data.id };
+  } else if (optsParsingResult.data.tag) {
+    search = { type: "tag", tag: optsParsingResult.data.tag! };
+  } else {
     cliError("The artifact must be identified by a tag or an ID");
     process.exitCode = 1;
     return;
   }
 
   boxHeader(
-    `Inspecting artifact "${optsParsingResult.data.project}:${tagOrId}"`,
+    `Inspecting artifact "${optsParsingResult.data.project}:${search.type === "tag" ? search.tag : search.id}"`,
     optsParsingResult.data.silent,
   );
 
   const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
   await inspectArtifact(
-    { project: optsParsingResult.data.project, tagOrId },
+    { project: optsParsingResult.data.project, search },
     localStorage,
     {
       debug: optsParsingResult.data.debug,
