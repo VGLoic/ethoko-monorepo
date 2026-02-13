@@ -48,6 +48,28 @@ pnpm vitest run -t "test name pattern"
 
 **Build Dependencies:** Turborepo manages task dependencies. `lint`, `check-types`, and `test` depend on `build` completing first.
 
+## Validation Workflow
+
+**Critical:** Run this validation suite after completing each logical unit of work (feature, bug fix, todo item).
+
+### Steps (run at root level in order)
+
+1. **`pnpm build`** - Build all packages (Turborepo handles dependency order)
+2. **`pnpm check-types`** - Typecheck all packages
+3. **`pnpm lint`** - Lint all packages (max 0 warnings)
+4. **`pnpm format`** - Format all packages
+5. **`pnpm test:e2e`** - Run all E2E tests
+
+### Failure Handling
+
+If any check fails, **immediately fix the issue** before proceeding with additional work.
+
+### Key Notes
+
+- **Package Dependencies:** `hardhat-ethoko` and `hardhat-v2-ethoko` depend on `@ethoko/core`. When core changes, Turborepo automatically rebuilds dependent packages during `pnpm build`.
+- **When to Run:** After completing a logical unit of work, not after every single file edit.
+- **Root-Level Execution:** Always run these commands at the monorepo root to validate all packages.
+
 ## Code Style Guidelines
 
 ### TypeScript Configuration
@@ -300,7 +322,7 @@ packages/core/
 ## Git Workflow
 
 - Commit messages should be concise and descriptive
-- Always run `pnpm lint` and `pnpm check-types` before committing
+- Run the complete validation workflow (see "Validation Workflow" section) before committing
 - Generated files in `.ethoko/` and `.ethoko-typings/` are gitignored
 - Build outputs (`dist/`, `.next/`, etc.) are gitignored
 
