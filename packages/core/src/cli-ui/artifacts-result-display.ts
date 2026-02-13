@@ -7,7 +7,7 @@ export function displayListArtifactsResultsJson(
   silent = false,
 ): void {
   if (silent) return;
-  console.error(JSON.stringify(data, null, 2));
+  console.log(JSON.stringify(data, null, 2));
 }
 
 export function displayListArtifactsResults(

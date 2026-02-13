@@ -191,6 +191,54 @@ const hardhatEthoko: HardhatPlugin = {
       // @ts-ignore - Dynamic import type inference limitation with tsup
       .setAction(() => import("./tasks/diff.js"))
       .build(),
+    task(["ethoko", "export"], "Export contract ABI from a pulled artifact.")
+      .addOption({
+        name: "contract",
+        description:
+          "Contract name or fully qualified name (sourcePath:contractName)",
+        type: ArgumentType.STRING,
+        defaultValue: "",
+      })
+      .addOption({
+        name: "id",
+        description:
+          "The ID of the artifact to export from, can not be used with the `tag` parameter",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addOption({
+        name: "tag",
+        description:
+          "The tag of the artifact to export from, can not be used with the `id` parameter",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addOption({
+        name: "project",
+        description:
+          "The project to export from, defaults to the configured project",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addOption({
+        name: "output",
+        description:
+          "Output file path (prints to stdout if omitted, allowing piping/redirection)",
+        type: ArgumentType.STRING_WITHOUT_DEFAULT,
+        defaultValue: undefined,
+      })
+      .addFlag({
+        name: "debug",
+        description: "Enable debug mode",
+      })
+      .addFlag({
+        name: "silent",
+        description: "Suppress CLI output (except errors and warnings)",
+      })
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore - Dynamic import type inference limitation with tsup
+      .setAction(() => import("./tasks/export.js"))
+      .build(),
   ],
 };
 

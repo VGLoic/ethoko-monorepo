@@ -55,6 +55,7 @@ const EventItemSchema = z.object({
     z.object({
       name: z.string(),
       type: z.string(),
+      internalType: z.string().optional(),
       components: z.array(ComponentSchema).optional(),
       indexed: z.boolean(),
     }),
@@ -68,6 +69,7 @@ const ErrorItemSchema = z.object({
     z.object({
       name: z.string(),
       type: z.string(),
+      internalType: z.string().optional(),
       components: z.array(ComponentSchema).optional(),
     }),
   ),
@@ -75,6 +77,7 @@ const ErrorItemSchema = z.object({
 const ItemOutputInputSchema = z.object({
   name: z.string(),
   type: z.string(),
+  internalType: z.string().optional(),
   components: z.array(ComponentSchema).optional(),
 });
 const FunctionItemSchema = z.object({

@@ -6,6 +6,7 @@ import {
   listPulledArtifacts,
   pull,
   push,
+  exportContractAbi,
 } from "@/cli-client/index";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import {
@@ -81,7 +82,7 @@ describe.each([
 
       const pullResult = await pull(
         project,
-        artifactId,
+        { type: "id", id: artifactId },
         storageProvider,
         localStorage,
         {
@@ -143,11 +144,17 @@ describe.each([
     expect(hasTag).toBe(true);
     expect(hasId).toBe(true);
 
-    const pullResult = await pull(project, tag, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    const pullResult = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
 
     expect(pullResult.pulledTags).toContain(tag);
     expect(pullResult.failedTags).toHaveLength(0);
@@ -189,7 +196,7 @@ describe.each([
 
     const pullResult = await pull(
       project,
-      undefined,
+      null,
       storageProvider,
       localStorage,
       { force: false, debug: false, silent: true },
@@ -269,24 +276,36 @@ describe.each([
       debug: false,
       silent: true,
     });
-    await pull(project, tag, storageProvider, localStorage, {
+    await pull(project, { type: "tag", tag }, storageProvider, localStorage, {
       force: false,
       debug: false,
       silent: true,
     });
 
-    const result1 = await pull(project, tag, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    const result1 = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
     expect(result1.pulledTags).toHaveLength(0);
 
-    const result2 = await pull(project, tag, storageProvider, localStorage, {
-      force: true,
-      debug: false,
-      silent: true,
-    });
+    const result2 = await pull(
+      project,
+      { type: "tag", tag },
+      storageProvider,
+      localStorage,
+      {
+        force: true,
+        debug: false,
+        silent: true,
+      },
+    );
     expect(result2.pulledTags).toContain(tag);
   });
 
@@ -296,11 +315,17 @@ describe.each([
     await localStorage.ensureProjectSetup(project);
 
     await expect(
-      pull(project, "non-existent-tag", storageProvider, localStorage, {
-        force: false,
-        debug: false,
-        silent: true,
-      }),
+      pull(
+        project,
+        { tag: "non-existent-tag", type: "tag" },
+        storageProvider,
+        localStorage,
+        {
+          force: false,
+          debug: false,
+          silent: true,
+        },
+      ),
     ).rejects.toThrow();
   });
 
@@ -324,14 +349,14 @@ describe.each([
       },
     );
 
-    await pull(project, tag, storageProvider, localStorage, {
+    await pull(project, { type: "tag", tag }, storageProvider, localStorage, {
       force: false,
       debug: false,
       silent: true,
     });
 
     const inspectResult = await inspectArtifact(
-      { project, tagOrId: tag },
+      { project, search: { type: "tag", tag } },
       localStorage,
       { debug: false, silent: true },
     );
@@ -369,14 +394,20 @@ describe.each([
       },
     );
 
-    await pull(project, artifactId, storageProvider, localStorage, {
-      force: false,
-      debug: false,
-      silent: true,
-    });
+    await pull(
+      project,
+      { type: "id", id: artifactId },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
 
     const inspectResult = await inspectArtifact(
-      { project, tagOrId: artifactId },
+      { project, search: { type: "id", id: artifactId } },
       localStorage,
       { debug: false, silent: true },
     );
@@ -402,10 +433,180 @@ describe.each([
     await localStorage.ensureProjectSetup(project);
 
     await expect(
-      inspectArtifact({ project, tagOrId: "non-existent-tag" }, localStorage, {
+      inspectArtifact(
+        { project, search: { type: "tag", tag: "non-existent-tag" } },
+        localStorage,
+        {
+          debug: false,
+          silent: true,
+        },
+      ),
+    ).rejects.toThrow();
+  });
+
+  test("export contract ABI by tag", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+    const tag = TEST_CONSTANTS.TAGS.V1;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+
+    await localStorage.ensureProjectSetup(project);
+
+    const artifactId = await push(
+      artifactFixture.folderPath,
+      project,
+      tag,
+      storageProvider,
+      {
+        force: false,
         debug: false,
         silent: true,
-      }),
+      },
+    );
+
+    await pull(project, { type: "tag", tag }, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+      silent: true,
+    });
+
+    const exportFixture = artifactFixture.exportExpectedResult;
+
+    const exportResult = await exportContractAbi(
+      { project, search: { type: "tag", tag } },
+      exportFixture.name,
+      localStorage,
+      {
+        debug: false,
+        silent: true,
+      },
+    );
+
+    expect(exportResult.project).toBe(project);
+    expect(exportResult.tag).toBe(tag);
+    expect(exportResult.id).toBe(artifactId);
+    expect(exportResult.contract.name).toBe(exportFixture.name);
+    expect(exportResult.contract.path).toBe(exportFixture.path);
+    const expectedAbi = await fs
+      .readFile(exportFixture.abiPath, "utf-8")
+      .then(JSON.parse);
+    expect(exportResult.contract.abi).toEqual(expectedAbi);
+  });
+
+  test("export with non-existent artifact returns error", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+
+    await localStorage.ensureProjectSetup(project);
+
+    await expect(
+      exportContractAbi(
+        { project, search: { type: "tag", tag: "non-existent-tag" } },
+        "Counter",
+        localStorage,
+        {
+          debug: false,
+          silent: true,
+        },
+      ),
+    ).rejects.toThrow();
+  });
+
+  test("export contract ABI by ID", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+
+    await localStorage.ensureProjectSetup(project);
+
+    const artifactId = await push(
+      artifactFixture.folderPath,
+      project,
+      undefined,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    await pull(
+      project,
+      { type: "id", id: artifactId },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    const exportFixture = artifactFixture.exportExpectedResult;
+
+    const exportResult = await exportContractAbi(
+      { project, search: { type: "id", id: artifactId } },
+      exportFixture.name,
+      localStorage,
+      {
+        debug: false,
+        silent: true,
+      },
+    );
+
+    expect(exportResult.project).toBe(project);
+    expect(exportResult.tag).toBe(null);
+    expect(exportResult.id).toBe(artifactId);
+    expect(exportResult.contract.name).toBe(exportFixture.name);
+    expect(exportResult.contract.path).toBe(exportFixture.path);
+    const expectedAbi = await fs
+      .readFile(exportFixture.abiPath, "utf-8")
+      .then(JSON.parse);
+    expect(exportResult.contract.abi).toEqual(expectedAbi);
+  });
+
+  test("export with non-existent contract returns error", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+
+    await localStorage.ensureProjectSetup(project);
+
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+
+    const artifactId = await push(
+      artifactFixture.folderPath,
+      project,
+      undefined,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    await pull(
+      project,
+      { type: "id", id: artifactId },
+      storageProvider,
+      localStorage,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    await expect(
+      exportContractAbi(
+        { project, search: { type: "id", id: artifactId } },
+        "NonExistentContract",
+        localStorage,
+        {
+          debug: false,
+          silent: true,
+        },
+      ),
     ).rejects.toThrow();
   });
 

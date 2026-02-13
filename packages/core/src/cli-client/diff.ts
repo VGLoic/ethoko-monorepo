@@ -116,7 +116,10 @@ export type Difference = {
  */
 export async function generateDiffWithTargetRelease(
   artifactPath: string,
-  artifact: { project: string; tagOrId: string },
+  artifact: {
+    project: string;
+    search: { type: "tag"; tag: string } | { type: "id"; id: string };
+  },
   localStorage: LocalStorage,
   opts: { debug: boolean; silent?: boolean; isCI?: boolean },
 ): Promise<Difference[]> {
@@ -136,42 +139,41 @@ export async function generateDiffWithTargetRelease(
     );
   }
 
-  let type: "tag" | "id" | undefined = undefined;
-  const isIdResult = await toAsyncResult(
-    localStorage.hasId(artifact.project, artifact.tagOrId),
-    { debug: opts.debug },
-  );
-  if (!isIdResult.success) {
-    steps.fail("Failed to check local artifacts");
-    throw new CliError(
-      "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+  if (artifact.search.type === "tag") {
+    const hasTagResult = await toAsyncResult(
+      localStorage.hasTag(artifact.project, artifact.search.tag),
+      { debug: opts.debug },
     );
-  }
-  if (isIdResult.value) {
-    type = "id";
-  }
-
-  const isTagResult = await toAsyncResult(
-    localStorage.hasTag(artifact.project, artifact.tagOrId),
-    { debug: opts.debug },
-  );
-  if (!isTagResult.success) {
-    steps.fail("Failed to check local artifacts");
-    throw new CliError(
-      "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+    if (!hasTagResult.success) {
+      steps.fail("Failed to check local artifacts");
+      throw new CliError(
+        "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+      );
+    }
+    if (!hasTagResult.value) {
+      steps.fail("Local artifact not found");
+      throw new CliError(
+        `The artifact "${artifact.project}:${artifact.search.tag}" has not been found locally. Please, make sure to have the artifact locally before running the diff command. Run with debug mode for more info`,
+      );
+    }
+  } else {
+    const hasIdResult = await toAsyncResult(
+      localStorage.hasId(artifact.project, artifact.search.id),
+      { debug: opts.debug },
     );
+    if (!hasIdResult.success) {
+      steps.fail("Failed to check local artifacts");
+      throw new CliError(
+        "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+      );
+    }
+    if (!hasIdResult.value) {
+      steps.fail("Local artifact not found");
+      throw new CliError(
+        `The artifact "${artifact.project}:${artifact.search.id}" has not been found locally. Please, make sure to have the artifact locally before running the diff command. Run with debug mode for more info`,
+      );
+    }
   }
-  if (isTagResult.value) {
-    type = "tag";
-  }
-
-  if (!type) {
-    steps.fail("Local artifact not found");
-    throw new CliError(
-      `The artifact "${artifact.project}:${artifact.tagOrId}" has not been found locally. Please, make sure to have the artifact locally before running the diff command. Run with debug mode for more info`,
-    );
-  }
-
   steps.succeed("Local artifact found");
 
   // Step 2: Look for compilation artifact
@@ -217,9 +219,12 @@ export async function generateDiffWithTargetRelease(
 
   steps.start("Reading target artifact...");
   const artifactContentResult = await toAsyncResult(
-    type === "tag"
-      ? localStorage.retrieveArtifactByTag(artifact.project, artifact.tagOrId)
-      : localStorage.retrieveArtifactById(artifact.project, artifact.tagOrId),
+    artifact.search.type === "tag"
+      ? localStorage.retrieveArtifactByTag(
+          artifact.project,
+          artifact.search.tag,
+        )
+      : localStorage.retrieveArtifactById(artifact.project, artifact.search.id),
     { debug: opts.debug },
   );
   if (!artifactContentResult.success) {

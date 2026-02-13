@@ -236,7 +236,7 @@ export function toAsyncResult<T, TError = Error>(
 ```typescript
 await pull(
   optsParsingResult.data.project,
-  optsParsingResult.data.id || optsParsingResult.data.tag,
+  search,
   storageProvider,
   localStorage,
   {
