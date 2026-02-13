@@ -143,6 +143,27 @@ List the pulled compilation artifacts with their project.
 npx hardhat ethoko artifacts
 ```
 
+### Inspect
+
+Inspect a pulled compilation artifact to list contracts and metadata.
+
+```bash
+npx hardhat ethoko inspect --tag 2026-02-02
+npx hardhat ethoko inspect --id b5e41181986a
+```
+
+Target a different project:
+
+```bash
+npx hardhat ethoko inspect --project another-project --tag 2026-02-02
+```
+
+Output JSON for scripting:
+
+```bash
+npx hardhat ethoko inspect --tag 2026-02-02 --json
+```
+
 ### Diff
 
 Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.

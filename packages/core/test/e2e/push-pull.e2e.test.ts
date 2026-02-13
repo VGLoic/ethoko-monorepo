@@ -1,7 +1,12 @@
 import fs from "fs/promises";
 import path from "path";
 import { beforeEach, describe, expect, test } from "vitest";
-import { listPulledArtifacts, pull, push } from "@/cli-client/index";
+import {
+  inspectArtifact,
+  listPulledArtifacts,
+  pull,
+  push,
+} from "@/cli-client/index";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import {
   createTestLocalStorageProvider,
@@ -290,6 +295,97 @@ describe.each([
     await expect(
       pull(project, "non-existent-tag", storageProvider, localStorage, {
         force: false,
+        debug: false,
+        silent: true,
+      }),
+    ).rejects.toThrow();
+  });
+
+  test("inspect artifact by tag", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+    const tag = TEST_CONSTANTS.TAGS.V1;
+    const artifactPath =
+      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+
+    await localStorage.ensureProjectSetup(project);
+
+    const artifactId = await push(
+      artifactPath.folderPath,
+      project,
+      tag,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    await pull(project, tag, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+      silent: true,
+    });
+
+    const inspectResult = await inspectArtifact(
+      { project, tagOrId: tag },
+      localStorage,
+      { debug: false, silent: true },
+    );
+
+    expect(inspectResult.project).toBe(project);
+    expect(inspectResult.tag).toBe(tag);
+    expect(inspectResult.id).toBe(artifactId);
+    expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
+    expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
+    expect(inspectResult.fileSize).toBeGreaterThan(0);
+  });
+
+  test("inspect artifact by ID", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+    const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER;
+
+    await localStorage.ensureProjectSetup(project);
+
+    const artifactId = await push(
+      artifactPath.folderPath,
+      project,
+      undefined,
+      storageProvider,
+      {
+        force: false,
+        debug: false,
+        silent: true,
+      },
+    );
+
+    await pull(project, artifactId, storageProvider, localStorage, {
+      force: false,
+      debug: false,
+      silent: true,
+    });
+
+    const inspectResult = await inspectArtifact(
+      { project, tagOrId: artifactId },
+      localStorage,
+      { debug: false, silent: true },
+    );
+
+    expect(inspectResult.project).toBe(project);
+    expect(inspectResult.tag).toBe(null);
+    expect(inspectResult.id).toBe(artifactId);
+    expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
+    expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
+    expect(inspectResult.fileSize).toBeGreaterThan(0);
+  });
+
+  test("inspect non-existent artifact returns error", async () => {
+    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+
+    await localStorage.ensureProjectSetup(project);
+
+    await expect(
+      inspectArtifact({ project, tagOrId: "non-existent-tag" }, localStorage, {
         debug: false,
         silent: true,
       }),
