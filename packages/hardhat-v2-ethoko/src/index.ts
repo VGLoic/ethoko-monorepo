@@ -2,6 +2,7 @@ import "hardhat/types/config";
 import { extendConfig, scope } from "hardhat/config";
 import { HardhatConfig, HardhatUserConfig } from "hardhat/types/config";
 import { z } from "zod";
+import fs from "node:fs/promises";
 import { styleText } from "node:util";
 import { LocalStorage } from "@ethoko/core/local-storage";
 import {
@@ -22,6 +23,7 @@ import {
 } from "@ethoko/core/cli-ui";
 import {
   CliError,
+  exportContractAbi,
   generateArtifactsSummariesAndTypings,
   generateDiffWithTargetRelease,
   inspectArtifact,
@@ -211,7 +213,9 @@ Already downloaded artifacts are not downloaded again by default, enable the for
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });
@@ -328,7 +332,9 @@ If the provided tag already exists in the storage, the push will be aborted unle
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });
@@ -389,7 +395,9 @@ The typings will be generated in the configured typings path.
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });
@@ -450,7 +458,9 @@ ethokoScope
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });
@@ -557,14 +567,16 @@ Output JSON for scripting
           displayInspectResult(result, optsParsingResult.data.silent);
         }
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (err instanceof CliError) {
           cliError(err.message);
         } else {
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });
@@ -666,14 +678,173 @@ ethokoScope
       .then((result) =>
         displayDifferences(result, paramParsingResult.data.silent),
       )
-      .catch((err) => {
+      .catch((err: unknown) => {
         if (err instanceof CliError) {
           cliError(err.message);
         } else {
           cliError(
             "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-          console.error(err);
+          if (err instanceof Error) {
+            console.error(err);
+          }
+        }
+        process.exitCode = 1;
+      });
+  });
+
+ethokoScope
+  .task("export", "Export contract ABI from a pulled artifact.")
+  .setDescription(
+    `Export a contract ABI from a locally pulled artifact.
+
+The artifact must be identified by tag or ID. By default, the project is the one configured in the Hardhat configuration.
+
+Export by tag
+  npx hardhat ethoko export --tag v1.2.3 --contract Counter
+
+Export by ID
+  npx hardhat ethoko export --id dcauXtavGLxC --contract contracts/Counter.sol:Counter
+
+Export to a file (overwrites if exists)
+  npx hardhat ethoko export --tag v1.2.3 --contract Counter --output ./Counter.abi.json
+
+Pipe to another tool
+  npx hardhat ethoko export --tag v1.2.3 --contract Counter | jq
+`,
+  )
+  .addOptionalParam(
+    "contract",
+    "Contract name or fully qualified name (sourcePath:contractName)",
+  )
+  .addOptionalParam(
+    "id",
+    "The ID of the artifact to export from, can not be used with the `tag` parameter",
+  )
+  .addOptionalParam(
+    "tag",
+    "The tag of the artifact to export from, can not be used with the `id` parameter",
+  )
+  .addOptionalParam(
+    "project",
+    "The project to export from, defaults to the configured project",
+  )
+  .addOptionalParam(
+    "output",
+    "Output file path (prints to stdout if omitted, allowing piping/redirection)",
+  )
+  .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
+  .setAction(async (opts, hre) => {
+    const ethokoConfig = hre.config.ethoko;
+    if (!ethokoConfig) {
+      cliError("Ethoko is not configured");
+      process.exitCode = 1;
+      return;
+    }
+
+    const optsParsingResult = z
+      .object({
+        contract: z.string().min(1),
+        id: z.string().optional(),
+        tag: z.string().optional(),
+        project: z.string().optional().default(ethokoConfig.project),
+        output: z.string().optional(),
+        debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
+      })
+      .safeParse(opts);
+    if (!optsParsingResult.success) {
+      cliError("Invalid arguments");
+      if (ethokoConfig.debug) {
+        console.error(optsParsingResult.error);
+      }
+      process.exitCode = 1;
+      return;
+    }
+
+    if (optsParsingResult.data.id && optsParsingResult.data.tag) {
+      cliError("The ID and tag parameters can not be used together");
+      process.exitCode = 1;
+      return;
+    }
+
+    let search: { type: "tag"; tag: string } | { type: "id"; id: string };
+    if (optsParsingResult.data.id) {
+      search = { type: "id", id: optsParsingResult.data.id };
+    } else if (optsParsingResult.data.tag) {
+      search = { type: "tag", tag: optsParsingResult.data.tag };
+    } else {
+      cliError("The artifact must be identified by a tag or an ID");
+      process.exitCode = 1;
+      return;
+    }
+
+    if (optsParsingResult.data.output) {
+      boxHeader(
+        `Exporting ABI for "${optsParsingResult.data.contract}" from "${optsParsingResult.data.project}:${search.type === "tag" ? search.tag : search.id}"`,
+        optsParsingResult.data.silent,
+      );
+    }
+
+    const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
+
+    await exportContractAbi(
+      { project: optsParsingResult.data.project, search },
+      optsParsingResult.data.contract,
+      localStorage,
+      {
+        debug: optsParsingResult.data.debug,
+        silent: optsParsingResult.data.silent,
+      },
+    )
+      .then(async (result) => {
+        if (optsParsingResult.data.output) {
+          const abiJson = JSON.stringify(result.contract.abi, null, 2);
+
+          try {
+            await fs.access(optsParsingResult.data.output);
+            if (!optsParsingResult.data.silent) {
+              console.error(
+                styleText(
+                  LOG_COLORS.warn,
+                  `⚠ File ${optsParsingResult.data.output} already exists, overwriting...`,
+                ),
+              );
+            }
+          } catch {
+            // File does not exist.
+          }
+
+          await fs.writeFile(optsParsingResult.data.output, `${abiJson}\n`);
+
+          if (!optsParsingResult.data.silent) {
+            const contractIdentifier = `${result.contract.path}:${result.contract.name}`;
+            const artifactLabel = result.tag
+              ? `${result.project}:${result.tag}`
+              : `${result.project}:${result.id}`;
+            console.error(
+              styleText(
+                LOG_COLORS.success,
+                `\n✔ Exported ABI for ${contractIdentifier} from ${artifactLabel} to ${optsParsingResult.data.output}`,
+              ),
+            );
+          }
+          return;
+        }
+
+        console.log(JSON.stringify(result.contract.abi, null, 2));
+      })
+      .catch((err: unknown) => {
+        if (err instanceof CliError) {
+          cliError(err.message);
+        } else {
+          cliError(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          if (err instanceof Error) {
+            console.error(err);
+          }
         }
         process.exitCode = 1;
       });

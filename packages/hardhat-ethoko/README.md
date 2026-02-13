@@ -164,6 +164,27 @@ Output JSON for scripting:
 npx hardhat ethoko inspect --tag 2026-02-02 --json
 ```
 
+### Export
+
+Export a contract ABI from a locally pulled artifact.
+
+```bash
+npx hardhat ethoko export --tag 2026-02-02 --contract Counter
+npx hardhat ethoko export --id b5e41181986a --contract contracts/Counter.sol:Counter
+```
+
+Write the ABI to a file (overwrites if it exists):
+
+```bash
+npx hardhat ethoko export --tag 2026-02-02 --contract Counter --output ./Counter.abi.json
+```
+
+Pipe the ABI to another tool:
+
+```bash
+npx hardhat ethoko export --tag 2026-02-02 --contract Counter | jq
+```
+
 ### Diff
 
 Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.

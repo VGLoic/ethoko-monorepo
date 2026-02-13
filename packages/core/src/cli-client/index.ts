@@ -9,3 +9,4 @@ export {
   type ListArtifactsResult,
   type ArtifactItem,
 } from "./list-pulled-artifacts";
+export { exportContractAbi, type ExportAbiResult } from "./export-abi";

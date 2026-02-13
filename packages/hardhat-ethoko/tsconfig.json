@@ -1,7 +1,11 @@
 {
   "extends": "@ethoko/typescript-config/node-base.json",
   "compilerOptions": {
-    "types": ["node"]
+    "types": ["node"],
+    "baseUrl": ".",
+    "paths": {
+      "@ethoko/core/*": ["../core/src/*"]
+    }
   },
   "include": ["src"]
 }

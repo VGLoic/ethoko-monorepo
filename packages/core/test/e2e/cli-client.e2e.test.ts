@@ -6,6 +6,7 @@ import {
   listPulledArtifacts,
   pull,
   push,
+  exportContractAbi,
 } from "@/cli-client/index";
 import { createTestLocalStorage } from "@test/helpers/local-storage-factory";
 import {
@@ -16,7 +17,6 @@ import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import type { LocalStorage } from "@/local-storage";
 import { LocalStorageProvider, StorageProvider } from "@/storage-provider";
-import { exportContractAbi } from "@/cli-client/export-abi";
 
 describe.each([
   ["Local Storage Provider", "local" as const, createTestLocalStorageProvider],
