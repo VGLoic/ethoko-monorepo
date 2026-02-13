@@ -40,91 +40,94 @@ describe.each([
   test.each([
     [
       "Hardhat V2 Counter",
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V2_COUNTER,
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER,
     ],
-    ["Foundry Counter", TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER],
+    ["Foundry Counter", TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER],
     [
       "Hardhat V3 Counter",
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER,
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
     ],
     [
       "Foundry Build Info Counter",
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_BUILD_INFO_COUNTER,
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER,
     ],
-  ])("push artifact [%s] without tag → pull by ID", async (_, artifactPath) => {
-    const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+  ])(
+    "push artifact [%s] without tag → pull by ID",
+    async (_, artifactFixture) => {
+      const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-    await localStorage.ensureProjectSetup(project);
+      await localStorage.ensureProjectSetup(project);
 
-    const artifactId = await push(
-      artifactPath.folderPath,
-      project,
-      undefined,
-      storageProvider,
-      {
-        force: false,
+      const artifactId = await push(
+        artifactFixture.folderPath,
+        project,
+        undefined,
+        storageProvider,
+        {
+          force: false,
+          debug: false,
+          silent: true,
+        },
+      );
+
+      expect(artifactId).toBeTruthy();
+      expect(artifactId).toHaveLength(12);
+
+      const hasArtifact = await storageProvider.hasArtifactById(
+        project,
+        artifactId,
+      );
+      expect(hasArtifact).toBe(true);
+
+      const pullResult = await pull(
+        project,
+        artifactId,
+        storageProvider,
+        localStorage,
+        {
+          force: false,
+          debug: false,
+          silent: true,
+        },
+      );
+
+      expect(pullResult.pulledIds).toContain(artifactId);
+      expect(pullResult.failedIds).toHaveLength(0);
+
+      const listArtifactsResult = await listPulledArtifacts(localStorage, {
         debug: false,
         silent: true,
-      },
-    );
+      });
+      expect(
+        listArtifactsResult.some(
+          (r) => r.id === artifactId && r.project === project,
+        ),
+      ).toBe(true);
 
-    expect(artifactId).toBeTruthy();
-    expect(artifactId).toHaveLength(12);
+      const localArtifact = await localStorage.retrieveArtifactById(
+        project,
+        artifactId,
+      );
+      const originalContent = await fs.readFile(
+        artifactFixture.buildInfoPath,
+        "utf-8",
+      );
+      const originalJson = JSON.parse(originalContent) as { id: string };
 
-    const hasArtifact = await storageProvider.hasArtifactById(
-      project,
-      artifactId,
-    );
-    expect(hasArtifact).toBe(true);
-
-    const pullResult = await pull(
-      project,
-      artifactId,
-      storageProvider,
-      localStorage,
-      {
-        force: false,
-        debug: false,
-        silent: true,
-      },
-    );
-
-    expect(pullResult.pulledIds).toContain(artifactId);
-    expect(pullResult.failedIds).toHaveLength(0);
-
-    const listArtifactsResult = await listPulledArtifacts(localStorage, {
-      debug: false,
-      silent: true,
-    });
-    expect(
-      listArtifactsResult.some(
-        (r) => r.id === artifactId && r.project === project,
-      ),
-    ).toBe(true);
-
-    const localArtifact = await localStorage.retrieveArtifactById(
-      project,
-      artifactId,
-    );
-    const originalContent = await fs.readFile(
-      artifactPath.buildInfoPath,
-      "utf-8",
-    );
-    const originalJson = JSON.parse(originalContent) as { id: string };
-
-    expect(localArtifact.origin.id).toBe(originalJson.id);
-  });
+      expect(localArtifact.origin.id).toBe(originalJson.id);
+    },
+  );
 
   test("push artifact with tag → pull by tag", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
     const artifactId = await push(
-      artifactPath.folderPath,
+      artifactFixture.folderPath,
       project,
       tag,
       storageProvider,
@@ -165,20 +168,20 @@ describe.each([
     const project = createTestProjectName(
       TEST_CONSTANTS.PROJECTS.MULTI_ARTIFACT,
     );
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
     const tag1 = TEST_CONSTANTS.TAGS.V1;
     const tag2 = TEST_CONSTANTS.TAGS.V2;
 
-    await push(artifactPath.folderPath, project, tag1, storageProvider, {
+    await push(artifactFixture.folderPath, project, tag1, storageProvider, {
       force: false,
       debug: false,
       silent: true,
     });
-    await push(artifactPath.folderPath, project, tag2, storageProvider, {
+    await push(artifactFixture.folderPath, project, tag2, storageProvider, {
       force: true,
       debug: false,
       silent: true,
@@ -210,13 +213,13 @@ describe.each([
   test("force push overwrites existing tag", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.FORCE_TEST);
     const tag = TEST_CONSTANTS.TAGS.LATEST;
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
     const id1 = await push(
-      artifactPath.folderPath,
+      artifactFixture.folderPath,
       project,
       tag,
       storageProvider,
@@ -228,7 +231,7 @@ describe.each([
     );
 
     await expect(
-      push(artifactPath.folderPath, project, tag, storageProvider, {
+      push(artifactFixture.folderPath, project, tag, storageProvider, {
         force: false,
         debug: false,
         silent: true,
@@ -236,7 +239,7 @@ describe.each([
     ).rejects.toThrow(/already exists/);
 
     const id2 = await push(
-      artifactPath.folderPath,
+      artifactFixture.folderPath,
       project,
       tag,
       storageProvider,
@@ -256,12 +259,12 @@ describe.each([
   test("pull with force re-downloads existing artifacts", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
-    await push(artifactPath.folderPath, project, tag, storageProvider, {
+    await push(artifactFixture.folderPath, project, tag, storageProvider, {
       force: false,
       debug: false,
       silent: true,
@@ -304,13 +307,13 @@ describe.each([
   test("inspect artifact by tag", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
     const tag = TEST_CONSTANTS.TAGS.V1;
-    const artifactPath =
-      TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+    const artifactFixture =
+      TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
     const artifactId = await push(
-      artifactPath.folderPath,
+      artifactFixture.folderPath,
       project,
       tag,
       storageProvider,
@@ -343,12 +346,12 @@ describe.each([
 
   test("inspect artifact by ID", async () => {
     const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-    const artifactPath = TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.FOUNDRY_COUNTER;
+    const artifactFixture = TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER;
 
     await localStorage.ensureProjectSetup(project);
 
     const artifactId = await push(
-      artifactPath.folderPath,
+      artifactFixture.folderPath,
       project,
       undefined,
       storageProvider,
@@ -397,13 +400,13 @@ describe.each([
     async () => {
       const localStorageProvider = storageProvider as LocalStorageProvider;
       const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-      const artifactPath =
-        TEST_CONSTANTS.PATHS.SAMPLE_ARTIFACT.HARDHAT_V3_COUNTER;
+      const artifactFixture =
+        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
       await localStorage.ensureProjectSetup(project);
 
       const artifactId = await push(
-        artifactPath.folderPath,
+        artifactFixture.folderPath,
         project,
         undefined,
         storageProvider,
@@ -421,7 +424,7 @@ describe.each([
         "ids",
         artifactId,
         "original-content",
-        artifactPath.buildInfoPath.replace(/^\.\//, ""),
+        artifactFixture.buildInfoPath.replace(/^\.\//, ""),
       );
 
       const stored = await fs.stat(storedBuildInfo);
