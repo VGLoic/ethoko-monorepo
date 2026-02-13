@@ -188,6 +188,12 @@ Pipe the ABI to another tool:
 npx hardhat ethoko export --tag 2026-02-02 --contract Counter | jq
 ```
 
+Export the ABI as a TypeScript `const`:
+
+```bash
+echo "export const MY_ABI = $(npx hardhat ethoko export --tag 2026-02-02 --contract Counter) as const;" > ./my-abi.ts
+```
+
 ### Diff
 
 Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.
