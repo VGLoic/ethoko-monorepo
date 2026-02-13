@@ -341,6 +341,7 @@ describe.each([
     expect(inspectResult.id).toBe(artifactId);
     expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
     expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
+    expect(inspectResult.artifactPath).toContain(`/tags/${tag}.json`);
     expect(inspectResult.fileSize).toBeGreaterThan(0);
     const fullyQualifiedPathsResult = inspectResult.contractsBySource
       .map((c) => c.contracts.map((contract) => `${c.sourcePath}:${contract}`))
@@ -386,6 +387,7 @@ describe.each([
     expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
     expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
     expect(inspectResult.fileSize).toBeGreaterThan(0);
+    expect(inspectResult.artifactPath).toContain(`/ids/${artifactId}.json`);
     const fullyQualifiedPathsResult = inspectResult.contractsBySource
       .map((c) => c.contracts.map((contract) => `${c.sourcePath}:${contract}`))
       .flat();

@@ -3,6 +3,13 @@ import { styleText } from "node:util";
 import type { InspectResult } from "../cli-client/inspect";
 import { boxSummary, LOG_COLORS } from "./utils";
 
+const ORIGIN_FORMAT_LABELS: Record<InspectResult["origin"]["format"], string> =
+  {
+    "hardhat-v2": "Hardhat v2",
+    "hardhat-v3": "Hardhat v3",
+    forge: "Forge",
+  };
+
 export function displayInspectResult(
   result: InspectResult,
   silent = false,
@@ -18,13 +25,16 @@ export function displayInspectResult(
   summaryLines.push(styleText(LOG_COLORS.log, `Artifact: ${artifactLabel}`));
   summaryLines.push(styleText(LOG_COLORS.log, `ID: ${result.id}`));
   summaryLines.push(
+    styleText(
+      LOG_COLORS.log,
+      `Origin: ${ORIGIN_FORMAT_LABELS[result.origin.format]} (${result.origin.id})}`,
+    ),
+  );
+  summaryLines.push(
     styleText(LOG_COLORS.log, `File size: ${formatBytes(result.fileSize)}`),
   );
   summaryLines.push(
-    styleText(
-      LOG_COLORS.log,
-      `Origin: ${result.origin.format} (${result.origin.id})${result.origin.outputFormat ? ` → ${result.origin.outputFormat}` : ""}`,
-    ),
+    styleText(LOG_COLORS.log, `File path: ${result.artifactPath}`),
   );
   summaryLines.push("");
   summaryLines.push(styleText(["bold", LOG_COLORS.log], "Compiler Settings:"));

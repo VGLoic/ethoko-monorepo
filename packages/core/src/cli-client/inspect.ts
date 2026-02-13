@@ -4,6 +4,8 @@ import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import type { EthokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
+import { HARDHAT_V3_COMPILER_INPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
+import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
 
 export type InspectResult = {
   project: string;
@@ -12,8 +14,7 @@ export type InspectResult = {
   fileSize: number;
   origin: {
     id: string;
-    format: string;
-    outputFormat?: string;
+    format: "forge" | "hardhat-v2" | "hardhat-v3";
   };
   compiler: {
     solcLongVersion: string;
@@ -29,6 +30,7 @@ export type InspectResult = {
     sourcePath: string;
     contracts: string[];
   }>;
+  artifactPath: string;
 };
 
 /**
@@ -112,15 +114,26 @@ export async function inspectArtifact(
 
   const compilerSettings = deriveCompilerSettings(artifactResult.value);
 
+  const originFormat =
+    artifactResult.value.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
+      ? "hardhat-v3"
+      : artifactResult.value.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
+        ? "hardhat-v2"
+        : "forge";
+
   return {
     project: artifact.project,
     tag: type === "tag" ? artifact.tagOrId : null,
     id: artifactResult.value.id,
     fileSize: fileStatResult.value.size,
-    origin: artifactResult.value.origin,
+    origin: {
+      id: artifactResult.value.origin.id,
+      format: originFormat,
+    },
     compiler: compilerSettings,
     sourceFiles: Object.keys(artifactResult.value.input.sources).sort(),
     contractsBySource: deriveContractsBySource(artifactResult.value),
+    artifactPath,
   };
 }
 
