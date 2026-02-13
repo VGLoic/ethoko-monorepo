@@ -90,6 +90,12 @@ async function deployFoo() {
 }
 ```
 
+Export the ABI of a specific contract for a given tag
+
+<picture>
+  <img alt="Export example" src="images/export-example.png">
+</picture>
+
 ### Complete guide and examples
 
 Please refer to the [Hardhat Ethoko documentation](packages/hardhat-ethoko/README.md)

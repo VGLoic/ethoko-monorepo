@@ -51,25 +51,38 @@ export async function exportContractAbi(
 
   if (shortOrFullyQualifiedContractName.split(":").length === 1) {
     // Short name, find the contract with that name, if multiple are found, throw an error
-    const matchingSourcePaths = [];
+    // We will perform the search with lowercase names to allow case-insensitive matching, but we will return the ABI with the original contract name casing
+    const lowerCaseContractName =
+      shortOrFullyQualifiedContractName.toLowerCase();
+    const matchingContracts: {
+      sourcePath: string;
+      exactContractName: string;
+    }[] = [];
     for (const [sourcePath, contractsByName] of Object.entries(contracts)) {
-      if (shortOrFullyQualifiedContractName in contractsByName) {
-        matchingSourcePaths.push(sourcePath);
+      for (const contractName of Object.keys(contractsByName)) {
+        if (contractName.toLowerCase() === lowerCaseContractName) {
+          matchingContracts.push({
+            sourcePath,
+            exactContractName: contractName,
+          });
+        }
       }
     }
-    const matchingSourcePath = matchingSourcePaths[0];
-    if (!matchingSourcePath) {
+    const matchingContract = matchingContracts[0];
+    if (!matchingContract) {
       throw new CliError(
         `No contract found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}`,
       );
     }
-    if (matchingSourcePaths.length > 1) {
+    if (matchingContracts.length > 1) {
       throw new CliError(
-        `Multiple contracts found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}, please specify the fully qualified contract name (i.e. <sourcePath>:${shortOrFullyQualifiedContractName}).\nMatching source paths: ${matchingSourcePaths.join(", ")}`,
+        `Multiple contracts found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}, please specify the fully qualified contract name (i.e. <sourcePath>:${shortOrFullyQualifiedContractName}).\nMatching source paths: ${matchingContracts.map((c) => c.sourcePath).join(", ")}`,
       );
     }
     const abi =
-      contracts[matchingSourcePath]?.[shortOrFullyQualifiedContractName]?.abi;
+      contracts[matchingContract.sourcePath]?.[
+        matchingContract.exactContractName
+      ]?.abi;
     if (!abi) {
       throw new CliError(
         `No ABI found for contract ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}`,
@@ -80,8 +93,8 @@ export async function exportContractAbi(
       tag: artifact.search.type === "tag" ? artifact.search.tag : null,
       id: artifactResult.value.id,
       contract: {
-        path: matchingSourcePath,
-        name: shortOrFullyQualifiedContractName,
+        path: matchingContract.sourcePath,
+        name: matchingContract.exactContractName,
         abi,
       },
     };
@@ -95,18 +108,23 @@ export async function exportContractAbi(
     );
   }
   const [sourcePath, contractName] = elements as [string, string];
+  // We will perform the search with lowercase names to allow case-insensitive matching, but we will return the ABI with the original contract name casing
+  const lowerCaseContractName = contractName.toLowerCase();
   const sourceContracts = contracts[sourcePath];
   if (!sourceContracts) {
     throw new CliError(
       `No contracts found for source path ${sourcePath} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}`,
     );
   }
-  const contract = sourceContracts[contractName];
-  if (!contract) {
+  const matchingEntry = Object.entries(sourceContracts).find(
+    ([name]) => name.toLowerCase() === lowerCaseContractName,
+  );
+  if (!matchingEntry) {
     throw new CliError(
       `No contract found with name ${contractName} in source path ${sourcePath} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}`,
     );
   }
+  const [exactContractName, contract] = matchingEntry;
   if (!contract.abi) {
     throw new CliError(
       `No ABI found for contract ${contractName} in source path ${sourcePath} in artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}`,
@@ -118,7 +136,7 @@ export async function exportContractAbi(
     id: artifactResult.value.id,
     contract: {
       path: sourcePath,
-      name: contractName,
+      name: exactContractName,
       abi: contract.abi,
     },
   };
