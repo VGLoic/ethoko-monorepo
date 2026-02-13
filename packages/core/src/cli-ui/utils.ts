@@ -20,10 +20,12 @@ export class StepTracker {
   private currentStep: number;
   private readonly totalSteps: number;
   private spinner: Ora | undefined;
+  private readonly silent: boolean;
 
-  constructor(totalSteps: number) {
+  constructor(totalSteps: number, silent = false) {
     this.currentStep = 0;
     this.totalSteps = totalSteps;
+    this.silent = silent;
   }
 
   /**
@@ -39,6 +41,7 @@ export class StepTracker {
       text: message,
       prefixText: prefix,
       stream: process.stderr,
+      isSilent: this.silent,
     }).start();
     return this.spinner;
   }
@@ -83,17 +86,19 @@ export class StepTracker {
 /**
  * Creates a simple spinner without step tracking
  */
-export function createSpinner(message: string): Ora {
+export function createSpinner(message: string, silent = false): Ora {
   return ora({
     text: message,
     stream: process.stderr,
+    isSilent: silent,
   }).start();
 }
 
 /**
  * Creates a boxed header message
  */
-export function boxHeader(message: string): void {
+export function boxHeader(message: string, silent = false): void {
+  if (silent) return;
   const boxed = boxen(message, {
     padding: 0,
     margin: { top: 1, bottom: 0, left: 0, right: 0 },
@@ -106,7 +111,12 @@ export function boxHeader(message: string): void {
 /**
  * Creates a boxed summary with multiple lines
  */
-export function boxSummary(title: string, lines: string[]): void {
+export function boxSummary(
+  title: string,
+  lines: string[],
+  silent = false,
+): void {
+  if (silent) return;
   const boldTitle = styleText("bold", title);
   const content = `${boldTitle}\n\n${lines.join("\n")}`;
   const boxed = boxen(content, {
@@ -121,7 +131,8 @@ export function boxSummary(title: string, lines: string[]): void {
 /**
  * Enhanced success message
  */
-export function success(message: string): void {
+export function success(message: string, silent = false): void {
+  if (silent) return;
   console.error(styleText(LOG_COLORS.success, `✔ ${message}`));
 }
 
@@ -142,6 +153,7 @@ export function warn(message: string): void {
 /**
  * Enhanced info message
  */
-export function info(message: string): void {
+export function info(message: string, silent = false): void {
+  if (silent) return;
   console.error(styleText(LOG_COLORS.log, `ℹ ${message}`));
 }

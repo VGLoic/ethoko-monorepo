@@ -18,6 +18,7 @@ interface PullTaskArguments {
   project?: string;
   force?: boolean;
   debug?: boolean;
+  silent?: boolean;
 }
 
 export default async function (
@@ -38,6 +39,7 @@ export default async function (
       project: z.string().optional().default(ethokoConfig.project),
       force: z.boolean().default(false),
       debug: z.boolean().default(ethokoConfig.debug),
+      silent: z.boolean().default(false),
     })
     .safeParse(taskArguments);
   if (!optsParsingResult.success) {
@@ -58,9 +60,13 @@ export default async function (
   if (optsParsingResult.data.id || optsParsingResult.data.tag) {
     boxHeader(
       `Pulling artifact "${optsParsingResult.data.project}:${optsParsingResult.data.id || optsParsingResult.data.tag}"`,
+      optsParsingResult.data.silent,
     );
   } else {
-    boxHeader(`Pulling artifacts for "${optsParsingResult.data.project}"`);
+    boxHeader(
+      `Pulling artifacts for "${optsParsingResult.data.project}"`,
+      optsParsingResult.data.silent,
+    );
   }
 
   const storageProvider =
@@ -86,10 +92,15 @@ export default async function (
     {
       force: optsParsingResult.data.force,
       debug: ethokoConfig.debug || optsParsingResult.data.debug,
+      silent: optsParsingResult.data.silent,
     },
   )
     .then((result) =>
-      displayPullResults(optsParsingResult.data.project, result),
+      displayPullResults(
+        optsParsingResult.data.project,
+        result,
+        optsParsingResult.data.silent,
+      ),
     )
     .catch((err) => {
       if (err instanceof CliError) {

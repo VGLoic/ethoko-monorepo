@@ -44,6 +44,7 @@ type SupportedBuildInfoFormat = BuildInfoPath["format"];
  * @param steps Step tracker to stop spinner during prompts
  * @param opts Options for the function
  * @param opts.debug Enable debug mode
+ * @param opts.silent Suppress CLI output
  * @param opts.isCI Whether running in CI environment (disables prompts)
  * @returns The path to the build info JSON file
  * @throws A CliError
@@ -51,7 +52,7 @@ type SupportedBuildInfoFormat = BuildInfoPath["format"];
 export async function lookForBuildInfoJsonFile(
   inputPath: string,
   steps: StepTracker,
-  opts: { debug: boolean; isCI?: boolean },
+  opts: { debug: boolean; silent?: boolean; isCI?: boolean },
 ): Promise<BuildInfoPath> {
   const { debug, isCI = false } = opts;
   const statResult = await toAsyncResult(fs.stat(inputPath), { debug });

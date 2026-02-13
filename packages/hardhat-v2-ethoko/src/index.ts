@@ -110,6 +110,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
     "Force the pull of the artifacts, replacing previously downloaded ones",
   )
   .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -125,6 +126,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
         project: z.string().optional().default(ethokoConfig.project),
         force: z.boolean().default(false),
         debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
       })
       .safeParse(opts);
     if (!optsParsingResult.success) {
@@ -145,9 +147,13 @@ Already downloaded artifacts are not downloaded again by default, enable the for
     if (optsParsingResult.data.id || optsParsingResult.data.tag) {
       boxHeader(
         `Pulling artifact "${optsParsingResult.data.project}:${optsParsingResult.data.id || optsParsingResult.data.tag}"`,
+        optsParsingResult.data.silent,
       );
     } else {
-      boxHeader(`Pulling artifacts for "${optsParsingResult.data.project}"`);
+      boxHeader(
+        `Pulling artifacts for "${optsParsingResult.data.project}"`,
+        optsParsingResult.data.silent,
+      );
     }
 
     const storageProvider =
@@ -174,10 +180,15 @@ Already downloaded artifacts are not downloaded again by default, enable the for
       {
         force: optsParsingResult.data.force,
         debug: ethokoConfig.debug || optsParsingResult.data.debug,
+        silent: optsParsingResult.data.silent,
       },
     )
       .then((result) =>
-        displayPullResults(optsParsingResult.data.project, result),
+        displayPullResults(
+          optsParsingResult.data.project,
+          result,
+          optsParsingResult.data.silent,
+        ),
       )
       .catch((err) => {
         if (err instanceof CliError) {
@@ -216,6 +227,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
     "Force the push of the artifact even if it already exists in the storage",
   )
   .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -230,6 +242,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
         tag: z.string().optional(),
         force: z.boolean().default(false),
         debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
       })
       .safeParse(opts);
 
@@ -255,6 +268,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
 
     boxHeader(
       `Pushing artifact to "${ethokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+      optsParsingResult.data.silent,
     );
 
     const storageProvider =
@@ -282,6 +296,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
         force: optsParsingResult.data.force,
         debug: ethokoConfig.debug || optsParsingResult.data.debug,
         isCI: process.env.CI === "true" || process.env.CI === "1",
+        silent: optsParsingResult.data.silent,
       },
     )
       .then((result) =>
@@ -289,6 +304,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
           ethokoConfig.project,
           optsParsingResult.data.tag,
           result,
+          optsParsingResult.data.silent,
         ),
       )
       .catch((err) => {
@@ -312,6 +328,7 @@ The typings will be generated in the configured typings path.
 `,
   )
   .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -323,6 +340,7 @@ The typings will be generated in the configured typings path.
     const parsingResult = z
       .object({
         debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
       })
       .safeParse(opts);
 
@@ -335,7 +353,7 @@ The typings will be generated in the configured typings path.
       return;
     }
 
-    boxHeader("Generating typings");
+    boxHeader("Generating typings", parsingResult.data.silent);
 
     const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
@@ -344,6 +362,7 @@ The typings will be generated in the configured typings path.
       localStorage,
       {
         debug: parsingResult.data.debug,
+        silent: parsingResult.data.silent,
       },
     )
       .then(() => {
@@ -368,6 +387,7 @@ ethokoScope
     "List the artifacts that have been pulled with their associated projects.",
   )
   .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -379,6 +399,7 @@ ethokoScope
     const parsingResult = z
       .object({
         debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
       })
       .safeParse(opts);
 
@@ -391,14 +412,17 @@ ethokoScope
       return;
     }
 
-    boxHeader("Listing artifacts");
+    boxHeader("Listing artifacts", parsingResult.data.silent);
 
     const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
     await listPulledArtifacts(localStorage, {
       debug: parsingResult.data.debug,
+      silent: parsingResult.data.silent,
     })
-      .then(displayListArtifactsResults)
+      .then((result) =>
+        displayListArtifactsResults(result, parsingResult.data.silent),
+      )
       .catch((err) => {
         if (err instanceof CliError) {
           cliError(err.message);
@@ -427,6 +451,7 @@ ethokoScope
     "The tag of the artifact to compare with, can not be used with the `id` parameter",
   )
   .addFlag("debug", "Enable debug mode")
+  .addFlag("silent", "Suppress CLI output (except errors and warnings)")
   .setAction(async (opts, hre) => {
     const ethokoConfig = hre.config.ethoko;
     if (!ethokoConfig) {
@@ -441,6 +466,7 @@ ethokoScope
         id: z.string().optional(),
         tag: z.string().optional(),
         debug: z.boolean().default(ethokoConfig.debug),
+        silent: z.boolean().default(false),
       })
       .safeParse(opts);
     if (!paramParsingResult.success) {
@@ -482,7 +508,10 @@ ethokoScope
       return;
     }
 
-    boxHeader(`Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`);
+    boxHeader(
+      `Comparing with artifact "${ethokoConfig.project}:${tagOrId}"`,
+      paramParsingResult.data.silent,
+    );
 
     const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
@@ -493,9 +522,12 @@ ethokoScope
       {
         debug: paramParsingResult.data.debug,
         isCI: process.env.CI === "true" || process.env.CI === "1",
+        silent: paramParsingResult.data.silent,
       },
     )
-      .then(displayDifferences)
+      .then((result) =>
+        displayDifferences(result, paramParsingResult.data.silent),
+      )
       .catch((err) => {
         if (err instanceof CliError) {
           cliError(err.message);

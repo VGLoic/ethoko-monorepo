@@ -10,6 +10,7 @@ import { LocalStorage } from "@ethoko/core/local-storage";
 
 interface ListTaskArguments {
   debug?: boolean;
+  silent?: boolean;
 }
 
 export default async function (
@@ -26,6 +27,7 @@ export default async function (
   const parsingResult = z
     .object({
       debug: z.boolean().default(ethokoConfig.debug),
+      silent: z.boolean().default(false),
     })
     .safeParse(taskArguments);
 
@@ -38,14 +40,17 @@ export default async function (
     return;
   }
 
-  boxHeader("Listing artifacts");
+  boxHeader("Listing artifacts", parsingResult.data.silent);
 
   const localStorage = new LocalStorage(ethokoConfig.pulledArtifactsPath);
 
   await listPulledArtifacts(localStorage, {
     debug: parsingResult.data.debug,
+    silent: parsingResult.data.silent,
   })
-    .then(displayListArtifactsResults)
+    .then((result) =>
+      displayListArtifactsResults(result, parsingResult.data.silent),
+    )
     .catch((err) => {
       if (err instanceof CliError) {
         cliError(err.message);

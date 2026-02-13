@@ -10,16 +10,20 @@ import { LOG_COLORS, success, boxSummary, warn } from "./utils";
 // ########### CLI RESULT DISPLAY ###########
 // ##########################################
 
-export function displayPullResults(project: string, data: PullResult): void {
+export function displayPullResults(
+  project: string,
+  data: PullResult,
+  silent = false,
+): void {
   if (data.remoteTags.length === 0 && data.remoteIds.length === 0) {
-    success("No artifacts to pull yet");
+    success("No artifacts to pull yet", silent);
   } else if (
     data.failedTags.length === 0 &&
     data.failedIds.length === 0 &&
     data.pulledTags.length === 0 &&
     data.pulledIds.length === 0
   ) {
-    success(`You're up to date with project "${project}"`);
+    success(`You're up to date with project "${project}"`, silent);
   } else {
     const summaryLines: string[] = [];
 
@@ -58,7 +62,7 @@ export function displayPullResults(project: string, data: PullResult): void {
     }
 
     if (summaryLines.length > 0) {
-      boxSummary("Summary", summaryLines);
+      boxSummary("Summary", summaryLines, silent);
     }
   }
 }
@@ -67,18 +71,25 @@ export function displayPushResult(
   project: string,
   tag: string | undefined,
   artifactId: string,
+  silent = false,
 ): void {
+  if (silent) return;
   console.error("");
   success(`Artifact "${project}:${tag || artifactId}" pushed successfully`);
   console.error(styleText(LOG_COLORS.log, `  ID: ${artifactId}`));
   console.error("");
 }
 
-export function displayListArtifactsResults(data: ListArtifactsResult): void {
+export function displayListArtifactsResults(
+  data: ListArtifactsResult,
+  silent = false,
+): void {
   if (data.length === 0) {
     warn("No artifacts found");
     return;
   }
+
+  if (silent) return;
 
   const structuredData = data.map((item) => ({
     Project: item.project,
@@ -111,11 +122,16 @@ function deriveTimeAgo(time: string): string {
   return `Less than a minute ago`;
 }
 
-export function displayDifferences(differences: Difference[]): void {
+export function displayDifferences(
+  differences: Difference[],
+  silent = false,
+): void {
   if (differences.length === 0) {
-    console.error("");
-    success("No differences found");
-    console.error("");
+    if (!silent) {
+      console.error("");
+      success("No differences found");
+      console.error("");
+    }
     return;
   }
 
@@ -154,7 +170,7 @@ export function displayDifferences(differences: Difference[]): void {
     });
   }
 
-  boxSummary("Differences Found", summaryLines);
+  boxSummary("Differences Found", summaryLines, silent);
 }
 
 /**

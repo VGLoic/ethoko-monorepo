@@ -26,7 +26,10 @@ export type PullResult = {
  * @param tagOrId The tag or ID of the artifact to pull, if not provided all tags and IDs will be pulled
  * @param storageProvider The storage provider used to access remote artifacts
  * @param localStorage The local storage used to persist pulled artifacts
- * @param opts Options for the pull command, currently only supports the force option to skip the check of existing local artifacts
+ * @param opts Options for the pull command
+ * @param opts.force Force the pull to skip checking existing local artifacts
+ * @param opts.debug Enable debug mode
+ * @param opts.silent Suppress CLI output (errors and warnings still shown)
  * @returns An object with the remote tags and IDs, pulled tags and IDs, and failed tags and IDs
  *
  */
@@ -35,9 +38,9 @@ export async function pull(
   tagOrId: string | undefined,
   storageProvider: StorageProvider,
   localStorage: LocalStorage,
-  opts: { force: boolean; debug: boolean },
+  opts: { force: boolean; debug: boolean; silent?: boolean },
 ): Promise<PullResult> {
-  const steps = new StepTracker(4);
+  const steps = new StepTracker(4, opts.silent);
 
   // Step 1: Set up local storage
   steps.start("Setting up local storage...");

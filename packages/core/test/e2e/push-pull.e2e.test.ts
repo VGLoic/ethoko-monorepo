@@ -58,7 +58,8 @@ describe.each([
       storageProvider,
       {
         force: false,
-        debug: true,
+        debug: false,
+        silent: true,
       },
     );
 
@@ -79,6 +80,7 @@ describe.each([
       {
         force: false,
         debug: false,
+        silent: true,
       },
     );
 
@@ -87,6 +89,7 @@ describe.each([
 
     const listArtifactsResult = await listPulledArtifacts(localStorage, {
       debug: false,
+      silent: true,
     });
     expect(
       listArtifactsResult.some(
@@ -123,6 +126,7 @@ describe.each([
       {
         force: false,
         debug: false,
+        silent: true,
       },
     );
 
@@ -134,6 +138,7 @@ describe.each([
     const pullResult = await pull(project, tag, storageProvider, localStorage, {
       force: false,
       debug: false,
+      silent: true,
     });
 
     expect(pullResult.pulledTags).toContain(tag);
@@ -141,6 +146,7 @@ describe.each([
 
     const listArtifactsResult = await listPulledArtifacts(localStorage, {
       debug: false,
+      silent: true,
     });
     expect(
       listArtifactsResult.some(
@@ -165,10 +171,12 @@ describe.each([
     await push(artifactPath.folderPath, project, tag1, storageProvider, {
       force: false,
       debug: false,
+      silent: true,
     });
     await push(artifactPath.folderPath, project, tag2, storageProvider, {
       force: true,
       debug: false,
+      silent: true,
     });
 
     const pullResult = await pull(
@@ -176,7 +184,7 @@ describe.each([
       undefined,
       storageProvider,
       localStorage,
-      { force: false, debug: false },
+      { force: false, debug: false, silent: true },
     );
 
     expect(pullResult.pulledTags).toHaveLength(2);
@@ -185,6 +193,7 @@ describe.each([
 
     const listArtifactsResult = await listPulledArtifacts(localStorage, {
       debug: false,
+      silent: true,
     });
     const pulledTags = listArtifactsResult
       .filter((r) => r.project === project)
@@ -209,6 +218,7 @@ describe.each([
       {
         force: false,
         debug: false,
+        silent: true,
       },
     );
 
@@ -216,6 +226,7 @@ describe.each([
       push(artifactPath.folderPath, project, tag, storageProvider, {
         force: false,
         debug: false,
+        silent: true,
       }),
     ).rejects.toThrow(/already exists/);
 
@@ -227,6 +238,7 @@ describe.each([
       {
         force: true,
         debug: false,
+        silent: true,
       },
     );
 
@@ -247,21 +259,25 @@ describe.each([
     await push(artifactPath.folderPath, project, tag, storageProvider, {
       force: false,
       debug: false,
+      silent: true,
     });
     await pull(project, tag, storageProvider, localStorage, {
       force: false,
       debug: false,
+      silent: true,
     });
 
     const result1 = await pull(project, tag, storageProvider, localStorage, {
       force: false,
       debug: false,
+      silent: true,
     });
     expect(result1.pulledTags).toHaveLength(0);
 
     const result2 = await pull(project, tag, storageProvider, localStorage, {
       force: true,
       debug: false,
+      silent: true,
     });
     expect(result2.pulledTags).toContain(tag);
   });
@@ -275,6 +291,7 @@ describe.each([
       pull(project, "non-existent-tag", storageProvider, localStorage, {
         force: false,
         debug: false,
+        silent: true,
       }),
     ).rejects.toThrow();
   });
@@ -297,6 +314,7 @@ describe.each([
         {
           force: false,
           debug: false,
+          silent: true,
         },
       );
 

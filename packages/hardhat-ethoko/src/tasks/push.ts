@@ -16,6 +16,7 @@ interface PushTaskArguments {
   tag?: string;
   force?: boolean;
   debug?: boolean;
+  silent?: boolean;
 }
 
 export default async function (
@@ -35,6 +36,7 @@ export default async function (
       tag: z.string().optional(),
       force: z.boolean().default(false),
       debug: z.boolean().default(ethokoConfig.debug),
+      silent: z.boolean().default(false),
     })
     .safeParse(taskArguments);
 
@@ -60,6 +62,7 @@ export default async function (
 
   boxHeader(
     `Pushing artifact to "${ethokoConfig.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+    optsParsingResult.data.silent,
   );
 
   const storageProvider =
@@ -86,6 +89,7 @@ export default async function (
       force: optsParsingResult.data.force,
       debug: ethokoConfig.debug || optsParsingResult.data.debug,
       isCI: process.env.CI === "true" || process.env.CI === "1",
+      silent: optsParsingResult.data.silent,
     },
   )
     .then((result) =>
@@ -93,6 +97,7 @@ export default async function (
         ethokoConfig.project,
         optsParsingResult.data.tag,
         result,
+        optsParsingResult.data.silent,
       ),
     )
     .catch((err) => {
