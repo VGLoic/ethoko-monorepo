@@ -1,11 +1,13 @@
 import { describe, test } from "vitest";
 import { asyncExec } from "./async-exec";
 
-const TAG_NAME = "2026-02-04";
+const TAG_NAME = "v1.0.1";
 
-describe("[Foundry Hardhat-deploy v2] Push artifact, pull artifact, deploy", async () => {
+describe("[Hardhat v2 - Hardhat-deploy v0 - external lib] Push artifact, pull artifact, deploy", async () => {
   test("it compiles", () =>
-    asyncExec("forge build --skip test --skip script --force"));
+    asyncExec(
+      "npx hardhat compile --force --no-typechain --config ./hardhat.config.e2e.ts",
+    ));
 
   test("it pushes the tag", () =>
     asyncExec(
@@ -21,5 +23,7 @@ describe("[Foundry Hardhat-deploy v2] Push artifact, pull artifact, deploy", asy
   test("it checks types", () => asyncExec("pnpm check-types"));
 
   test("it deploys", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts deploy"));
+    asyncExec(
+      "npx hardhat --config ./hardhat.config.e2e.ts deploy --no-compile",
+    ));
 });

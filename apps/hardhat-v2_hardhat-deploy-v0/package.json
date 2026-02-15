@@ -12,7 +12,8 @@
     "compile": "pnpm run format-contracts && hardhat compile --force --no-typechain",
     "deploy-contracts": "hardhat deploy --no-compile",
     "hardhat": "hardhat",
-    "check-types": "pnpm run ethoko-typings && tsc --noEmit"
+    "check-types": "pnpm run ethoko-typings && tsc --noEmit",
+    "test:e2e:apps": "vitest run e2e-test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^0.15.16",
