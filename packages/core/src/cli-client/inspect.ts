@@ -83,7 +83,7 @@ export async function inspectArtifact(
       "Unable to retrieve the artifact content, please ensure it exists locally. Run with debug mode for more info",
     );
   }
-  const [sokoArtifact, artifactPath] = artifactResult.value;
+  const [ethokoArtifact, artifactPath] = artifactResult.value;
 
   const fileStatResult = await toAsyncResult(fs.stat(artifactPath), {
     debug: opts.debug,
@@ -94,27 +94,27 @@ export async function inspectArtifact(
     );
   }
 
-  const compilerSettings = deriveCompilerSettings(sokoArtifact);
+  const compilerSettings = deriveCompilerSettings(ethokoArtifact);
 
   const originFormat =
-    sokoArtifact.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
+    ethokoArtifact.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
       ? "hardhat-v3"
-      : sokoArtifact.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
+      : ethokoArtifact.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
         ? "hardhat-v2"
         : "forge";
 
   return {
     project: artifact.project,
     tag: artifact.search.type === "tag" ? artifact.search.tag : null,
-    id: sokoArtifact.id,
+    id: ethokoArtifact.id,
     fileSize: fileStatResult.value.size,
     origin: {
-      id: sokoArtifact.origin.id,
+      id: ethokoArtifact.origin.id,
       format: originFormat,
     },
     compiler: compilerSettings,
-    sourceFiles: Object.keys(sokoArtifact.input.sources).sort(),
-    contractsBySource: deriveContractsBySource(sokoArtifact),
+    sourceFiles: Object.keys(ethokoArtifact.input.sources).sort(),
+    contractsBySource: deriveContractsBySource(ethokoArtifact),
     artifactPath,
   };
 }

@@ -12,7 +12,8 @@
     "deploy-contracts": "hardhat deploy --no-compile",
     "hardhat": "hardhat",
     "compile": "forge build --skip test --skip script --force",
-    "check-types": "pnpm run ethoko-typings && tsc --noEmit"
+    "check-types": "pnpm run ethoko-typings && tsc --noEmit",
+    "test:e2e:apps": "vitest run e2e-test"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
@@ -33,6 +34,7 @@
     "prettier-plugin-solidity": "^2.2.1",
     "rocketh": "^0.18.1",
     "typescript": "~5.8.0",
+    "vitest": "^2.1.8",
     "viem": "^2.43.0"
   }
 }

@@ -62,7 +62,7 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm test
-  test-e2e:
+  test-e2e-core:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -72,4 +72,17 @@ jobs:
           node-version-file: .nvmrc
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm test:e2e
+      - run: pnpm test:e2e:core
+  test-e2e-apps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm test:e2e:apps

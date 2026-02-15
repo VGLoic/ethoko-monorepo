@@ -10,6 +10,9 @@
 # Hardhat Build Artifacts
 /artifacts
 
+# Hardhat generated typings
+/generated
+
 # Hardhat compilation (v2) support directory
 /cache
 
@@ -25,3 +28,4 @@
 # Ethoko files
 .ethoko/
 .ethoko-typings/
+.ethoko-e2e/
