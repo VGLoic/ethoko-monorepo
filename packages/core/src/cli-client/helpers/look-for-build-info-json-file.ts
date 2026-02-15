@@ -197,14 +197,6 @@ export async function lookForBuildInfoJsonFile(
   );
 
   if (jsonFiles.length > 1) {
-    if (isCI) {
-      throw new CliError(
-        `Multiple JSON files found in "${finalFolderPath}". In CI environments, please make sure to have a unique JSON file in the directory. Alternatively, please specify a direct path to the build info file instead of a directory to avoid ambiguity.`,
-      );
-    }
-
-    steps.stop();
-
     const jsonFilesWithStats: (
       | { ignored: false; summary: FileSummary }
       | { ignored: true; name: string }
@@ -295,6 +287,14 @@ export async function lookForBuildInfoJsonFile(
     if (options.length === 1) {
       return firstOption.value;
     }
+
+    if (isCI) {
+      throw new CliError(
+        `Multiple compilation artifacts found in "${finalFolderPath}". In CI environments, please make sure to have a unique compilation artifact in the directory. Alternatively, please specify a direct path to the build info file instead of a directory to avoid ambiguity.`,
+      );
+    }
+
+    steps.stop();
 
     const selectedBuildInfo = await promptUserSelection(
       `Multiple JSON files found in "${finalFolderPath}" (${ignoredFilesCount} ignored). Please select which build info file to use:`,
