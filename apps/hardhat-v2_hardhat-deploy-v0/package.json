@@ -29,6 +29,7 @@
     "hardhat-deploy": "^0.12.4",
     "prettier-plugin-solidity": "^2.2.1",
     "typescript": "5.9.2",
+    "vitest": "^2.1.8",
     "zod": "^3.23.8"
   }
 }

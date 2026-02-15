@@ -38,6 +38,9 @@
     },
     "test": {
       "dependsOn": ["build", "^test"]
+    },
+    "test:e2e:apps": {
+      "dependsOn": ["build"]
     }
   }
 }

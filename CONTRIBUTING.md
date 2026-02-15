@@ -29,7 +29,8 @@ Check the available scripts in the root `package.json` file. The most used ones 
 - `format`: format all packages,
 - `check-format`: check code formatting for all packages,
 - `check-types`: typecheck all packages,
-- `test:e2e`: run end-to-end tests.
+- `test:e2e:core`: run end-to-end tests for @ethoko/core,
+- `test:e2e:apps`: run end-to-end tests for integration apps.
 
 ### Changesets
 
