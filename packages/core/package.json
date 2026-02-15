@@ -1,6 +1,6 @@
 {
   "name": "@ethoko/core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": false,
   "description": "Core utilities and libraries for Ethoko CLI and plugins.",
   "author": "Loïc Vincent-Genod",

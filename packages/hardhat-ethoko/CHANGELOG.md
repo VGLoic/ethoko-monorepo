@@ -1,5 +1,16 @@
 # hardhat-ethoko
 
+## 0.3.0
+
+### Minor Changes
+
+- ed16a11: Fix CI restriction when identifying build info for Hardhat V3
+
+### Patch Changes
+
+- Updated dependencies [ed16a11]
+  - @ethoko/core@0.3.0
+
 ## 0.2.0
 
 ### Minor Changes
