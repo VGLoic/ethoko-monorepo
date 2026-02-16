@@ -19,14 +19,14 @@ Development is done as usual, with as many tests or else.
 Once the development is considered done, one can create the compilation artifacts:
 
 ```bash
-npx hardhat compile --force --no-tests
+npx hardhat build --build-profile production --force --no-tests
 ```
 
 The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.
 
 ```bash
-# The tag 2026-02-04 is arbitrary, it can be any string identifying the release
-npx hardhat ethoko push --tag 2026-02-04
+# The tag 2026-02-02 is arbitrary, it can be any string identifying the release
+npx hardhat ethoko push --tag 2026-02-02
 ```
 
 ### Deployment phase
