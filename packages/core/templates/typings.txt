@@ -170,7 +170,7 @@ function buildInfoToContractArtifact(
   project: string,
   tag: string,
   contractKey: string,
-  buildInfo: BuildInfo,
+  buildInfo: EthokoBuildInfo,
 ): ContractArtifact {
   const contractPieces = contractKey.split(":");
   const contractName = contractPieces.at(-1);
@@ -238,7 +238,7 @@ function prefixWith0x(s: string): `0x${string}` {
 async function getCompilationArtifact(
   project: string,
   tag: string,
-): Promise<BuildInfo> {
+): Promise<EthokoBuildInfo> {
   const buildInfoExists = await fs
     .stat(`${ETHOKO_PATH}/${project}/tags/${tag}.json`)
     .catch(() => false);
@@ -264,7 +264,10 @@ async function getCompilationArtifact(
  * @param tag Tag of the compilation
  * @returns The compilation artifact
  */
-function getCompilationArtifactSync(project: string, tag: string): BuildInfo {
+function getCompilationArtifactSync(
+  project: string,
+  tag: string,
+): EthokoBuildInfo {
   try {
     fsSync.statSync(`${ETHOKO_PATH}/${project}/tags/${tag}.json`);
   } catch {
@@ -277,7 +280,7 @@ function getCompilationArtifactSync(project: string, tag: string): BuildInfo {
       "utf-8",
     );
     const jsonContent = JSON.parse(buildInfoContent);
-    return jsonContent as BuildInfo;
+    return jsonContent as EthokoBuildInfo;
   } catch (e) {
     console.error(e);
     throw e;
@@ -300,15 +303,14 @@ function toAsyncResult<T, TError = Error>(
     });
 }
 
-/**
- * @dev These types are imported from hardhat/types
- * They are extended with our knowledge of the types
- */
-interface BuildInfo {
+interface EthokoBuildInfo {
   id: string;
-  solcVersion: string;
   solcLongVersion: string;
-  _format?: string;
+  origin: {
+    id: string;
+    format: string;
+    outputFormat?: string;
+  };
   input: CompilerInput;
   output: CompilerOutput;
 }
