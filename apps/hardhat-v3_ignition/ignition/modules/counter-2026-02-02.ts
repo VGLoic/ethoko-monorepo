@@ -30,20 +30,11 @@ export default buildModule(`CounterModule_${MODULE_SUFFIX}`, (m) => {
   const projectUtils = project("ignited-counter");
 
   const counterArtifact = projectUtils
-    .tag("2026-02-02")
+    .tag(TARGET_RELEASE_TAG)
+    // Hardhat Ignition module does not support promises => we use the `sync` variant of artifact retrieval
     .getContractArtifactSync("project/contracts/Counter.sol:Counter");
 
-  const counter = m.contract("Counter", {
-    _format: "hh3-artifact-1",
-    contractName: "Counter",
-    sourceName: "contracts/Counter.sol",
-    bytecode: `0x${counterArtifact.evm.bytecode.object}`,
-    deployedBytecode: `0x${counterArtifact.evm.deployedBytecode?.object}`,
-    linkReferences: counterArtifact.evm.bytecode.linkReferences,
-    deployedLinkReferences:
-      counterArtifact.evm.deployedBytecode?.linkReferences ?? {},
-    abi: counterArtifact.abi,
-  });
+  const counter = m.contract("Counter", counterArtifact);
 
   m.call(counter, "incBy", [5n]);
 

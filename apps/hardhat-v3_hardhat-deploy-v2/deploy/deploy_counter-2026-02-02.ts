@@ -34,21 +34,19 @@ export default deployScript(
       .tag(TARGET_RELEASE_TAG)
       .getContractArtifact("project/contracts/Counter.sol:Counter");
 
-    const metadata = counterArtifact.metadata;
-    if (!metadata) {
-      throw new Error(
-        "Metadata is required for deployment, but was not found in the artifact",
-      );
-    }
-
     await deploy(`Counter@${TARGET_RELEASE_TAG}`, {
       account: deployer,
       artifact: {
         // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         abi: counterArtifact.abi as any,
-        bytecode: `0x${counterArtifact.evm.bytecode.object}`,
-        metadata,
+        bytecode: counterArtifact.bytecode,
+        metadata: counterArtifact.metadata,
+        deployedBytecode: counterArtifact.deployedBytecode,
+        linkReferences: counterArtifact.linkReferences,
+        deployedLinkReferences: counterArtifact.deployedLinkReferences,
+        contractName: counterArtifact.contractName,
+        sourceName: counterArtifact.sourceName,
       },
     });
   },

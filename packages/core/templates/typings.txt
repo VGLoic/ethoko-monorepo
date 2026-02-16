@@ -140,7 +140,7 @@ async function getArtifact(
   project: string,
   tag: string,
   contractKey: string,
-): Promise<CompilerOutputContract> {
+): Promise<ContractArtifact> {
   const buildInfoResult = await toAsyncResult(
     getCompilationArtifact(project, tag),
   );
@@ -148,25 +148,30 @@ async function getArtifact(
     throw buildInfoResult.error;
   }
 
-  return buildInfoToArtifact(project, tag, contractKey, buildInfoResult.value);
+  return buildInfoToContractArtifact(
+    project,
+    tag,
+    contractKey,
+    buildInfoResult.value,
+  );
 }
 
 function getArtifactSync(
   project: string,
   tag: string,
   contractKey: string,
-): CompilerOutputContract {
+): ContractArtifact {
   const buildInfo = getCompilationArtifactSync(project, tag);
 
-  return buildInfoToArtifact(project, tag, contractKey, buildInfo);
+  return buildInfoToContractArtifact(project, tag, contractKey, buildInfo);
 }
 
-function buildInfoToArtifact(
+function buildInfoToContractArtifact(
   project: string,
   tag: string,
   contractKey: string,
   buildInfo: BuildInfo,
-): CompilerOutputContract {
+): ContractArtifact {
   const contractPieces = contractKey.split(":");
   const contractName = contractPieces.at(-1);
   if (!contractName) {
@@ -198,7 +203,30 @@ function buildInfoToArtifact(
       `Contract artifact not found for contract key: ${contractKey} with artifact ${project}:${tag}`,
     );
   }
-  return contractArtifact;
+  return {
+    _format: "ethoko-artifact-v0",
+    abi: contractArtifact.abi,
+    metadata: contractArtifact.metadata || "",
+    bytecode: prefixWith0x(contractArtifact.evm.bytecode.object),
+    deployedBytecode: contractArtifact.evm.deployedBytecode?.object
+      ? prefixWith0x(contractArtifact.evm.deployedBytecode.object)
+      : "0x",
+    linkReferences: contractArtifact.evm.bytecode.linkReferences,
+    deployedLinkReferences: contractArtifact.evm.deployedBytecode
+      ? contractArtifact.evm.deployedBytecode.linkReferences
+      : {},
+    contractName,
+    sourceName: contractPath,
+    userdoc: contractArtifact.userdoc,
+    devdoc: contractArtifact.devdoc,
+    storageLayout: contractArtifact.storageLayout,
+    evm: contractArtifact.evm,
+  };
+}
+
+function prefixWith0x(s: string): `0x${string}` {
+  if (s.startsWith("0x")) return s as `0x${string}`;
+  return `0x${s}`;
 }
 
 /**
@@ -377,5 +405,80 @@ interface CompilerOutputBytecode {
 interface LinkReferences {
   [libraryFileName: string]: {
     [libraryName: string]: Array<{ length: number; start: number }>;
+  };
+}
+
+/**
+ * This interface is derived from the compilation output.
+ *
+ * It is meant to integrate in a smoother way with external dependencies.
+ */
+export interface ContractArtifact {
+  /**
+   * Format, hardcoded to `ethoko-artifact-v0` for now
+   */
+  readonly _format: "ethoko-artifact-v0";
+  /**
+   * ABI of the artifact
+   */
+  readonly abi: unknown[];
+  /**
+   * Metadata of the artifact, fallback to empty string
+   */
+  readonly metadata: string;
+  /**
+   * Bytecode formatted with `0x` prefix
+   */
+  readonly bytecode: `0x${string}`;
+  /**
+   * Deployed bytecode, formatted with `0x` prefix, fallback to `0x`
+   */
+  readonly deployedBytecode: `0x${string}`;
+  /**
+   * Link references for the libraries
+   */
+  readonly linkReferences: LinkReferences;
+  /**
+   * Link references for the deployed libraries, fallback to empty object
+   */
+  readonly deployedLinkReferences: LinkReferences;
+  /**
+   * Name of the contract
+   */
+  readonly contractName: string;
+  /**
+   * Relative path
+   */
+  readonly sourceName: string;
+  /**
+   * User documentation
+   */
+  readonly userdoc?: unknown;
+  /**
+   * Dev documentation
+   */
+  readonly devdoc?: unknown;
+  /**
+   * Storage layout
+   */
+  readonly storageLayout?: {
+    readonly storage: unknown[];
+    readonly types: unknown;
+  };
+  /**
+   * Full EVM compilation output object
+   */
+  readonly evm: {
+    readonly assembly?: string;
+    readonly bytecode: CompilerOutputBytecode;
+    readonly deployedBytecode?: CompilerOutputBytecode;
+    readonly gasEstimates?: {
+      readonly creation?: Record<string, string>;
+      readonly external?: Record<string, string>;
+      readonly internal?: Record<string, string>;
+    };
+    readonly methodIdentifiers?: {
+      readonly [methodSignature: string]: string;
+    };
   };
 }

@@ -83,7 +83,7 @@ async function deployFoo() {
     await deploy("Foo@2026-02-04", {
       contract: {
         abi: myContractArtifact.abi,
-        bytecode: myContractArtifact.evm.bytecode.object,
+        bytecode: myContractArtifact.bytecode,
         metadata: myContractArtifact.metadata,
       },
     })
