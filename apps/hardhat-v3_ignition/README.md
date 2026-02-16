@@ -44,4 +44,47 @@ Then, generates the typings in order to write a type-safe deployment script:
 npx hardhat ethoko typings
 ```
 
-REMIND ME: TO BE COMPLETED
+Finally, the deployer can create an Hardhat Ignition module, e.g. [counter-2026-02-02.ts](./ignition/modules/counter-2026-02-02.ts), that will retrieve the compilation artifacts from `Ethoko` and deploy the contract accordingly.
+
+```ts
+import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
+import { project } from "../../.ethoko-typings";
+
+const TARGET_RELEASE_TAG = "2026-02-02";
+// Hardhat Ignition likes alphanumeric and underscores
+const MODULE_SUFFIX = TARGET_RELEASE_TAG.replaceAll("-", "_");
+
+export default buildModule(`CounterModule_${MODULE_SUFFIX}`, (m) => {
+  const projectUtils = project("ignited-counter");
+
+  const counterArtifact = projectUtils
+    .tag("2026-02-02")
+    .getContractArtifactSync("project/contracts/Counter.sol:Counter");
+
+  const counter = m.contract("Counter", {
+    _format: "hh3-artifact-1",
+    contractName: "Counter",
+    sourceName: "contracts/Counter.sol",
+    bytecode: `0x${counterArtifact.evm.bytecode.object}`,
+    deployedBytecode: `0x${counterArtifact.evm.deployedBytecode?.object}`,
+    linkReferences: counterArtifact.evm.bytecode.linkReferences,
+    deployedLinkReferences:
+      counterArtifact.evm.deployedBytecode?.linkReferences ?? {},
+    abi: counterArtifact.abi,
+  });
+
+  m.call(counter, "incBy", [5n]);
+
+  return { counter };
+});
+```
+
+The deployment script can be executed using the Hardhat Ignition command:
+
+```bash
+npx hardhat ignition deploy ./ignition/modules/counter-2026-02-02.ts --network <network-name>
+```
+
+No additional compilation step is needed since the deployment script directly uses the static artifacts from `Ethoko`.
+
+The deployment is by nature idempotent, this is guaranteed by the fact that the used artifacts are static and the Hardhat Ignition plugin.
