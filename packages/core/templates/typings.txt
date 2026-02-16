@@ -163,8 +163,7 @@ async function getArtifact(
       `Invalid contract key: ${contractKey}. Expected format: "path/to/Contract.sol:Contract"`,
     );
   }
-  const contractArtifact =
-    buildInfoResult.value.output.contracts[contractPath][contractName];
+  const contractArtifact = buildInfo.output.contracts[contractPath][contractName];
   if (!contractArtifact) {
     throw new Error(
       `Contract artifact not found for contract key: ${contractKey} with artifact ${project}:${tag}`,
