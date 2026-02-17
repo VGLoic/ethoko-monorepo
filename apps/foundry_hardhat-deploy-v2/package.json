@@ -34,7 +34,7 @@
     "prettier-plugin-solidity": "^2.2.1",
     "rocketh": "^0.18.1",
     "typescript": "~5.8.0",
-    "vitest": "^2.1.8",
+    "vitest": "^4.0.17",
     "viem": "^2.43.0"
   }
 }

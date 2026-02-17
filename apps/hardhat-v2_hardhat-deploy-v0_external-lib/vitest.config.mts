@@ -10,12 +10,6 @@ export default defineConfig({
     include: ["e2e-test/**/*.e2e.test.ts"],
     exclude: ["node_modules", "dist"],
     pool: "threads",
-    poolOptions: {
-      threads: {
-        minThreads: 1,
-        maxThreads: 4,
-      },
-    },
   },
   resolve: {
     alias: {},
