@@ -20,7 +20,7 @@ import {
   SolcContractSchema,
   SolcJsonOutputSchema,
 } from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
-import { BuildInfoPath } from "@/utils/build-info-path";
+import type { BuildInfoPath } from "./look-for-build-info-json-file";
 import {
   HardhatV3CompilerInputPieceSchema,
   HardhatV3CompilerOutputPieceSchema,

@@ -7,7 +7,7 @@ import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToEthokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
 import { EthokoArtifact } from "@/utils/artifacts-schemas/ethoko-v0";
-import { BuildInfoPath } from "@/utils/build-info-path";
+import type { BuildInfoPath } from "./helpers/look-for-build-info-json-file";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
   if (buildInfoPath.format === "hardhat-v3") {
