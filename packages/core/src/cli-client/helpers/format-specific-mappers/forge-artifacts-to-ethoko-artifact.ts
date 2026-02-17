@@ -17,6 +17,7 @@ import {
   SolcContractSchema,
   SolcJsonOutputSchema,
 } from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
+import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
 
 /**
  * The default Forge build info format splits the contract output into multiple files, the build info file contains only the mapping to these files.
@@ -253,17 +254,4 @@ function strip0xPrefix(bytecode: string): string {
     return bytecode.slice(2);
   }
   return bytecode;
-}
-
-async function* lookForContractArtifactPath(
-  path: string,
-): AsyncIterable<string> {
-  const entries = await fs.readdir(path, { withFileTypes: true });
-  for (const entry of entries) {
-    if (entry.isDirectory() && entry.name !== "build-info") {
-      yield* lookForContractArtifactPath(`${path}/${entry.name}`);
-    } else if (entry.isFile() && entry.name.endsWith(".json")) {
-      yield `${path}/${entry.name}`;
-    }
-  }
 }

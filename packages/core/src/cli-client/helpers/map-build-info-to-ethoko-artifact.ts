@@ -13,7 +13,8 @@ import {
   HardhatV3CompilerInputPieceSchema,
   HardhatV3CompilerOutputPieceSchema,
 } from "@/utils/artifacts-schemas/hardhat-v3";
-import { forgeArtifactsToEthokoArtifact } from "./forge-artifacts-to-ethoko-artifact";
+import { forgeArtifactsToEthokoArtifact } from "./format-specific-mappers/forge-artifacts-to-ethoko-artifact";
+import { retrieveHardhatv3ContractArtifactsPaths } from "./format-specific-mappers/retrieve-hhv3-contract-artifacts-paths";
 
 /**
  * Given a path to a candidate build info JSON file, try to output a EthokoArtifact.
@@ -87,6 +88,19 @@ export async function mapBuildInfoToEthokoArtifact(
       );
     }
 
+    const contractArtifactsPathsResult = await toAsyncResult(
+      retrieveHardhatv3ContractArtifactsPaths(
+        buildInfoPath.inputPath,
+        inputParsingResult.data.id,
+      ),
+      { debug },
+    );
+    if (!contractArtifactsPathsResult.success) {
+      throw new CliError(
+        `Failed to identify the contract artifacts related to the compilation. Please provide valid compilation files or contact us. Run with debug mode for more info.`,
+      );
+    }
+
     return {
       artifact: {
         id: deriveEthokoArtifactId(outputParsingResult.data.output),
@@ -99,7 +113,11 @@ export async function mapBuildInfoToEthokoArtifact(
         output: outputParsingResult.data.output,
         solcLongVersion: inputParsingResult.data.solcLongVersion,
       },
-      originalContentPaths: [buildInfoPath.inputPath, buildInfoPath.outputPath],
+      originalContentPaths: [
+        buildInfoPath.inputPath,
+        buildInfoPath.outputPath,
+        ...contractArtifactsPathsResult.value,
+      ],
     };
   }
 
