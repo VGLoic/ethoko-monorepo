@@ -303,7 +303,11 @@ function toAsyncResult<T, TError = Error>(
     });
 }
 
-interface EthokoBuildInfo {
+// #############################################################
+// ##################### Compilation types #####################
+// #############################################################
+
+export interface EthokoBuildInfo {
   id: string;
   solcLongVersion: string;
   origin: {
@@ -317,36 +321,50 @@ interface EthokoBuildInfo {
 
 interface CompilerInput {
   language: string;
-  sources: { [sourceName: string]: { content: string } };
-  settings: {
-    viaIR?: boolean;
-    optimizer: {
-      runs?: number;
-      enabled?: boolean;
-      details?: {
-        yulDetails: {
-          optimizerSteps: string;
-        };
+  sources: { [sourceName: string]: InputSource };
+  settings?: InputSettings;
+}
+
+type InputSource =
+  | {
+      license?: string;
+      keccak256?: string;
+      urls?: string[];
+      content?: string;
+    }
+  | {
+      ast: Record<string, unknown>;
+    }
+  | {
+      assemblyJson: {
+        ".code": unknown[];
+        ".data"?: Record<string, unknown>;
+        sourceList?: string[];
       };
     };
-    metadata?: { useLiteralContent: boolean };
-    outputSelection: {
-      [sourceName: string]: {
-        [contractName: string]: string[];
-      };
-    };
-    evmVersion?: string;
-    libraries?: {
-      [libraryFileName: string]: {
-        [libraryName: string]: string;
-      };
-    };
-    remappings?: string[];
-  };
+
+interface InputSettings {
+  stopAfter?: string;
+  remappings?: string[];
+  optimizer?: OptimizerSettings;
+  evmVersion?: string;
+  eofVersion?: number;
+  viaIr?: boolean;
+  debug?: unknown;
+  metadata?: unknown;
+  libraries?: Record<string, Record<string, string>>;
+  outputSelection?: unknown;
+  modelChecker?: unknown;
+}
+interface OptimizerSettings {
+  enabled?: boolean;
+  runs?: number;
+  details?: unknown;
 }
 
 interface CompilerOutput {
-  sources: CompilerOutputSources;
+  errors?: unknown[];
+  sources?: CompilerOutputSources;
   contracts: {
     [sourceName: string]: {
       [contractName: string]: CompilerOutputContract;
@@ -365,43 +383,40 @@ interface CompilerOutputSource {
 
 interface CompilerOutputContract {
   abi: unknown[];
-  metadata?: string;
+  metadata: string;
   userdoc?: unknown;
   devdoc?: unknown;
   ir?: string;
   irAst?: unknown;
   irOptimized?: string;
   irOptimizedAst?: unknown;
-  storageLayout?: {
-    storage: unknown[];
-    types: unknown;
-  };
+  storageLayout?: unknown;
   transientStorageLayout?: unknown;
   evm: {
     assembly?: string;
+    legacyAssembly?: unknown;
     bytecode: CompilerOutputBytecode;
-    deployedBytecode?: CompilerOutputBytecode;
+    deployedBytecode?: CompilerOutputBytecode & {
+      immutableReferences?: unknown;
+    };
+    methodIdentifiers?: {
+      [methodSignature: string]: string;
+    };
     gasEstimates?: {
       creation?: Record<string, string>;
       external?: Record<string, string>;
       internal?: Record<string, string>;
     };
-    methodIdentifiers?: {
-      [methodSignature: string]: string;
-    };
   };
 }
 
 interface CompilerOutputBytecode {
-  functionDebugData?: Record<string, unknown>;
+  functionDebugData?: unknown;
   object: string;
-  opcodes: string;
+  opcodes?: string;
   sourceMap?: string;
-  generatedSources: unknown[];
+  generatedSources?: unknown[];
   linkReferences: LinkReferences;
-  immutableReferences?: {
-    [key: string]: Array<{ start: number; length: number }>;
-  };
 }
 
 interface LinkReferences {
@@ -409,6 +424,10 @@ interface LinkReferences {
     [libraryName: string]: Array<{ length: number; start: number }>;
   };
 }
+
+// ##############################################
+// ################# Built type #################
+// ##############################################
 
 /**
  * This interface is derived from the compilation output.
@@ -463,10 +482,7 @@ export interface ContractArtifact {
   /**
    * Storage layout
    */
-  readonly storageLayout?: {
-    readonly storage: unknown[];
-    readonly types: unknown;
-  };
+  readonly storageLayout?: unknown;
   /**
    * Full EVM compilation output object
    */

@@ -46,13 +46,13 @@
     }
   },
   "scripts": {
-    "generate-template": "cp templates-builder/typings.ts templates/typings.txt",
+    "generate-template": "mkdir -p templates && cat templates-builder/typings.ts >> templates/typings.txt",
     "build": "pnpm generate-template && tsup",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write src/**/*.ts",
     "check-format": "prettier --check src/**/*.ts",
-    "check-types": "tsc --noEmit",
-    "test:e2e": "vitest run test/e2e",
+    "check-types": "tsc --noEmit && vitest run --project typecheck",
+    "test:e2e": "vitest run --project e2e",
     "test:localstack:up": "docker compose -f compose.test.yml up -d",
     "test:localstack:down": "docker compose -f compose.test.yml down -v",
     "test:localstack:logs": "docker compose -f compose.test.yml logs -f"
@@ -74,6 +74,6 @@
     "eslint": "^9.39.1",
     "tsup": "^8.2.4",
     "typescript": "5.9.2",
-    "vitest": "^2.1.8"
+    "vitest": "^4.0.17"
   }
 }
