@@ -92,6 +92,8 @@ export async function mapBuildInfoToEthokoArtifact(
       retrieveHardhatv3ContractArtifactsPaths(
         buildInfoPath.inputPath,
         inputParsingResult.data.id,
+        inputParsingResult.data.userSourceNameMap,
+        debug,
       ),
       { debug },
     );

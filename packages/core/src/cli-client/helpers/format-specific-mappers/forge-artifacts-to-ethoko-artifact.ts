@@ -75,8 +75,6 @@ export async function forgeArtifactsToEthokoArtifact(
   for await (const contractArtifactPath of lookForContractArtifactPath(
     rootArtifactsFolder,
   )) {
-    additionalArtifactsPaths.push(contractArtifactPath);
-
     const contractContentResult = await toAsyncResult(
       fs.readFile(contractArtifactPath, "utf-8").then((content) => {
         const rawParsing = JSON.parse(content);
@@ -124,6 +122,7 @@ export async function forgeArtifactsToEthokoArtifact(
     }
     // We register the visiter contract path with the ID
     visitedContractPaths.set(contract.id.toString(), contractPath);
+    additionalArtifactsPaths.push(contractArtifactPath);
 
     // Fill the solc version if not set
     if (!solcLongVersion) {

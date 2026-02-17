@@ -1,6 +1,10 @@
 import z from "zod";
 import { SolcJsonInputSchema } from "./solc-v0.8.33/input-json";
-import { SolcJsonOutputSchema } from "./solc-v0.8.33/output-json";
+import {
+  AbiItemSchema,
+  SolcJsonOutputSchema,
+} from "./solc-v0.8.33/output-json";
+import { JsonSchema } from "./json";
 
 export const HARDHAT_V3_COMPILER_INPUT_FORMAT = "hh3-sol-build-info-1";
 export const HARDHAT_V3_COMPILER_OUTPUT_FORMAT = "hh3-sol-build-info-output-1";
@@ -30,4 +34,41 @@ export const FormatInferenceHardhatV3CompilerInputPieceSchema = z.object({
 export const FormatInferenceHardhatV3CompilerOutputPieceSchema = z.object({
   _format: z.literal(HARDHAT_V3_COMPILER_OUTPUT_FORMAT),
   output: z.any(),
+});
+
+// Schema for output of a contract in its dedicated file
+export const HardhatV3CompilerContractOutputSchema = z.object({
+  _format: z.literal("hh3-artifact-1"),
+  contractName: z.string(),
+  sourceName: z.string(),
+  abi: z.array(AbiItemSchema),
+  bytecode: z.string().refine((s) => s.startsWith("0x")),
+  deployedBytecode: z.string().refine((s) => s.startsWith("0x")),
+  linkReferences: z.record(
+    z.string(), // File name
+    z.record(
+      z.string(), // Library name
+      z.array(
+        z.object({
+          start: z.number(),
+          length: z.number(),
+        }),
+      ),
+    ),
+  ),
+  deployedLinkReferences: z.record(
+    z.string(), // File name
+    z.record(
+      z.string(), // Library name
+      z.array(
+        z.object({
+          start: z.number(),
+          length: z.number(),
+        }),
+      ),
+    ),
+  ),
+  immutableReferences: JsonSchema.optional(),
+  inputSourceName: z.string(),
+  buildInfoId: z.string(),
 });
