@@ -13,7 +13,17 @@ import {
   FormatInferenceForgeCompilerOutputDefaultFormatSchema,
   FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema,
 } from "@/utils/artifacts-schemas/forge-v1";
-import { BuildInfoPath } from "@/utils/build-info-path";
+
+export type BuildInfoPath =
+  | {
+      format: "hardhat-v2" | "forge-default" | "forge-with-build-info-option";
+      path: string;
+    }
+  | {
+      format: "hardhat-v3";
+      inputPath: string;
+      outputPath: string;
+    };
 
 type SupportedFormatPerFile =
   | "hardhat-v2"

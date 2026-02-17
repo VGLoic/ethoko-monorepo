@@ -1,6 +1,6 @@
 {
   "_format": "hh3-sol-build-info-1",
-  "id": "solc-0_8_28-bc799805424a1a705e21bbfc5845e72d80fad361",
+  "id": "solc-0_8_28-64fd6f94562663cf0a431e963b73b324bf859bd6",
   "solcVersion": "0.8.28",
   "solcLongVersion": "0.8.28+commit.7893614a",
   "userSourceNameMap": {
@@ -10,6 +10,13 @@
     "language": "Solidity",
     "settings": {
       "evmVersion": "cancun",
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
       "outputSelection": {
         "*": {
           "": [
@@ -17,10 +24,14 @@
           ],
           "*": [
             "abi",
+            "devdoc",
             "evm.bytecode",
             "evm.deployedBytecode",
+            "evm.gasEstimates",
             "evm.methodIdentifiers",
-            "metadata"
+            "metadata",
+            "storageLayout",
+            "userdoc"
           ]
         }
       },

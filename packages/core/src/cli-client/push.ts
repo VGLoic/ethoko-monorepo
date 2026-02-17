@@ -4,7 +4,7 @@ import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToEthokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
-import { BuildInfoPath } from "@/utils/build-info-path";
+import { BuildInfoPath } from "./helpers/look-for-build-info-json-file";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
   if (buildInfoPath.format === "hardhat-v3") {
