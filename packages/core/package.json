@@ -51,8 +51,8 @@
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write src/**/*.ts",
     "check-format": "prettier --check src/**/*.ts",
-    "check-types": "tsc --noEmit && vitest run templates-builder/ --typecheck",
-    "test:e2e": "vitest run test/e2e",
+    "check-types": "tsc --noEmit && vitest run --project typecheck",
+    "test:e2e": "vitest run --project e2e",
     "test:localstack:up": "docker compose -f compose.test.yml up -d",
     "test:localstack:down": "docker compose -f compose.test.yml down -v",
     "test:localstack:logs": "docker compose -f compose.test.yml logs -f"

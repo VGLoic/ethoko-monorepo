@@ -3,16 +3,32 @@ import { defineConfig } from "vitest/config";
 
 export default defineConfig({
   test: {
-    pool: "threads",
-    environment: "node",
-    testTimeout: 60000,
-    hookTimeout: 30000,
-    globalSetup: "./test/setup.ts",
-    include: ["test/**/*.e2e.test.ts"],
-    exclude: ["node_modules", "dist"],
-    typecheck: {
-      include: ["templates-builder/*.test-d.ts"],
-    },
+    projects: [
+      {
+        extends: true,
+        test: {
+          name: "e2e",
+          pool: "threads",
+          environment: "node",
+          testTimeout: 60000,
+          hookTimeout: 30000,
+          globalSetup: "./test/setup.ts",
+          include: ["test/**/*.e2e.test.ts"],
+          exclude: ["node_modules", "dist"],
+        },
+      },
+      {
+        extends: true,
+        test: {
+          name: "typecheck",
+          environment: "node",
+          testTimeout: 60000,
+          hookTimeout: 30000,
+          include: ["templates-builder/*.test-d.ts"],
+          exclude: ["node_modules", "dist"],
+        },
+      },
+    ],
   },
   resolve: {
     alias: {
