@@ -21,8 +21,11 @@ export async function teardown(): Promise<void> {
 }
 
 async function cleanUpLocalEthokoStorage() {
-  const doesExist = await fs.stat("ethoko-e2e").then(() => true).catch(() => false);
+  const doesExist = await fs
+    .stat("ethoko-e2e")
+    .then(() => true)
+    .catch(() => false);
   if (doesExist) {
-    await fs.rmdir("ethoko-e2e", { recursive: true });
+    await fs.rm("ethoko-e2e", { recursive: true });
   }
 }
