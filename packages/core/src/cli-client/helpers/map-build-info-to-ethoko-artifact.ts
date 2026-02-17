@@ -273,10 +273,10 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
   forgeBuildInfo: z.infer<typeof ForgeCompilerDefaultOutputSchema>,
   debug: boolean,
 ): Promise<{ artifact: EthokoArtifact; additionalArtifactsPaths: string[] }> {
-  const expectedContractPaths = new Set(
-    Object.values(forgeBuildInfo.source_id_to_path),
+  const contractPathsToVisit = new Map(
+    Object.entries(forgeBuildInfo.source_id_to_path),
   );
-  if (expectedContractPaths.size === 0) {
+  if (contractPathsToVisit.size === 0) {
     throw new Error("Empty build info file");
   }
 
@@ -286,7 +286,7 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
   // We keep track of the additional artifacts paths to return them at the end
   const additionalArtifactsPaths: string[] = [];
 
-  const exploredContractPaths = new Set<string>();
+  const visitedContractPaths = new Map<string, string>();
   let solcLongVersion: string | undefined = undefined;
   // Target input libraries are formatted as
   // "sourceFile" -> "libraryName" -> "libraryAddress"
@@ -320,10 +320,6 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
     }
     const contract = contractContentResult.value;
 
-    if (!solcLongVersion) {
-      solcLongVersion = contract.metadata.compiler.version;
-    }
-
     const compilationTargetEntries = Object.entries(
       contract.metadata.settings.compilationTarget || {},
     );
@@ -336,8 +332,29 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
       }
       continue;
     }
+
     // E.g "contracts/MyContract.sol" and "MyContract"
     const [contractPath, contractName] = targetEntry;
+
+    // We verify that the couple (ID, contractPath) matches the one in the `contractPathToVisit`
+    const expectedContractPath = contractPathsToVisit.get(
+      contract.id.toString(),
+    );
+    if (expectedContractPath != contractPath) {
+      if (debug) {
+        console.warn(
+          `Found an artifact belonging to another compilation for contract "${contractArtifactPath}". Skipping it.`,
+        );
+      }
+      continue;
+    }
+    // We register the visiter contract path with the ID
+    visitedContractPaths.set(contract.id.toString(), contractPath);
+
+    // Fill the solc version if not set
+    if (!solcLongVersion) {
+      solcLongVersion = contract.metadata.compiler.version;
+    }
 
     // Fill the input language if not set
     if (!input.language) {
@@ -412,17 +429,16 @@ async function forgeDefaultBuildInfoToEthokoArtifact(
         gasEstimates: undefined, // not handled
       },
     } satisfies z.infer<typeof SolcContractSchema>;
-
-    exploredContractPaths.add(contractPath);
   }
 
-  if (exploredContractPaths.size !== expectedContractPaths.size) {
+  // We verify that all contract paths have been visiter
+  if (visitedContractPaths.size !== contractPathsToVisit.size) {
     throw new Error(
-      `The number of explored contract paths (${exploredContractPaths.size}) does not match the number of expected contract paths (${expectedContractPaths.size}). Explored contract paths: ${[
-        ...exploredContractPaths,
+      `The number of visited contract paths (${visitedContractPaths.size}) does not match the number of expected contract paths (${contractPathsToVisit.size}). Explored contract paths: ${[
+        ...visitedContractPaths.values(),
       ].join(
         ", ",
-      )}. Expected contract paths: ${[...expectedContractPaths].join(", ")}.`,
+      )}. Expected contract paths: ${[...contractPathsToVisit.values()].join(", ")}.`,
     );
   }
 
