@@ -8,7 +8,6 @@ export default defineConfig({
         extends: true,
         test: {
           name: "e2e",
-          pool: "threads",
           environment: "node",
           testTimeout: 60000,
           hookTimeout: 30000,
