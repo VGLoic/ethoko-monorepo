@@ -46,7 +46,7 @@
     }
   },
   "scripts": {
-    "generate-template": "cat templates-builder/typings.ts >> templates/typings.txt",
+    "generate-template": "mkdir -p templates && cat templates-builder/typings.ts >> templates/typings.txt",
     "build": "pnpm generate-template && tsup",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write src/**/*.ts",
