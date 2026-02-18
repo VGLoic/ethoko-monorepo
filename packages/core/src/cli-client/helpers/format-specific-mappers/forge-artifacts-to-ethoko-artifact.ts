@@ -2,11 +2,8 @@ import {
   EthokoArtifact,
   EthokoArtifactSchema,
 } from "@/utils/artifacts-schemas/ethoko-v0";
-import fs from "fs/promises";
-import { toAsyncResult } from "@/utils/result";
 import {
   FORGE_COMPILER_DEFAULT_OUTPUT_FORMAT,
-  ForgeCompilerContractOutputSchema,
   ForgeCompilerDefaultOutputSchema,
 } from "@/utils/artifacts-schemas/forge-v1";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
@@ -17,7 +14,7 @@ import {
   SolcContractSchema,
   SolcJsonOutputSchema,
 } from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
-import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
+import { lookForForgeContractArtifactPath } from "./retrieve-forge-contract-artifacts-paths";
 
 /**
  * The default Forge build info format splits the contract output into multiple files, the build info file contains only the mapping to these files.
@@ -47,10 +44,10 @@ export async function forgeArtifactsToEthokoArtifact(
   forgeBuildInfo: z.infer<typeof ForgeCompilerDefaultOutputSchema>,
   debug: boolean,
 ): Promise<{ artifact: EthokoArtifact; additionalArtifactsPaths: string[] }> {
-  const contractPathsToVisit = new Map(
+  const expectedSourceIdToPath = new Map(
     Object.entries(forgeBuildInfo.source_id_to_path),
   );
-  if (contractPathsToVisit.size === 0) {
+  if (expectedSourceIdToPath.size === 0) {
     throw new Error("Empty build info file");
   }
 
@@ -60,7 +57,7 @@ export async function forgeArtifactsToEthokoArtifact(
   // We keep track of the additional artifacts paths to return them at the end
   const additionalArtifactsPaths: string[] = [];
 
-  const visitedContractPaths = new Map<string, string>();
+  const rebuiltSourceIdToPath = new Map<string, string>();
   let solcLongVersion: string | undefined = undefined;
   // Target input libraries are formatted as
   // "sourceFile" -> "libraryName" -> "libraryAddress"
@@ -72,57 +69,18 @@ export async function forgeArtifactsToEthokoArtifact(
   const input: Record<string, any> = {};
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const outputContracts: Record<string, any> = {};
-  for await (const contractArtifactPath of lookForContractArtifactPath(
+  for await (const {
+    fullyQualifiedName,
+    localArtifactPath,
+    contract,
+  } of lookForForgeContractArtifactPath(
     rootArtifactsFolder,
+    expectedSourceIdToPath,
+    debug,
   )) {
-    const contractContentResult = await toAsyncResult(
-      fs.readFile(contractArtifactPath, "utf-8").then((content) => {
-        const rawParsing = JSON.parse(content);
-        return ForgeCompilerContractOutputSchema.parse(rawParsing);
-      }),
-      { debug },
-    );
-    if (!contractContentResult.success) {
-      if (debug) {
-        console.warn(
-          `Failed to parse contract artifact at path "${contractArtifactPath}". Skipping it. Error: ${contractContentResult.error}`,
-        );
-      }
-      continue;
-    }
-    const contract = contractContentResult.value;
-
-    const compilationTargetEntries = Object.entries(
-      contract.metadata.settings.compilationTarget || {},
-    );
-    const targetEntry = compilationTargetEntries.at(0);
-    if (!targetEntry || compilationTargetEntries.length > 1) {
-      if (debug) {
-        console.warn(
-          `No compilation target found or too many targets for contract "${contractArtifactPath}". Skipping it.`,
-        );
-      }
-      continue;
-    }
-
-    // E.g "contracts/MyContract.sol" and "MyContract"
-    const [contractPath, contractName] = targetEntry;
-
-    // We verify that the couple (ID, contractPath) matches the one in the `contractPathToVisit`
-    const expectedContractPath = contractPathsToVisit.get(
-      contract.id.toString(),
-    );
-    if (expectedContractPath != contractPath) {
-      if (debug) {
-        console.warn(
-          `Found an artifact belonging to another compilation for contract "${contractArtifactPath}". Skipping it.`,
-        );
-      }
-      continue;
-    }
     // We register the visiter contract path with the ID
-    visitedContractPaths.set(contract.id.toString(), contractPath);
-    additionalArtifactsPaths.push(contractArtifactPath);
+    rebuiltSourceIdToPath.set(contract.id.toString(), fullyQualifiedName.path);
+    additionalArtifactsPaths.push(localArtifactPath);
 
     // Fill the solc version if not set
     if (!solcLongVersion) {
@@ -150,8 +108,8 @@ export async function forgeArtifactsToEthokoArtifact(
     // Update the input settings libraries with the libraries found in the contract metadata
     const contractLibraries = contract.metadata.settings.libraries;
     if (contractLibraries) {
-      for (const fullyQualifiedPath in contractLibraries) {
-        const [filePath, libraryName] = fullyQualifiedPath.split(":");
+      for (const fullyQualifiedName in contractLibraries) {
+        const [filePath, libraryName] = fullyQualifiedName.split(":");
         if (!filePath || !libraryName) {
           continue;
         }
@@ -159,7 +117,7 @@ export async function forgeArtifactsToEthokoArtifact(
           inputLibraries[filePath] = {};
         }
         inputLibraries[filePath][libraryName] =
-          contractLibraries[fullyQualifiedPath];
+          contractLibraries[fullyQualifiedName];
       }
     }
     // Update the input sources with the source found in the contract metadata
@@ -171,10 +129,10 @@ export async function forgeArtifactsToEthokoArtifact(
     }
 
     // Fill the output contracts
-    if (!outputContracts[contractPath]) {
-      outputContracts[contractPath] = {};
+    if (!outputContracts[fullyQualifiedName.path]) {
+      outputContracts[fullyQualifiedName.path] = {};
     }
-    outputContracts[contractPath][contractName] = {
+    outputContracts[fullyQualifiedName.path][fullyQualifiedName.name] = {
       abi: contract.abi,
       metadata: contract.rawMetadata,
       userdoc: contract.metadata.output.userdoc,
@@ -205,16 +163,16 @@ export async function forgeArtifactsToEthokoArtifact(
   }
 
   // We verify that all contract paths have been visited
-  if (visitedContractPaths.size !== contractPathsToVisit.size) {
+  if (rebuiltSourceIdToPath.size !== expectedSourceIdToPath.size) {
     const pathsNotVisited: string[] = [];
-    for (const [id, path] of contractPathsToVisit.entries()) {
-      if (!visitedContractPaths.has(id)) {
+    for (const [id, path] of expectedSourceIdToPath.entries()) {
+      if (!rebuiltSourceIdToPath.has(id)) {
         pathsNotVisited.push(`${path} (ID: ${id})`);
       }
     }
 
     throw new Error(
-      `The number of visited contract paths (${visitedContractPaths.size}) does not match the number of expected contract paths (${contractPathsToVisit.size}). Missing contract paths:\n${pathsNotVisited.join(",\n")}.`,
+      `The number of visited contract paths (${rebuiltSourceIdToPath.size}) does not match the number of expected contract paths (${expectedSourceIdToPath.size}). Missing contract paths:\n${pathsNotVisited.join(",\n")}.`,
     );
   }
 

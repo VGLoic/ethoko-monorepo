@@ -15,6 +15,7 @@ import {
 } from "@/utils/artifacts-schemas/hardhat-v3";
 import { forgeArtifactsToEthokoArtifact } from "./format-specific-mappers/forge-artifacts-to-ethoko-artifact";
 import { retrieveHardhatv3ContractArtifactsPaths } from "./format-specific-mappers/retrieve-hhv3-contract-artifacts-paths";
+import { retrieveForgeContractArtifactsPaths } from "./format-specific-mappers/retrieve-forge-contract-artifacts-paths";
 
 /**
  * Given a path to a candidate build info JSON file, try to output a EthokoArtifact.
@@ -172,6 +173,21 @@ export async function mapBuildInfoToEthokoArtifact(
         `The provided build info file "${buildInfoPath.path}" seems to be in the Forge format with the build info option but we failed to validate it. Please provide a valid Forge build info JSON file with the build info option. Run with debug mode for more info.`,
       );
     }
+
+    const contractArtifactsPathsResult = await toAsyncResult(
+      retrieveForgeContractArtifactsPaths(
+        buildInfoPath.path,
+        parsingResult.data.source_id_to_path,
+        debug,
+      ),
+      { debug },
+    );
+    if (!contractArtifactsPathsResult.success) {
+      throw new CliError(
+        `Failed to identify the contract artifacts related to the compilation. Please provide valid compilation files or contact us. Run with debug mode for more info.`,
+      );
+    }
+
     return {
       artifact: {
         id: deriveEthokoArtifactId(parsingResult.data.output),
@@ -183,7 +199,10 @@ export async function mapBuildInfoToEthokoArtifact(
         input: parsingResult.data.input,
         output: parsingResult.data.output,
       },
-      originalContentPaths: [buildInfoPath.path],
+      originalContentPaths: [
+        buildInfoPath.path,
+        ...contractArtifactsPathsResult.value,
+      ],
     };
   }
 
