@@ -19,7 +19,7 @@ Development is done as usual, with as many tests or else.
 Once the development is considered done, one can create the compilation artifacts:
 
 ```bash
-npx hardhat build --build-profile production --force --no-tests
+npx hardhat build --build-profile production
 ```
 
 The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.
@@ -48,8 +48,7 @@ Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-202
 
 ```ts
 import { deployScript } from "../rocketh/deploy.js";
-import { project } from "../.ethoko-typings/index.js"
-
+import { project } from "../.ethoko-typings/index.js";
 
 const TARGET_RELEASE_TAG = "2026-02-02";
 
@@ -57,13 +56,17 @@ export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
-    const projectUtils = project("curious-counter")
+    const projectUtils = project("curious-counter");
 
-    const counterArtifact = await projectUtils.tag(TARGET_RELEASE_TAG).getContractArtifact("project/contracts/Counter.sol:Counter")
+    const counterArtifact = await projectUtils
+      .tag(TARGET_RELEASE_TAG)
+      .getContractArtifact("project/contracts/Counter.sol:Counter");
 
     const metadata = counterArtifact.metadata;
     if (!metadata) {
-      throw new Error("Metadata is required for deployment, but was not found in the artifact");
+      throw new Error(
+        "Metadata is required for deployment, but was not found in the artifact",
+      );
     }
 
     await deploy(`Counter@${TARGET_RELEASE_TAG}`, {
@@ -73,15 +76,12 @@ export default deployScript(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         abi: counterArtifact.abi as any,
         bytecode: `0x${counterArtifact.evm.bytecode.object}`,
-        metadata
+        metadata,
       },
     });
   },
   { tags: ["Counter", "Counter_deploy", TARGET_RELEASE_TAG] },
 );
-
-
-
 ```
 
 The deployment script can be executed using the Hardhat-Deploy plugin:
@@ -93,4 +93,3 @@ npx hardhat deploy --network <network-name>
 No additional compilation step is needed since the deployment script directly uses the static artifacts from `Ethoko`.
 
 The deployment is by nature idempotent, this is guaranteed by the fact that the used artifacts are static and the Hardhat-Deploy plugin.
-
