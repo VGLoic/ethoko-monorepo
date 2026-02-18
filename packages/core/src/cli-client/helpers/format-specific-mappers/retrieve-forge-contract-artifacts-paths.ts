@@ -5,6 +5,12 @@ import { ForgeCompilerContractOutputSchema } from "@/utils/artifacts-schemas/for
 import z from "zod";
 import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
 
+/**
+ * When using the --build-info option, Forge artifacts have the usual Build Info input and output
+ * But they also output contract artifacts directly, this function is in charge of retrieving their paths
+ * Additionally, we check that we have every contracts of the build info
+ * @returns The paths of the contract artifacts
+ */
 export async function retrieveForgeContractArtifactsPaths(
   buildInfoPath: string,
   sourceIdToPath: Record<string, string>,
