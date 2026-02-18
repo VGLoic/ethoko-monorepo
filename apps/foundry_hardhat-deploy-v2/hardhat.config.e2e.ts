@@ -13,6 +13,7 @@ export default defineConfig({
       type: "local",
       path: "./ethoko-e2e",
     },
+    debug: false,
   },
   solidity: {
     profiles: {

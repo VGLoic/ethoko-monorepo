@@ -19,7 +19,7 @@ Development is done as usual, with as many tests or else.
 Once the development is considered done, one can create the compilation artifacts:
 
 ```bash
-npx hardhat build --build-profile production --force --no-tests
+npx hardhat build --build-profile production
 ```
 
 The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.

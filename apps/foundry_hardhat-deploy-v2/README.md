@@ -24,7 +24,13 @@ Once the development is considered done, one can create the compilation artifact
 forge build --skip test --skip script --force
 ```
 
-Note that it is important to ignore the `test` and `script` folders, otherwise, the generated artifacts will contain all the non-relevant contracts from these folders.
+Note that it is advised to ignore the `test` and `script` folders, otherwise, the generated artifacts will contain all the non-relevant contracts from these folders.
+
+If one wants to keep the test and script helper contracts, one should build using the `--build-info` flag:
+
+```
+forge build --force --build-info
+```
 
 The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.
 

@@ -4,8 +4,7 @@ import { asyncExec } from "./async-exec";
 const TAG_NAME = "2026-02-04";
 
 describe("[Foundry Hardhat-deploy v2] Push artifact, pull artifact, deploy", async () => {
-  test("it compiles", () =>
-    asyncExec("forge build --skip test --skip script --force"));
+  test("it compiles", () => asyncExec("forge build --force --build-info"));
 
   test("it pushes the tag", () =>
     asyncExec(

@@ -53,8 +53,8 @@ export const ForgeCompilerContractOutputSchema = z.object({
     immutableReferences: JsonSchema.optional(),
   }),
   methodIdentifiers: z.record(z.string(), z.string()).optional(),
-  rawMetadata: z.string(),
-  metadata: ContractMetadataSchema,
+  rawMetadata: z.string().optional(),
+  metadata: ContractMetadataSchema.optional(),
   // ID as number (e.g. 0, 1, etc.) of the contract, used to resolve the source file path from the "source_id_to_path" field in the output JSON.
   id: z.number().int(),
 });

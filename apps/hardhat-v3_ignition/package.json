@@ -10,7 +10,7 @@
     "format-contracts": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "format": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "check-types": "tsc --noEmit",
-    "compile": "pnpm format-contracts && hardhat compile --build-profile production --force --no-tests",
+    "compile": "pnpm format-contracts && hardhat compile --build-profile production",
     "test:e2e:apps": "vitest run e2e-test"
   },
   "devDependencies": {

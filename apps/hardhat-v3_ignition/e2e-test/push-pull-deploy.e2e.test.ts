@@ -6,7 +6,7 @@ const TAG_NAME = "2026-02-02";
 describe("[Hardhat v3 - Hardhat Ignition] Push artifact, pull artifact, deploy", async () => {
   test("it compiles", () =>
     asyncExec(
-      "npx hardhat build --build-profile production --force --no-tests --config ./hardhat.config.e2e.ts",
+      "npx hardhat build --build-profile production --config ./hardhat.config.e2e.ts",
     ));
 
   test("it pushes the tag", () =>
