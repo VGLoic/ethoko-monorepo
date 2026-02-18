@@ -82,31 +82,36 @@ export async function forgeArtifactsToEthokoArtifact(
     rebuiltSourceIdToPath.set(contract.id.toString(), fullyQualifiedName.path);
     additionalArtifactsPaths.push(localArtifactPath);
 
+    const contractMetadata = contract.metadata;
+    const contractRawMetadata = contract.rawMetadata;
+    // No contract metadata is likely to involve test/script contracts from Forge, we keep track of them but we do not use them for setting the rest of the fields
+    if (!contractMetadata || !contractRawMetadata) continue;
+
     // Fill the solc version if not set
     if (!solcLongVersion) {
-      solcLongVersion = contract.metadata.compiler.version;
+      solcLongVersion = contractMetadata.compiler.version;
     }
 
     // Fill the input language if not set
     if (!input.language) {
-      input.language = contract.metadata.language;
+      input.language = contractMetadata.language;
     }
     // Fill the input settings if not set
     if (!input.settings) {
       // Libraries in contract
       input.settings = {
-        remappings: contract.metadata.settings.remappings,
-        optimizer: contract.metadata.settings.optimizer,
-        evmVersion: contract.metadata.settings.evmVersion,
-        eofVersion: contract.metadata.settings.eofVersion,
-        viaIR: contract.metadata.settings.viaIR,
-        metadata: contract.metadata.settings.metadata,
+        remappings: contractMetadata.settings.remappings,
+        optimizer: contractMetadata.settings.optimizer,
+        evmVersion: contractMetadata.settings.evmVersion,
+        eofVersion: contractMetadata.settings.eofVersion,
+        viaIR: contractMetadata.settings.viaIR,
+        metadata: contractMetadata.settings.metadata,
         outputSelection: undefined, // not handled
         modelChecker: undefined, // not handled
       } satisfies z.infer<typeof SettingsSchema>;
     }
     // Update the input settings libraries with the libraries found in the contract metadata
-    const contractLibraries = contract.metadata.settings.libraries;
+    const contractLibraries = contractMetadata.settings.libraries;
     if (contractLibraries) {
       for (const fullyQualifiedName in contractLibraries) {
         const [filePath, libraryName] = fullyQualifiedName.split(":");
@@ -121,10 +126,10 @@ export async function forgeArtifactsToEthokoArtifact(
       }
     }
     // Update the input sources with the source found in the contract metadata
-    for (const sourcePath in contract.metadata.sources) {
+    for (const sourcePath in contractMetadata.sources) {
       inputSources[sourcePath] = {
         ...inputSources[sourcePath],
-        ...contract.metadata.sources[sourcePath],
+        ...contractMetadata.sources[sourcePath],
       };
     }
 
@@ -134,9 +139,9 @@ export async function forgeArtifactsToEthokoArtifact(
     }
     outputContracts[fullyQualifiedName.path][fullyQualifiedName.name] = {
       abi: contract.abi,
-      metadata: contract.rawMetadata,
-      userdoc: contract.metadata.output.userdoc,
-      devdoc: contract.metadata.output.devdoc,
+      metadata: contractRawMetadata,
+      userdoc: contractMetadata.output.userdoc,
+      devdoc: contractMetadata.output.devdoc,
       ir: undefined, // not handled
       irAst: undefined, // not handled
       irOptimized: undefined, // not handled

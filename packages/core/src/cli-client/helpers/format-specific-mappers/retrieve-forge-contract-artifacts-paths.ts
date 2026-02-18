@@ -89,21 +89,29 @@ export async function* lookForForgeContractArtifactPath(
     }
     const contract = contractContentResult.value;
 
-    const compilationTargetEntries = Object.entries(
-      contract.metadata.settings.compilationTarget || {},
-    );
-    const targetEntry = compilationTargetEntries.at(0);
-    if (!targetEntry || compilationTargetEntries.length > 1) {
-      if (debug) {
-        console.warn(
-          `No compilation target found or too many targets for contract "${contractArtifactPath}". Skipping it.`,
-        );
-      }
-      continue;
-    }
-
     // E.g "contracts/MyContract.sol" and "MyContract"
-    const [contractPath, contractName] = targetEntry;
+    let contractPath: string;
+    let contractName: string;
+    // @dev we retrieve the name and path from the `compilationTarget` field
+    // An exception is made for `console2.sol` helper "contract" because the format is different, I don't know why
+    if (contractArtifactPath.endsWith("console2.json")) {
+      contractPath = "lib/forge-std/src/console2.sol";
+      contractName = "console2";
+    } else {
+      const compilationTargetEntries = Object.entries(
+        contract.metadata?.settings.compilationTarget || {},
+      );
+      const targetEntry = compilationTargetEntries.at(0);
+      if (!targetEntry || compilationTargetEntries.length > 1) {
+        if (debug) {
+          console.warn(
+            `No compilation target found or too many targets for contract "${contractArtifactPath}". Skipping it.`,
+          );
+        }
+        continue;
+      }
+      [contractPath, contractName] = targetEntry;
+    }
 
     // We verify that the couple (ID, contractPath) matches the one in the `contractPathToVisit`
     const expectedContractPath = buildInfoContractPaths.get(
