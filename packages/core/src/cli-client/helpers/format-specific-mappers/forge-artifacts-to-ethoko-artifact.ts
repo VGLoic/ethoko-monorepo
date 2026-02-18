@@ -204,14 +204,17 @@ export async function forgeArtifactsToEthokoArtifact(
     } satisfies z.infer<typeof SolcContractSchema>;
   }
 
-  // We verify that all contract paths have been visiter
+  // We verify that all contract paths have been visited
   if (visitedContractPaths.size !== contractPathsToVisit.size) {
+    const pathsNotVisited: string[] = [];
+    for (const [id, path] of contractPathsToVisit.entries()) {
+      if (!visitedContractPaths.has(id)) {
+        pathsNotVisited.push(`${path} (ID: ${id})`);
+      }
+    }
+
     throw new Error(
-      `The number of visited contract paths (${visitedContractPaths.size}) does not match the number of expected contract paths (${contractPathsToVisit.size}). Explored contract paths: ${[
-        ...visitedContractPaths.values(),
-      ].join(
-        ", ",
-      )}. Expected contract paths: ${[...contractPathsToVisit.values()].join(", ")}.`,
+      `The number of visited contract paths (${visitedContractPaths.size}) does not match the number of expected contract paths (${contractPathsToVisit.size}). Missing contract paths:\n${pathsNotVisited.join(",\n")}.`,
     );
   }
 
