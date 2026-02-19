@@ -1,24 +1,61 @@
-import { describe, test } from "vitest";
-import { asyncExec } from "./async-exec";
+import { beforeAll, describe, test } from "vitest";
+import fs from "fs/promises";
+import { asyncExec } from "./async-exec.js";
 
-const TAG_NAME = "2026-02-04";
+describe.each([
+  [
+    "~~Default compilation WITHOUT test and scripts~~",
+    "forge build --force --skip test --skip script",
+    "2026-forge-default",
+  ],
+  [
+    "~~Compilation WITH --build-info WITHOUT test and scripts~~",
+    "forge build --force --skip test --skip script --build-info",
+    "2026-forge-build-info",
+  ],
+  [
+    "~~Compilation WITH --build-info WITH test and scripts~~",
+    "forge build --force --build-info",
+    "2026-forge-build-info-full",
+  ],
+])(
+  "[Foundry Hardhat-deploy v2] - %s - Push artifact, pull artifact, deploy",
+  (_, buildCommand, tag) => {
+    beforeAll(async () => {
+      const deploymentScriptContent = await fs.readFile(
+        "deploy/00-deploy-counter-2026-02-04.ts",
+        "utf-8",
+      );
+      const updatedScriptContent = deploymentScriptContent.replaceAll(
+        "2026-02-04",
+        tag,
+      );
 
-describe("[Foundry Hardhat-deploy v2] Push artifact, pull artifact, deploy", async () => {
-  test("it compiles", () => asyncExec("forge build --force --build-info"));
+      const tmpDeploymentScript = `deploy/00-deploy-counter-${tag}.ts`;
+      await fs.writeFile(tmpDeploymentScript, updatedScriptContent);
+      return async () => {
+        await fs.rm(tmpDeploymentScript);
+      };
+    });
 
-  test("it pushes the tag", () =>
-    asyncExec(
-      `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${TAG_NAME}`,
-    ));
+    test("it compiles", () => asyncExec(buildCommand));
 
-  test("it pulls the tag", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
+    test("it pushes the tag", () =>
+      asyncExec(
+        `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${tag}`,
+      ));
 
-  test("it generates the typings", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko typings"));
+    test("it pulls the tag", () =>
+      asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
 
-  test("it checks types", () => asyncExec("pnpm check-types"));
+    test("it generates the typings", () =>
+      asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko typings"));
 
-  test("it deploys", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts deploy"));
-});
+    test("it checks types", () => asyncExec("pnpm check-types"));
+
+    test("it deploys", () =>
+      asyncExec(
+        `npx hardhat --config ./hardhat.config.e2e.ts deploy --tags ${tag}`,
+      ));
+  },
+);

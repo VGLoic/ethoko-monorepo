@@ -1,5 +1,5 @@
 import { describe, test } from "vitest";
-import { asyncExec } from "./async-exec";
+import { asyncExec } from "./async-exec.js";
 
 const TAG_NAME = "2026-02-02";
 
