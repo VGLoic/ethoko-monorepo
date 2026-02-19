@@ -1,5 +1,9 @@
 import { deployScript } from "../rocketh/deploy.js";
-import { project } from "../.ethoko-typings";
+import {
+  ContractArtifact as EthokoContractArtifact,
+  project,
+} from "../.ethoko-typings";
+import * as RockethTypes from "rocketh/types";
 
 /**
  * This deployment script deploys the Counter contract targeting a specific release.
@@ -36,19 +40,34 @@ export default deployScript(
 
     await deploy(`Counter@${TARGET_RELEASE_TAG}`, {
       account: deployer,
-      artifact: {
-        // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        abi: counterArtifact.abi as any,
-        bytecode: counterArtifact.bytecode,
-        metadata: counterArtifact.metadata,
-        deployedBytecode: counterArtifact.deployedBytecode,
-        linkReferences: counterArtifact.linkReferences,
-        deployedLinkReferences: counterArtifact.deployedLinkReferences,
-        contractName: counterArtifact.contractName,
-        sourceName: counterArtifact.sourceName,
-      },
+      // Ethoko still needs refinement on types
+      // we use a dedicated function to cast to expected Rocketh's type
+      artifact: toRockethArtifact(counterArtifact),
     });
   },
   { tags: ["Counter", "Counter_deploy", TARGET_RELEASE_TAG] },
 );
+
+function toRockethArtifact(
+  artifact: EthokoContractArtifact,
+): RockethTypes.Artifact {
+  return {
+    abi: artifact.abi as RockethTypes.Abi,
+    bytecode: artifact.bytecode,
+    metadata: artifact.metadata,
+    // | | | | | | | | | | | | | |
+    // | | | Optional fields | | |
+    // v v v                 v v v
+    deployedBytecode: artifact.deployedBytecode,
+    linkReferences: artifact.linkReferences,
+    deployedLinkReferences: artifact.deployedLinkReferences,
+    contractName: artifact.contractName,
+    sourceName: artifact.sourceName,
+    devdoc: artifact.devdoc as RockethTypes.DevDoc | undefined,
+    evm: artifact.evm,
+    storageLayout: artifact.storageLayout as
+      | RockethTypes.StorageLayout
+      | undefined,
+    userdoc: artifact.userdoc as RockethTypes.UserDoc | undefined,
+  };
+}

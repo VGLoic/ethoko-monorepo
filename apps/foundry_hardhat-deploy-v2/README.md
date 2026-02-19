@@ -58,7 +58,11 @@ Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-202
 
 ```ts
 import { deployScript } from "../rocketh/deploy.js";
-import { project } from "../.ethoko-typings";
+import {
+  ContractArtifact as EthokoContractArtifact,
+  project,
+} from "../.ethoko-typings";
+import * as RockethTypes from "rocketh/types";
 
 const TARGET_RELEASE = "2026-02-04";
 
@@ -73,26 +77,39 @@ export default deployScript(
       "src/Counter.sol:Counter",
     );
 
-    const metadata = counterArtifact.metadata;
-    if (!metadata) {
-      throw new Error(
-        "Metadata is required for deployment, but was not found in the artifact",
-      );
-    }
-
     await deploy(`Counter@${TARGET_RELEASE}`, {
       account: deployer,
-      artifact: {
-        // Hardhat Deploy works with the abitype dependency, strongly typing the ABI. It is not yet available here.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        abi: counterArtifact.abi as any,
-        bytecode: `0x${counterArtifact.evm.bytecode.object}`,
-        metadata,
-      },
+      // Ethoko still needs refinement on types
+      // we use a dedicated function to cast to expected Rocketh's type
+      artifact: toRockethArtifact(counterArtifact),
     });
   },
   { tags: ["Counter", "Counter_deploy", TARGET_RELEASE] },
 );
+
+function toRockethArtifact(
+  artifact: EthokoContractArtifact,
+): RockethTypes.Artifact {
+  return {
+    abi: artifact.abi as RockethTypes.Abi,
+    bytecode: artifact.bytecode,
+    metadata: artifact.metadata,
+    // | | | | | | | | | | | | | |
+    // | | | Optional fields | | |
+    // v v v                 v v v
+    deployedBytecode: artifact.deployedBytecode,
+    linkReferences: artifact.linkReferences,
+    deployedLinkReferences: artifact.deployedLinkReferences,
+    contractName: artifact.contractName,
+    sourceName: artifact.sourceName,
+    devdoc: artifact.devdoc as RockethTypes.DevDoc | undefined,
+    evm: artifact.evm,
+    storageLayout: artifact.storageLayout as
+      | RockethTypes.StorageLayout
+      | undefined,
+    userdoc: artifact.userdoc as RockethTypes.UserDoc | undefined,
+  };
+}
 ```
 
 The deployment script can be executed using the Hardhat-Deploy plugin:
