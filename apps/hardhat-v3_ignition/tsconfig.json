@@ -8,7 +8,8 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "moduleResolution": "nodenext",
-    "outDir": "dist"
+    "outDir": "dist",
+    "types": ["node"]
   },
-  "files": ["./hardhat.config.ts"],
+  "include": ["./hardhat.config.ts", "./e2e-test/*"]
 }
