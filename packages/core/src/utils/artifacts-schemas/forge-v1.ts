@@ -6,7 +6,6 @@ import {
   BytecodeSchema,
   SolcJsonOutputSchema,
 } from "./solc-v0.8.33/output-json";
-import { JsonSchema } from "./json";
 import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
 
 // Forge version at the time of writing: v1.6
@@ -36,21 +35,19 @@ export const ForgeCompilerOutputWithBuildInfoOptionSchema = z.object({
   solcVersion: z.string().optional(),
 });
 
-export const ForgeCompilerDefaultOutputSchema = z
-  .object({
-    id: z.string(),
-    // Mapping from contract "number" (e.g. "0", "1", etc.) to the source file path
-    // This is needed to resolve the source files when the output JSON doesn't include the source file paths.
-    source_id_to_path: z.record(z.string(), z.string()),
-    language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
-  })
-  .strict();
+export const ForgeCompilerDefaultOutputSchema = z.strictObject({
+  id: z.string(),
+  // Mapping from contract "number" (e.g. "0", "1", etc.) to the source file path
+  // This is needed to resolve the source files when the output JSON doesn't include the source file paths.
+  source_id_to_path: z.record(z.string(), z.string()),
+  language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
+});
 
 export const ForgeCompilerContractOutputSchema = z.object({
   abi: z.array(AbiItemSchema),
   bytecode: BytecodeSchema,
   deployedBytecode: BytecodeSchema.extend({
-    immutableReferences: JsonSchema.optional(),
+    immutableReferences: z.json().optional(),
   }),
   methodIdentifiers: z.record(z.string(), z.string()).optional(),
   rawMetadata: z.string().optional(),

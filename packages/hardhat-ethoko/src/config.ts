@@ -110,9 +110,9 @@ export async function validatePluginConfig(
   const parsingResult = EthokoHardhatConfigSchema.safeParse(userConfig.ethoko);
   if (!parsingResult.success) {
     const errors: HardhatUserConfigValidationError[] =
-      parsingResult.error.errors.map((zodError) => ({
-        path: ["ethoko", ...zodError.path],
-        message: zodError.message,
+      parsingResult.error.issues.map((issue) => ({
+        path: ["ethoko", ...issue.path.toString()],
+        message: issue.message,
       }));
     return errors;
   }

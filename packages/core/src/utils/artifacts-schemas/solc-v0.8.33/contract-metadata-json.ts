@@ -1,6 +1,5 @@
 import z from "zod";
 import { AbiItemSchema } from "./output-json";
-import { JsonSchema } from "../json";
 import { InputSourceSchema, SettingsSchema } from "./input-json";
 
 /**
@@ -23,9 +22,9 @@ export const ContractMetadataSchema = z.object({
     // Required: ABI definition of the contract. See "Contract ABI Specification"
     abi: z.array(AbiItemSchema),
     // Required: NatSpec developer documentation of the contract. See https://docs.soliditylang.org/en/latest/natspec-format.html for details.
-    devdoc: JsonSchema.optional(),
+    devdoc: z.json().optional(),
     // Required: NatSpec user documentation of the contract. See "NatSpec Format"
-    userdoc: JsonSchema.optional(),
+    userdoc: z.json().optional(),
   }),
   // Required: Compiler settings.
   // Reflects the settings in the JSON input during compilation, except:
