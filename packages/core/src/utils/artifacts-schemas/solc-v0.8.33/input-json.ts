@@ -33,7 +33,7 @@ const SolAstSourceSchema = z.object({
   // Furthermore, note that the AST import only consumes the fields of the AST as
   // produced by the compiler in "stopAfter": "parsing" mode and then re-performs
   // analysis, so any analysis-based annotations of the AST are ignored upon import.
-  ast: z.record(z.unknown()),
+  ast: z.record(z.string(), z.unknown()),
 });
 
 const EvmAssemblySourceSchema = z.object({
@@ -43,7 +43,7 @@ const EvmAssemblySourceSchema = z.object({
   // Note that importing EVM assembly is experimental.
   assemblyJson: z.object({
     ".code": z.array(z.unknown()),
-    ".data": z.record(z.unknown()).optional(),
+    ".data": z.record(z.string(), z.unknown()).optional(),
     sourceList: z.array(z.string()).optional(),
   }),
 });

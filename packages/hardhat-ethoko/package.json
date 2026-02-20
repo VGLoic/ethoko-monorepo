@@ -47,7 +47,7 @@
   },
   "dependencies": {
     "@ethoko/core": "workspace:*",
-    "zod": "^3.23.8"
+    "zod": "^4.3.6"
   },
   "peerDependencies": {
     "hardhat": "^3.x"

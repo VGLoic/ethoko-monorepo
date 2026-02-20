@@ -4,7 +4,6 @@ import {
   AbiItemSchema,
   SolcJsonOutputSchema,
 } from "./solc-v0.8.33/output-json";
-import { JsonSchema } from "./json";
 
 export const HARDHAT_V3_COMPILER_INPUT_FORMAT = "hh3-sol-build-info-1";
 export const HARDHAT_V3_COMPILER_OUTPUT_FORMAT = "hh3-sol-build-info-output-1";
@@ -68,7 +67,7 @@ export const HardhatV3CompilerContractOutputSchema = z.object({
       ),
     ),
   ),
-  immutableReferences: JsonSchema.optional(),
+  immutableReferences: z.json().optional(),
   inputSourceName: z.string(),
   buildInfoId: z.string(),
 });

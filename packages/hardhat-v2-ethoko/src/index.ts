@@ -60,7 +60,7 @@ extendConfig(
       console.error(
         styleText(
           LOG_COLORS.warn,
-          `Configuration for Ethoko has been found but seems invalid. Please consult the below errors: \n${ethokoParsingResult.error.errors.map(
+          `Configuration for Ethoko has been found but seems invalid. Please consult the below errors: \n${ethokoParsingResult.error.issues.map(
             (error) => {
               return `  - ${error.path.join(".")}: ${error.message} (${error.code})`;
             },
