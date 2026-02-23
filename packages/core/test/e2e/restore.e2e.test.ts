@@ -285,7 +285,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       );
     });
 
-    describe.each([
+    storageProviderTest.for([
       [
         "Hardhat V3",
         TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
@@ -330,121 +330,160 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           ),
         ],
       ],
-    ])("%s artifacts", (_, artifactFixture, expectedOriginalPaths) => {
-      storageProviderTest(
-        "restore by tag",
-        async ({ storageProvider, localStorage }) => {
-          const project = createTestProjectName(
-            TEST_CONSTANTS.PROJECTS.DEFAULT,
-          );
-          const tag = TEST_CONSTANTS.TAGS.V1;
+    ] as const)(
+      "%s artifacts - restore by tag",
+      async (
+        [, artifactFixture, expectedOriginalPaths],
+        { storageProvider, localStorage },
+      ) => {
+        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+        const tag = TEST_CONSTANTS.TAGS.V1;
 
-          await localStorage.ensureProjectSetup(project);
+        await localStorage.ensureProjectSetup(project);
 
-          await push(
-            artifactFixture.folderPath,
-            project,
-            tag,
-            storageProvider,
-            {
-              force: false,
-              debug: false,
-              silent: true,
-            },
-          );
+        await push(artifactFixture.folderPath, project, tag, storageProvider, {
+          force: false,
+          debug: false,
+          silent: true,
+        });
 
-          await pull(
-            project,
-            { type: "tag", tag },
-            storageProvider,
-            localStorage,
-            {
-              force: false,
-              debug: false,
-              silent: true,
-            },
-          );
+        await pull(
+          project,
+          { type: "tag", tag },
+          storageProvider,
+          localStorage,
+          {
+            force: false,
+            debug: false,
+            silent: true,
+          },
+        );
 
-          const outputPath = path.join(tempOutputDir, `${tag}-tag-test`);
-          const result = await restore(
-            { project, search: { type: "tag", tag } },
-            outputPath,
-            storageProvider,
-            localStorage,
-            { force: false, debug: false, silent: true },
-          );
+        const outputPath = path.join(tempOutputDir, `${tag}-tag-test`);
+        const result = await restore(
+          { project, search: { type: "tag", tag } },
+          outputPath,
+          storageProvider,
+          localStorage,
+          { force: false, debug: false, silent: true },
+        );
 
-          expect(result.project).toBe(project);
-          expect(result.tag).toBe(tag);
-          const expectedPaths = expectedOriginalPaths.map(sanitizePath);
+        expect(result.project).toBe(project);
+        expect(result.tag).toBe(tag);
+        const expectedPaths = expectedOriginalPaths.map(sanitizePath);
 
-          expect(result.filesRestored.length).toBe(expectedPaths.length);
+        expect(result.filesRestored.length).toBe(expectedPaths.length);
 
-          for (const expectedPath of expectedPaths) {
-            const fullPath = path.join(outputPath, expectedPath);
-            const stat = await fs.stat(fullPath);
-            expect(stat.isFile()).toBe(true);
-          }
-        },
-      );
+        for (const expectedPath of expectedPaths) {
+          const fullPath = path.join(outputPath, expectedPath);
+          const stat = await fs.stat(fullPath);
+          expect(stat.isFile()).toBe(true);
+        }
+      },
+    );
 
-      storageProviderTest(
-        "restore by ID",
-        async ({ storageProvider, localStorage }) => {
-          const project = createTestProjectName(
-            TEST_CONSTANTS.PROJECTS.DEFAULT,
-          );
+    storageProviderTest.for([
+      [
+        "Hardhat V3",
+        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
+        [
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.buildInfoPath,
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.buildInfoPath.replace(
+            ".json",
+            ".output.json",
+          ),
+          path.resolve(
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.folderPath,
+            "contracts/Counter.sol/Counter.json",
+          ),
+        ],
+      ],
+      [
+        "Hardhat V2",
+        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER,
+        [TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER.buildInfoPath],
+      ],
+      [
+        "Forge default",
+        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER,
+        [
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.buildInfoPath,
+          path.resolve(
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.folderPath,
+            "Counter.sol/Counter.json",
+          ),
+        ],
+      ],
+      [
+        "Forge with build-info",
+        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER,
+        [
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
+            .buildInfoPath,
+          path.resolve(
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
+              .folderPath,
+            "Counter.sol/Counter.json",
+          ),
+        ],
+      ],
+    ] as const)(
+      "%s artifacts - restore by ID",
+      async (
+        [, artifactFixture, expectedOriginalPaths],
+        { storageProvider, localStorage },
+      ) => {
+        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-          await localStorage.ensureProjectSetup(project);
+        await localStorage.ensureProjectSetup(project);
 
-          const artifactId = await push(
-            artifactFixture.folderPath,
-            project,
-            undefined,
-            storageProvider,
-            {
-              force: false,
-              debug: false,
-              silent: true,
-            },
-          );
+        const artifactId = await push(
+          artifactFixture.folderPath,
+          project,
+          undefined,
+          storageProvider,
+          {
+            force: false,
+            debug: false,
+            silent: true,
+          },
+        );
 
-          await pull(
-            project,
-            { type: "id", id: artifactId },
-            storageProvider,
-            localStorage,
-            {
-              force: false,
-              debug: false,
-              silent: true,
-            },
-          );
+        await pull(
+          project,
+          { type: "id", id: artifactId },
+          storageProvider,
+          localStorage,
+          {
+            force: false,
+            debug: false,
+            silent: true,
+          },
+        );
 
-          const outputPath = path.join(tempOutputDir, `${artifactId}-id-test`);
-          const result = await restore(
-            { project, search: { type: "id", id: artifactId } },
-            outputPath,
-            storageProvider,
-            localStorage,
-            { force: false, debug: false, silent: true },
-          );
+        const outputPath = path.join(tempOutputDir, `${artifactId}-id-test`);
+        const result = await restore(
+          { project, search: { type: "id", id: artifactId } },
+          outputPath,
+          storageProvider,
+          localStorage,
+          { force: false, debug: false, silent: true },
+        );
 
-          expect(result.project).toBe(project);
-          expect(result.tag).toBe(null);
-          expect(result.id).toBe(artifactId);
-          const expectedPaths = expectedOriginalPaths.map(sanitizePath);
+        expect(result.project).toBe(project);
+        expect(result.tag).toBe(null);
+        expect(result.id).toBe(artifactId);
+        const expectedPaths = expectedOriginalPaths.map(sanitizePath);
 
-          expect(result.filesRestored.length).toBe(expectedPaths.length);
+        expect(result.filesRestored.length).toBe(expectedPaths.length);
 
-          for (const expectedPath of expectedPaths) {
-            const fullPath = path.join(outputPath, expectedPath);
-            const stat = await fs.stat(fullPath);
-            expect(stat.isFile()).toBe(true);
-          }
-        },
-      );
-    });
+        for (const expectedPath of expectedPaths) {
+          const fullPath = path.join(outputPath, expectedPath);
+          const stat = await fs.stat(fullPath);
+          expect(stat.isFile()).toBe(true);
+        }
+      },
+    );
   },
 );
 

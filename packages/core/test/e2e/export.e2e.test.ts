@@ -9,7 +9,7 @@ import {
 } from "@test/helpers/storage-provider-test";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
-  "Push-Pull E2E Tests (%s)",
+  "Export E2E Tests (%s)",
   ([, storageProviderFactory]) => {
     storageProviderTest.scoped({ storageProviderFactory });
 
