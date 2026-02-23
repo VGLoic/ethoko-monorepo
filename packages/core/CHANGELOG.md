@@ -1,5 +1,11 @@
 # @ethoko/core
 
+## 0.5.0
+
+### Minor Changes
+
+- 69364f7: Support missing compilation artifacts in Foundry compilation output
+
 ## 0.4.0
 
 ### Minor Changes
