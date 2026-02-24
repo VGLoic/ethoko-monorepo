@@ -2,7 +2,7 @@ import { beforeAll, describe, test } from "vitest";
 import fs from "fs/promises";
 import { asyncExec } from "./async-exec.js";
 
-describe.each([
+describe.for([
   [
     "~~Default compilation WITHOUT --build-info WITHOUT test and scripts~~",
     "forge build --force --skip test --skip script",
@@ -25,7 +25,7 @@ describe.each([
   ],
 ])(
   "[Foundry Hardhat-deploy v2] - %s - Push artifact, pull artifact, deploy",
-  (_, buildCommand, tag) => {
+  ([, buildCommand, tag]) => {
     beforeAll(async () => {
       const deploymentScriptContent = await fs.readFile(
         "deploy/00-deploy-counter-2026-02-04.ts",
