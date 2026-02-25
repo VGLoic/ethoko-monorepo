@@ -8,12 +8,13 @@
     "test:e2e:apps": "vitest run e2e-test"
   },
   "devDependencies": {
+    "@ethoko/eslint-config": "workspace:*",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.0",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.2",
     "@types/node": "^22.8.5",
     "eslint": "^9.39.1",
     "hardhat": "^3.1.7",
-    "hardhat-ethoko": "0.4.1",
+    "hardhat-ethoko": "workspace:*",
     "typescript": "~5.8.0",
     "viem": "^2.43.0",
     "vitest": "^4.0.17"
