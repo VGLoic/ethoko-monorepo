@@ -2,30 +2,13 @@ import { beforeAll, describe, test } from "vitest";
 import fs from "fs/promises";
 import { asyncExec } from "./async-exec.js";
 
-describe.for([
-  [
-    "~~Default compilation WITHOUT --build-info WITHOUT test and scripts~~",
-    "forge build --force --skip test --skip script",
-    "2026-forge-default",
-  ],
-  [
-    "~~Default compilation WITHOUT --build-info WITH test and scripts~~",
-    "forge build --force",
-    "2026-forge-default-full",
-  ],
-  [
-    "~~Compilation WITH --build-info WITHOUT test and scripts~~",
-    "forge build --force --skip test --skip script --build-info",
-    "2026-forge-build-info",
-  ],
-  [
-    "~~Compilation WITH --build-info WITH test and scripts~~",
-    "forge build --force --build-info",
-    "2026-forge-build-info-full",
-  ],
-])(
-  "[Foundry Hardhat-deploy v2] - %s - Push artifact, pull artifact, deploy",
-  ([, buildCommand, tag]) => {
+export function foundryDescribe(
+  title: string,
+  buildCommand: string,
+  tag: string,
+  outputArtifactsPath: string,
+) {
+  describe(title, () => {
     beforeAll(async () => {
       const deploymentScriptContent = await fs.readFile(
         "deploy/00-deploy-counter-2026-02-04.ts",
@@ -47,7 +30,7 @@ describe.for([
 
     test("it pushes the tag", () =>
       asyncExec(
-        `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${tag}`,
+        `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${tag} --artifact-path ${outputArtifactsPath}`,
       ));
 
     test("it pulls the tag", () =>
@@ -69,5 +52,5 @@ describe.for([
       );
       await asyncExec(`ls -la ./ethoko-e2e/restored-artifacts-${tag}`);
     });
-  },
-);
+  });
+}
