@@ -54,6 +54,69 @@ export const TagManifestSchema = z.object({
   id: z.string(),
 });
 
+const LinkReferencesSchema = z.record(
+  z.string(),
+  z.record(
+    z.string(),
+    z.array(
+      z.object({
+        length: z.number(),
+        start: z.number(),
+      }),
+    ),
+  ),
+);
+
+const HexPrefixedStringSchema = z
+  .string()
+  .regex(/^0x[0-9a-fA-F]*$/) as z.ZodType<`0x${string}`>;
+
+const ContractBytecodeSchema = z.object({
+  functionDebugData: z.json().optional(),
+  object: z.string(),
+  opcodes: z.string().optional(),
+  sourceMap: z.string().optional(),
+  generatedSources: z.array(z.json()).optional(),
+  linkReferences: LinkReferencesSchema,
+});
+
+/**
+ * Contract artifact schema for export
+ */
+export const EthokoContractArtifactSchema = z.object({
+  _format: z.literal("ethoko-contract-artifact-v0"),
+  id: z.string(),
+  abi: z.array(z.unknown()),
+  metadata: z.string(),
+  bytecode: HexPrefixedStringSchema,
+  deployedBytecode: HexPrefixedStringSchema,
+  linkReferences: LinkReferencesSchema,
+  deployedLinkReferences: LinkReferencesSchema,
+  contractName: z.string(),
+  sourceName: z.string(),
+  userdoc: z.unknown().optional(),
+  devdoc: z.unknown().optional(),
+  storageLayout: z.unknown().optional(),
+  evm: z.object({
+    assembly: z.string().optional(),
+    bytecode: ContractBytecodeSchema,
+    deployedBytecode: ContractBytecodeSchema.extend({
+      immutableReferences: z.unknown().optional(),
+    }).optional(),
+    gasEstimates: z
+      .object({
+        creation: z.record(z.string(), z.string()).optional(),
+        external: z.record(z.string(), z.string()).optional(),
+        internal: z.record(z.string(), z.string()).optional(),
+      })
+      .optional(),
+    methodIdentifiers: z.record(z.string(), z.string()).optional(),
+  }),
+});
+
 export type EthokoInputArtifact = z.infer<typeof EthokoInputArtifactSchema>;
 export type EthokoOutputArtifact = z.infer<typeof EthokoOutputArtifactSchema>;
 export type TagManifest = z.infer<typeof TagManifestSchema>;
+export type EthokoContractArtifact = z.infer<
+  typeof EthokoContractArtifactSchema
+>;

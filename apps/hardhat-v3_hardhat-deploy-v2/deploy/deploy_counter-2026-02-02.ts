@@ -1,8 +1,5 @@
 import { deployScript } from "../rocketh/deploy.js";
-import {
-  ContractArtifact as EthokoContractArtifact,
-  project,
-} from "../.ethoko-typings";
+import { EthokoContractArtifact, project } from "../.ethoko-typings";
 import * as RockethTypes from "rocketh/types";
 
 /**

@@ -168,8 +168,8 @@ export async function pull(
     `Downloading ${missingArtifactCount} missing artifact${missingArtifactCount > 1 ? "s" : ""}...`,
   );
 
-  const tagsPromises: Promise<{ tag: string }>[] = filteredTagsToDownload.map(
-    async (tag) => {
+  const tagsPromises: Promise<{ tag: string; id: string }>[] =
+    filteredTagsToDownload.map(async (tag) => {
       const downloadResult = await toAsyncResult(
         storageProvider.downloadArtifactByTag(project, tag),
         { debug: opts.debug },
@@ -192,9 +192,35 @@ export async function pull(
         throw new PullTagError(tag);
       }
 
-      return { tag };
-    },
+      return { tag, id: downloadResult.value.id };
+    });
+
+  const tagsSettlements = await Promise.allSettled(tagsPromises);
+  const pulledTags: string[] = [];
+  const pulledIds: string[] = [];
+  const failedTags: string[] = [];
+  for (const settlement of tagsSettlements) {
+    if (settlement.status === "fulfilled") {
+      pulledTags.push(settlement.value.tag);
+      pulledIds.push(settlement.value.id);
+    } else {
+      // We know that the only possible error is PullTagError, we check for safety but we don't want any other error to be silently ignored
+      if (settlement.reason instanceof PullTagError) {
+        failedTags.push(settlement.reason.tag);
+      } else {
+        steps.fail("Failed to download artifacts");
+        throw new CliError(
+          "Unexpected error while pulling tags, please fill an issue",
+        );
+      }
+    }
+  }
+
+  // We filter IDs that were pulled as part of the tag pulling
+  filteredIdsToDownload = filteredIdsToDownload.filter(
+    (id) => !pulledIds.includes(id),
   );
+
   const idsPromises: Promise<{ id: string }>[] = filteredIdsToDownload.map(
     async (id) => {
       const downloadResult = await toAsyncResult(
@@ -222,27 +248,7 @@ export async function pull(
     },
   );
 
-  const tagsSettlements = await Promise.allSettled(tagsPromises);
-  const pulledTags: string[] = [];
-  const failedTags: string[] = [];
-  for (const settlement of tagsSettlements) {
-    if (settlement.status === "fulfilled") {
-      pulledTags.push(settlement.value.tag);
-    } else {
-      // We know that the only possible error is PullTagError, we check for safety but we don't want any other error to be silently ignored
-      if (settlement.reason instanceof PullTagError) {
-        failedTags.push(settlement.reason.tag);
-      } else {
-        steps.fail("Failed to download artifacts");
-        throw new CliError(
-          "Unexpected error while pulling tags, please fill an issue",
-        );
-      }
-    }
-  }
-
   const idsSettlements = await Promise.allSettled(idsPromises);
-  const pulledIds: string[] = [];
   const failedIds: string[] = [];
   for (const settlement of idsSettlements) {
     if (settlement.status === "fulfilled") {
