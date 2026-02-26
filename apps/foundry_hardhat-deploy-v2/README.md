@@ -58,10 +58,7 @@ Finally, the deployer can write a deployment script, e.g. [00-deploy-counter-202
 
 ```ts
 import { deployScript } from "../rocketh/deploy.js";
-import {
-  ContractArtifact as EthokoContractArtifact,
-  project,
-} from "../.ethoko-typings";
+import { EthokoContractArtifact, project } from "../.ethoko-typings";
 import * as RockethTypes from "rocketh/types";
 
 const TARGET_RELEASE = "2026-02-04";
