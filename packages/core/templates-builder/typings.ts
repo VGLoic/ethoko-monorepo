@@ -204,7 +204,7 @@ function buildInfoToContractArtifact(
     );
   }
   return {
-    _format: "ethoko-artifact-v0",
+    _format: "ethoko-contract-artifact-v0",
     abi: contractArtifact.abi,
     metadata: contractArtifact.metadata || "",
     bytecode: prefixWith0x(contractArtifact.evm.bytecode.object),
@@ -467,9 +467,9 @@ interface LinkReferences {
  */
 export interface ContractArtifact {
   /**
-   * Format, hardcoded to `ethoko-artifact-v0` for now
+   * Format, hardcoded to `ethoko-contract-artifact-v0` for now
    */
-  readonly _format: "ethoko-artifact-v0";
+  readonly _format: "ethoko-contract-artifact-v0";
   /**
    * ABI of the artifact
    */
