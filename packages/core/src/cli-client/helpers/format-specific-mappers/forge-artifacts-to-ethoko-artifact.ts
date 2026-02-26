@@ -213,6 +213,7 @@ export async function forgeArtifactsToEthokoArtifact(
   const id = deriveEthokoArtifactId(inputParsingResult.data);
   const inputArtifact = {
     id,
+    __format: "ethoko-input-v0",
     solcLongVersion: solcLongVersion ?? "unknown",
     origin: {
       id: forgeBuildInfo.id,
@@ -222,6 +223,7 @@ export async function forgeArtifactsToEthokoArtifact(
   } satisfies EthokoInputArtifact;
   const outputArtifact = {
     id,
+    __format: "ethoko-output-v0",
     output,
   } satisfies EthokoOutputArtifact;
 

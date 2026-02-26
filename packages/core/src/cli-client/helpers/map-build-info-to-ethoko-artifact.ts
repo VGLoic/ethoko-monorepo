@@ -119,11 +119,13 @@ export async function mapBuildInfoToEthokoArtifact(
         format: inputParsingResult.data._format,
         outputFormat: outputParsingResult.data._format,
       },
+      __format: "ethoko-input-v0",
       input: inputParsingResult.data.input,
       solcLongVersion: inputParsingResult.data.solcLongVersion,
     };
     const outputArtifact: EthokoOutputArtifact = {
       id,
+      __format: "ethoko-output-v0",
       output: outputParsingResult.data.output,
     };
     return {
@@ -161,6 +163,7 @@ export async function mapBuildInfoToEthokoArtifact(
     const id = deriveEthokoArtifactId(parsingResult.data.input);
     const inputArtifact: EthokoInputArtifact = {
       id,
+      __format: "ethoko-input-v0",
       origin: {
         id: parsingResult.data.id,
         format: parsingResult.data._format,
@@ -170,6 +173,7 @@ export async function mapBuildInfoToEthokoArtifact(
     };
     const outputArtifact: EthokoOutputArtifact = {
       id,
+      __format: "ethoko-output-v0",
       output: parsingResult.data.output,
     };
     return {
@@ -210,6 +214,7 @@ export async function mapBuildInfoToEthokoArtifact(
     const id = deriveEthokoArtifactId(parsingResult.data.input);
     const inputArtifact: EthokoInputArtifact = {
       id,
+      __format: "ethoko-input-v0",
       origin: {
         id: parsingResult.data.id,
         format: parsingResult.data._format,
@@ -219,6 +224,7 @@ export async function mapBuildInfoToEthokoArtifact(
     };
     const outputArtifact: EthokoOutputArtifact = {
       id,
+      __format: "ethoko-output-v0",
       output: parsingResult.data.output,
     };
     return {
