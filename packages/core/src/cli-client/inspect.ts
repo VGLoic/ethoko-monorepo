@@ -3,7 +3,10 @@ import fs from "fs/promises";
 import { LocalStorage } from "../local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
-import type { EthokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
+import type {
+  EthokoInputArtifact,
+  EthokoOutputArtifact,
+} from "../utils/artifacts-schemas/ethoko-v0";
 import { HARDHAT_V3_COMPILER_INPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v3";
 import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "@/utils/artifacts-schemas/hardhat-v2";
 
@@ -59,7 +62,11 @@ export async function inspectArtifact(
   const artifactResult = await toAsyncResult(
     artifact.search.type === "tag"
       ? Promise.all([
-          localStorage.retrieveArtifactByTag(
+          localStorage.retrieveInputArtifactByTag(
+            artifact.project,
+            artifact.search.tag,
+          ),
+          localStorage.retrieveOutputArtifactByTag(
             artifact.project,
             artifact.search.tag,
           ),
@@ -68,12 +75,16 @@ export async function inspectArtifact(
           ),
         ])
       : Promise.all([
-          localStorage.retrieveArtifactById(
+          localStorage.retrieveInputArtifactById(
+            artifact.project,
+            artifact.search.id,
+          ),
+          localStorage.retrieveOutputArtifactById(
             artifact.project,
             artifact.search.id,
           ),
           Promise.resolve(
-            `${localStorage.rootPath}/${artifact.project}/ids/${artifact.search.id}.json`,
+            `${localStorage.rootPath}/${artifact.project}/ids/${artifact.search.id}/input.json`,
           ),
         ]),
     { debug: opts.debug },
@@ -83,7 +94,7 @@ export async function inspectArtifact(
       "Unable to retrieve the artifact content, please ensure it exists locally. Run with debug mode for more info",
     );
   }
-  const [ethokoArtifact, artifactPath] = artifactResult.value;
+  const [inputArtifact, outputArtifact, artifactPath] = artifactResult.value;
 
   const fileStatResult = await toAsyncResult(fs.stat(artifactPath), {
     debug: opts.debug,
@@ -94,33 +105,34 @@ export async function inspectArtifact(
     );
   }
 
-  const compilerSettings = deriveCompilerSettings(ethokoArtifact);
+  const compilerSettings = deriveCompilerSettings(inputArtifact);
 
   const originFormat =
-    ethokoArtifact.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
+    inputArtifact.origin.format === HARDHAT_V3_COMPILER_INPUT_FORMAT
       ? "hardhat-v3"
-      : ethokoArtifact.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
+      : inputArtifact.origin.format === HARDHAT_V2_COMPILER_OUTPUT_FORMAT
         ? "hardhat-v2"
         : "forge";
 
+  // REMIND ME: reword the size and the paths
   return {
     project: artifact.project,
     tag: artifact.search.type === "tag" ? artifact.search.tag : null,
-    id: ethokoArtifact.id,
+    id: inputArtifact.id,
     fileSize: fileStatResult.value.size,
     origin: {
-      id: ethokoArtifact.origin.id,
+      id: inputArtifact.origin.id,
       format: originFormat,
     },
     compiler: compilerSettings,
-    sourceFiles: Object.keys(ethokoArtifact.input.sources).sort(),
-    contractsBySource: deriveContractsBySource(ethokoArtifact),
+    sourceFiles: Object.keys(inputArtifact.input.sources).sort(),
+    contractsBySource: deriveContractsBySource(outputArtifact),
     artifactPath,
   };
 }
 
 function deriveCompilerSettings(
-  artifact: EthokoArtifact,
+  artifact: EthokoInputArtifact,
 ): InspectResult["compiler"] {
   const settings = artifact.input.settings;
   const optimizer = settings?.optimizer;
@@ -137,7 +149,7 @@ function deriveCompilerSettings(
 }
 
 function deriveContractsBySource(
-  artifact: EthokoArtifact,
+  artifact: EthokoOutputArtifact,
 ): InspectResult["contractsBySource"] {
   const entries: InspectResult["contractsBySource"] = [];
   for (const sourcePath of Object.keys(artifact.output.contracts).sort()) {

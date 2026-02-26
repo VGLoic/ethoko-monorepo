@@ -115,7 +115,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
         expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
         expect(inspectResult.fileSize).toBeGreaterThan(0);
-        expect(inspectResult.artifactPath).toContain(`/ids/${artifactId}.json`);
+        expect(inspectResult.artifactPath).toContain(
+          `/ids/${artifactId}/input.json`,
+        );
         const fullyQualifiedPathsResult = inspectResult.contractsBySource
           .map((c) =>
             c.contracts.map((contract) => `${c.sourcePath}:${contract}`),

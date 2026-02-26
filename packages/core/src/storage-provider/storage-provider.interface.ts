@@ -1,5 +1,8 @@
 import { Stream } from "stream";
-import { EthokoArtifact } from "../utils/artifacts-schemas/ethoko-v0";
+import {
+  EthokoInputArtifact,
+  EthokoOutputArtifact,
+} from "../utils/artifacts-schemas/ethoko-v0";
 
 export interface StorageProvider {
   listTags(project: string): Promise<string[]>;
@@ -9,12 +12,19 @@ export interface StorageProvider {
   hasArtifactById(project: string, id: string): Promise<boolean>;
   uploadArtifact(
     project: string,
-    artifact: EthokoArtifact,
+    inputArtifact: EthokoInputArtifact,
+    outputArtifact: EthokoOutputArtifact,
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void>;
-  downloadArtifactById(project: string, id: string): Promise<Stream>;
-  downloadArtifactByTag(project: string, tag: string): Promise<Stream>;
+  downloadArtifactById(
+    project: string,
+    id: string,
+  ): Promise<{ input: Stream; output: Stream }>;
+  downloadArtifactByTag(
+    project: string,
+    tag: string,
+  ): Promise<{ id: string; input: Stream; output: Stream }>;
   downloadOriginalContent(
     project: string,
     id: string,

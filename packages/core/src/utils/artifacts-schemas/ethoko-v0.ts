@@ -28,16 +28,30 @@ const OriginSchema = z.discriminatedUnion("format", [
 ]);
 
 /**
- * This is the schema for an artifact stored on Ethoko
+ * Input artifact schema for Ethoko storage
  */
-export const EthokoArtifactSchema = z.object({
-  // ID derived by Ethoko
+export const EthokoInputArtifactSchema = z.object({
   id: z.string(),
-  // Origin of the artifact, can be used to revert to the original compiler output JSON structure if needed.
   origin: OriginSchema,
   solcLongVersion: z.string(),
   input: SolcJsonInputSchema,
+});
+
+/**
+ * Output artifact schema for Ethoko storage
+ */
+export const EthokoOutputArtifactSchema = z.object({
+  id: z.string(),
   output: SolcJsonOutputSchema,
 });
 
-export type EthokoArtifact = z.infer<typeof EthokoArtifactSchema>;
+/**
+ * Tag manifest schema for tag references
+ */
+export const TagManifestSchema = z.object({
+  id: z.string(),
+});
+
+export type EthokoInputArtifact = z.infer<typeof EthokoInputArtifactSchema>;
+export type EthokoOutputArtifact = z.infer<typeof EthokoOutputArtifactSchema>;
+export type TagManifest = z.infer<typeof TagManifestSchema>;
