@@ -706,7 +706,12 @@ Pipe to another tool
               );
             }
           } catch {
-            // File does not exist.
+            // File does not exist. We create the necessary directories if they don't exist, and then create the file.
+            const dir = optsParsingResult.data.output
+              .split("/")
+              .slice(0, -1)
+              .join("/");
+            await fs.mkdir(dir, { recursive: true });
           }
 
           await fs.writeFile(
