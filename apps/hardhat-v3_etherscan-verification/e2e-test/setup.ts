@@ -3,7 +3,9 @@ import { E2E_FOLDER_PATH } from "./e2e-folder-path.js";
 
 export async function setup(): Promise<void> {
   console.log("\n========================================");
-  console.log("🚀 Starting [Hardhat v3 - Ignition] E2E Test Suite");
+  console.log(
+    "🚀 Starting [Hardhat v3 - Etherscan Verification] E2E Test Suite",
+  );
   console.log("========================================\n");
 
   await cleanUpLocalEthokoStorage();
