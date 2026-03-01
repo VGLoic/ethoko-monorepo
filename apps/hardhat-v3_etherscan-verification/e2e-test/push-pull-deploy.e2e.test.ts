@@ -15,25 +15,26 @@ describe("[Hardhat v3 - Etherscan Verification] Push artifact, pull artifact, de
       `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${TAG_NAME} --debug`,
     ));
 
-  // test("it pulls the tag", () =>
-  //   asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
+  test("it pulls the tag", () =>
+    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
 
-  // test("it generates the typings", () =>
-  //   asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko typings"));
+  test("it generates the typings", () =>
+    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko typings"));
 
-  // test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
+  test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
 
+  // REMIND ME
   // test("it deploys", () =>
   //   asyncExec(
   //     "npx hardhat ignition deploy ./ignition/modules/counter-2026-02-02.ts --config ./hardhat.config.e2e.ts ",
   //   ));
 
-  // test("it restores the original artifacts", async () => {
-  //   await asyncExec(
-  //     `npx hardhat --config ./hardhat.config.e2e.ts ethoko restore --tag ${TAG_NAME} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
-  //   );
-  //   await asyncExec(
-  //     `ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
-  //   );
-  // });
+  test("it restores the original artifacts", async () => {
+    await asyncExec(
+      `npx hardhat --config ./hardhat.config.e2e.ts ethoko restore --tag ${TAG_NAME} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
+    );
+    await asyncExec(
+      `ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
+    );
+  });
 });
