@@ -85,7 +85,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           artifactId,
         );
 
-        if (localArtifact.origin.mappedFormat === "hardhat-v3") {
+        if (localArtifact.origin.type === "hardhat-v3") {
           // Hardhat v3 has a list of IDs
           const originalIds = await Promise.all(
             artifactFixture.buildInfoPaths.map((path) => {

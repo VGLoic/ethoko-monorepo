@@ -84,7 +84,7 @@ export async function mapBuildInfoToEthokoArtifact(
       id,
       _format: "ethoko-input-v0",
       origin: {
-        mappedFormat: "hardhat-v2",
+        type: "hardhat-v2",
         id: parsingResult.data.id,
         format: parsingResult.data._format,
       },
@@ -136,7 +136,7 @@ export async function mapBuildInfoToEthokoArtifact(
       id,
       _format: "ethoko-input-v0",
       origin: {
-        mappedFormat: "forge-v1.6-build-info",
+        type: "forge-v1.6-build-info",
         id: parsingResult.data.id,
         format: parsingResult.data._format,
       },

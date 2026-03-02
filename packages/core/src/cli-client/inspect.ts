@@ -118,14 +118,14 @@ export async function inspectArtifact(
   const compilerSettings = deriveCompilerSettings(inputArtifact);
 
   const origin =
-    inputArtifact.origin.mappedFormat === "hardhat-v3"
+    inputArtifact.origin.type === "hardhat-v3"
       ? {
           format: "hardhat-v3" as const,
           ids: inputArtifact.origin.pairs.map((pair) => pair.id),
         }
       : {
           format:
-            inputArtifact.origin.mappedFormat === "hardhat-v2"
+            inputArtifact.origin.type === "hardhat-v2"
               ? ("hardhat-v2" as const)
               : ("forge" as const),
           id: inputArtifact.origin.id,

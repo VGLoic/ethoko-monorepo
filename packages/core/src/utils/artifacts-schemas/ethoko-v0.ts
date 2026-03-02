@@ -8,23 +8,23 @@ import {
   HARDHAT_V3_COMPILER_INPUT_FORMAT,
 } from "./hardhat-v3";
 
-const EthokoArtifactOriginSchema = z.discriminatedUnion("mappedFormat", [
+const EthokoArtifactOriginSchema = z.discriminatedUnion("type", [
   z.object({
     id: z.string(),
-    mappedFormat: z.literal("forge-v1.6-default"),
+    type: z.literal("forge-v1.6-default"),
   }),
   z.object({
     id: z.string(),
-    mappedFormat: z.literal("forge-v1.6-build-info"),
+    type: z.literal("forge-v1.6-build-info"),
     format: z.literal(FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT),
   }),
   z.object({
     id: z.string(),
-    mappedFormat: z.literal("hardhat-v2"),
+    type: z.literal("hardhat-v2"),
     format: z.literal(HARDHAT_V2_COMPILER_OUTPUT_FORMAT),
   }),
   z.object({
-    mappedFormat: z.literal("hardhat-v3"),
+    type: z.literal("hardhat-v3"),
     pairs: z.array(
       z.object({
         id: z.string(),

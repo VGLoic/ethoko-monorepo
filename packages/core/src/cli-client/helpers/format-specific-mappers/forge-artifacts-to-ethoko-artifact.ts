@@ -213,7 +213,7 @@ export async function forgeArtifactsToEthokoArtifact(
     _format: "ethoko-input-v0",
     solcLongVersion: solcLongVersion ?? "unknown",
     origin: {
-      mappedFormat: "forge-v1.6-default",
+      type: "forge-v1.6-default",
       id: forgeBuildInfo.id,
     },
     input: inputParsingResult.data,

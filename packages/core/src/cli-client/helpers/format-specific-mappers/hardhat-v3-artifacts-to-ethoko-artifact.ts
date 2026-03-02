@@ -52,7 +52,7 @@ export async function hardhatV3ArtifactsToEthokoArtifact(
   const userSourceNameMap = firstInputArtifact.userSourceNameMap;
   const originPairs: Extract<
     EthokoArtifactOrigin,
-    { mappedFormat: "hardhat-v3" }
+    { type: "hardhat-v3" }
   >["pairs"] = [
     {
       id: firstInputArtifact.id,
@@ -144,7 +144,7 @@ export async function hardhatV3ArtifactsToEthokoArtifact(
       id: ethokoArtifactId,
       _format: "ethoko-input-v0",
       origin: {
-        mappedFormat: "hardhat-v3",
+        type: "hardhat-v3",
         pairs: originPairs,
       },
       solcLongVersion,
