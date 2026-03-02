@@ -12,7 +12,8 @@
     "check-types": "tsc --noEmit",
     "compile": "pnpm format-contracts && hardhat build --build-profile production",
     "test:e2e:apps": "vitest run e2e-test",
-    "reset-example": "./ethoko-scripts/reset-example.sh"
+    "reset-example": "./ethoko-scripts/reset-example.sh",
+    "verify-2026-02-02": "tsx ./scripts/verify-2026-02-02.ts"
   },
   "devDependencies": {
     "@ethoko/eslint-config": "workspace:*",
@@ -27,6 +28,7 @@
     "hardhat": "^3.1.7",
     "hardhat-ethoko": "workspace:*",
     "prettier-plugin-solidity": "^2.2.1",
+    "tsx": "^4.21.0",
     "typescript": "~5.8.0",
     "viem": "^2.43.0",
     "vitest": "^4.0.17"
