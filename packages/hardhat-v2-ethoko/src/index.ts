@@ -181,10 +181,7 @@ Already downloaded artifacts are not downloaded again by default, enable the for
         ? new S3BucketProvider({
             bucketName: ethokoConfig.storageConfiguration.awsBucketName,
             bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
-            accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey:
-              ethokoConfig.storageConfiguration.awsSecretAccessKey,
-            role: ethokoConfig.storageConfiguration.awsRole,
+            credentials: ethokoConfig.storageConfiguration.credentials,
             debug: optsParsingResult.data.debug,
           })
         : new LocalStorageProvider({
@@ -298,10 +295,7 @@ If the provided tag already exists in the storage, the push will be aborted unle
         ? new S3BucketProvider({
             bucketName: ethokoConfig.storageConfiguration.awsBucketName,
             bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
-            accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey:
-              ethokoConfig.storageConfiguration.awsSecretAccessKey,
-            role: ethokoConfig.storageConfiguration.awsRole,
+            credentials: ethokoConfig.storageConfiguration.credentials,
             debug: optsParsingResult.data.debug,
           })
         : new LocalStorageProvider({
@@ -852,10 +846,7 @@ Force overwrite existing directory
         ? new S3BucketProvider({
             bucketName: ethokoConfig.storageConfiguration.awsBucketName,
             bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
-            accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-            secretAccessKey:
-              ethokoConfig.storageConfiguration.awsSecretAccessKey,
-            role: ethokoConfig.storageConfiguration.awsRole,
+            credentials: ethokoConfig.storageConfiguration.credentials,
             debug: optsParsingResult.data.debug,
           })
         : new LocalStorageProvider({

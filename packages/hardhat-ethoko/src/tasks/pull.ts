@@ -82,9 +82,7 @@ export default async function (
       ? new S3BucketProvider({
           bucketName: ethokoConfig.storageConfiguration.awsBucketName,
           bucketRegion: ethokoConfig.storageConfiguration.awsRegion,
-          accessKeyId: ethokoConfig.storageConfiguration.awsAccessKeyId,
-          secretAccessKey: ethokoConfig.storageConfiguration.awsSecretAccessKey,
-          role: ethokoConfig.storageConfiguration.awsRole,
+          credentials: ethokoConfig.storageConfiguration.credentials,
           debug: optsParsingResult.data.debug,
         })
       : new LocalStorageProvider({

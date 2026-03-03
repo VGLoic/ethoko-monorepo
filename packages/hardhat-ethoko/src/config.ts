@@ -39,13 +39,15 @@ export type EthokoHardhatUserConfig = {
         type: "aws";
         awsRegion: string;
         awsBucketName: string;
-        awsAccessKeyId: string;
-        awsSecretAccessKey: string;
-        awsRole?: {
-          roleArn: string;
-          externalId?: string;
-          sessionName?: string;
-          durationSeconds?: number;
+        credentials?: {
+          accessKeyId: string;
+          secretAccessKey: string;
+          role?: {
+            roleArn: string;
+            externalId?: string;
+            sessionName?: string;
+            durationSeconds?: number;
+          };
         };
       }
     | {
@@ -70,14 +72,23 @@ export const EthokoHardhatConfigSchema = z.object({
       type: z.literal("aws"),
       awsRegion: z.string().min(1),
       awsBucketName: z.string().min(1),
-      awsAccessKeyId: z.string().min(1),
-      awsSecretAccessKey: z.string().min(1),
-      awsRole: z
+      credentials: z
         .object({
-          roleArn: z.string().min(1),
-          externalId: z.string().min(1).optional(),
-          sessionName: z.string().min(1).default("ethoko-hardhat-session"),
-          durationSeconds: z.number().int().min(900).max(43200).default(3600),
+          accessKeyId: z.string().min(1),
+          secretAccessKey: z.string().min(1),
+          role: z
+            .object({
+              roleArn: z.string().min(1),
+              externalId: z.string().min(1).optional(),
+              sessionName: z.string().min(1).default("ethoko-hardhat-session"),
+              durationSeconds: z
+                .number()
+                .int()
+                .min(900)
+                .max(43200)
+                .default(3600),
+            })
+            .optional(),
         })
         .optional(),
     }),

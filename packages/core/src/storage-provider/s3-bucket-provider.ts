@@ -22,16 +22,18 @@ import fs from "fs/promises";
 type S3BucketProviderConfig = {
   bucketName: string;
   bucketRegion: string;
-  accessKeyId: string;
-  secretAccessKey: string;
+  credentials?: {
+    accessKeyId: string;
+    secretAccessKey: string;
+    role?: {
+      roleArn: string;
+      externalId?: string;
+      sessionName?: string;
+      durationSeconds?: number;
+    };
+  };
   endpoint?: string;
   forcePathStyle?: boolean;
-  role?: {
-    roleArn: string;
-    externalId?: string;
-    sessionName?: string;
-    durationSeconds?: number;
-  };
   debug?: boolean;
   rootPath?: string;
 };
@@ -64,16 +66,41 @@ export class S3BucketProvider implements StorageProvider {
       return this.client;
     }
 
-    if (!this.config.role) {
-      this.client = new S3Client({
+    if (!this.config.credentials?.role) {
+      const clientConfig = {
         region: this.config.bucketRegion,
         endpoint: this.config.endpoint,
         forcePathStyle: this.config.forcePathStyle,
-        credentials: {
-          accessKeyId: this.config.accessKeyId,
-          secretAccessKey: this.config.secretAccessKey,
-        },
-      });
+      };
+
+      if (this.config.credentials) {
+        this.client = new S3Client({
+          ...clientConfig,
+          credentials: {
+            accessKeyId: this.config.credentials.accessKeyId,
+            secretAccessKey: this.config.credentials.secretAccessKey,
+          },
+        });
+        if (this.config.debug) {
+          console.error(
+            styleText(
+              LOG_COLORS.log,
+              "Using explicit AWS credentials from config",
+            ),
+          );
+        }
+      } else {
+        this.client = new S3Client(clientConfig);
+        if (this.config.debug) {
+          console.error(
+            styleText(
+              LOG_COLORS.log,
+              "Using AWS default credential provider chain",
+            ),
+          );
+        }
+      }
+
       return this.client;
     }
 
@@ -92,7 +119,8 @@ export class S3BucketProvider implements StorageProvider {
   }
 
   private async getRoleCredentials(): Promise<RoleCredentials> {
-    const role = this.config.role;
+    const credentialsConfig = this.config.credentials;
+    const role = credentialsConfig?.role;
     if (!role) {
       throw new Error("Role configuration is missing");
     }
@@ -101,8 +129,8 @@ export class S3BucketProvider implements StorageProvider {
       region: this.config.bucketRegion,
       endpoint: this.config.endpoint,
       credentials: {
-        accessKeyId: this.config.accessKeyId,
-        secretAccessKey: this.config.secretAccessKey,
+        accessKeyId: credentialsConfig.accessKeyId,
+        secretAccessKey: credentialsConfig.secretAccessKey,
       },
     });
 
