@@ -48,12 +48,10 @@ const deployCounter: DeployFunction = async function (
   const counterArtifact = await projectUtils.getContractArtifact(
     "src/Counter.sol:Counter",
   );
-  const counterAbi: RemoveReadonly<typeof counterArtifact.abi> = [
-    ...counterArtifact.abi,
-  ];
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      abi: counterAbi,
+      // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
+      abi: counterArtifact.abi as RemoveReadonly<typeof counterArtifact.abi>,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },
