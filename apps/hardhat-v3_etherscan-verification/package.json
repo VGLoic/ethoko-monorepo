@@ -5,11 +5,11 @@
   "private": true,
   "scripts": {
     "hardhat": "hardhat",
-    "lint": "eslint . --max-warnings 0",
+    "lint": "hardhat ethoko typings && eslint . --max-warnings 0",
     "check-format": "prettier --check --ignore-unknown --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "format-contracts": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
     "format": "prettier --write --plugin=prettier-plugin-solidity 'contracts/**/*.sol'",
-    "check-types": "tsc --noEmit",
+    "check-types": "hardhat ethoko typings && tsc --noEmit",
     "compile": "pnpm format-contracts && hardhat build --build-profile production",
     "test:e2e:apps": "vitest run e2e-test",
     "reset-example": "./ethoko-scripts/reset-example.sh",
