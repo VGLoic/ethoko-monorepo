@@ -25,6 +25,10 @@ import { project } from "../.ethoko-typings";
 
 const TARGET_RELEASE = "v1.0.1";
 
+type RemoveReadonly<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 const deployCounter: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment,
 ) {
@@ -48,7 +52,10 @@ const deployCounter: DeployFunction = async function (
     `IncrementOracle@${TARGET_RELEASE}`,
     {
       contract: {
-        abi: incrementOracleArtifact.abi,
+        // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
+        abi: incrementOracleArtifact.abi as RemoveReadonly<
+          typeof incrementOracleArtifact.abi
+        >,
         bytecode: incrementOracleArtifact.evm.bytecode.object,
         metadata: incrementOracleArtifact.metadata,
       },
@@ -63,7 +70,8 @@ const deployCounter: DeployFunction = async function (
   );
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      abi: counterArtifact.abi,
+      // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
+      abi: counterArtifact.abi as RemoveReadonly<typeof counterArtifact.abi>,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },
