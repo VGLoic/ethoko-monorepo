@@ -10,6 +10,60 @@ import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
 
 // Forge version at the time of writing: v1.6
 
+/**
+ * Forge version at the time of writing: v1.6
+ *
+ * # Supported formats
+ *
+ * We support two output formats for Forge compiler output:
+ * 1. The `default` format, obtained by running `forge build` without the `--build-info` option,
+ * 2. The `build-info` format, obtained by running `forge build --build-info`.
+ *
+ *
+ * ## The `default` format
+ *
+ * It is obtained by running `forge build` without the `--build-info` option.
+ * ```bash
+ * forge build
+ * forge build --use-literal-content
+ * forge build --use-literal-content --force
+ * ```
+ *
+ * It will output:
+ * 1. one JSON file in `build-info` directory. This file is very small and only contains:
+ *  - the `id` field, which is a string that probably uniquely identifies the compilation, it is a guess,
+ *  - the `language` field, which is the programming language used,
+ *  - the `source_id_to_path` field, which is a mapping from contract ID as number (e.g. "0", "1", etc.) to the source file path.
+ * 2. one JSON file PER contract.
+ *    The filename is the name of the contract, e.g. `Counter.json`.
+ *    The contract file is contained a directory named as either:
+ *     - either the filename containing the contract, e.g. `Counter.sol`. It will be the usual case when there is no conflict on the filename, e.g. `path/to/Counter.sol` and `path/to/other/Counter.sol`,
+ *     - either the full path of the contract in case of conflict on the filename, e.g. `path/to/other/Counter.sol/Counter.json`. Note that the "first" `Counter.json` may be without the full path, e.g. in `Counter.sol/Counter.json`.
+ *    See the `ForgeCompilerContractOutputSchema` for the content of the contract JSON file.
+ *
+ *
+ * ## The `build-info` format
+ *
+ * It is obtained by running `forge build --build-info`.
+ * ```bash
+ * forge build --build-info
+ * forge build --build-info --use-literal-content
+ * forge build --build-info --use-literal-content --force
+ * ```
+ *
+ * It will output
+ * 1. one JSON file in `build-info` directory.
+ *    This file is much larger than the one in the `default` format and contains all the information about the compilation, including the input and output of the compiler, as well as additional information such as the solc version used for the compilation.
+ *    See the `ForgeCompilerOutputWithBuildInfoOptionSchema` for the content of this JSON file.
+ * 2. one JSON file PER contract, with the same format as in the `default` format.
+ *
+ * # Format inference
+ *
+ * At first, we need to identify the format of the candidate JSON files.
+ * We do this by parsing the candidate JSON files with smaller schemas, that are less strict than the full schemas.
+ * See `FormatInferenceForgeCompilerOutputDefaultFormatSchema` and `FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema`.
+ */
+
 export const FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT =
   "ethers-rs-sol-build-info-1";
 
