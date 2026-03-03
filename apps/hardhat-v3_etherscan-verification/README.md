@@ -1,4 +1,4 @@
-# Hardhat Ethoko - Example - Deploy Counter
+# Hardhat Ethoko - Example - Hardhat v3 and Etherscan verification
 
 This is an example of integration between [Hardhat V3](https://hardhat.org/docs/getting-started) and [Ethoko](https://github.com/VGLoic/ethoko-monorepo).
 

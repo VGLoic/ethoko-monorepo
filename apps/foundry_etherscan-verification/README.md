@@ -1,4 +1,4 @@
-# Hardhat Ethoko - Example - Deploy Counter
+# Hardhat Ethoko - Example - Foundry with Etherscan verification
 
 This is an example of integration between [Foundry](https://getfoundry.sh/) and [Ethoko](https://github.com/VGLoic/ethoko-monorepo).
 
