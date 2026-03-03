@@ -1,6 +1,6 @@
-# Hardhat Ethoko - Example - Hardhat v3 and Etherscan verification
+# Hardhat Ethoko - Example - Foundry with Etherscan verification
 
-This is an example of integration between [Hardhat V3](https://hardhat.org/docs/getting-started) and [Ethoko](https://github.com/VGLoic/ethoko-monorepo).
+This is an example of integration between [Foundry](https://getfoundry.sh/) and [Ethoko](https://github.com/VGLoic/ethoko-monorepo).
 
 Deployments are managed using [Hardhat Ignition](https://hardhat.org/docs/guides/deployment/using-ignition).
 
@@ -19,8 +19,11 @@ Development is done as usual, with as many tests or else.
 Once the development is considered done, one can create the compilation artifacts:
 
 ```bash
-npx hardhat build --build-profile production
+forge build --force --skip test --skip script --use-literal-content
 ```
+
+> [!NOTE]
+> The `--use-literal-content` flag is helping a lot on the verification side, as it will enforce availability of the source code in the compilation artifacts, which is required for later verification. Otherwise, by default, the source code is not included in the compilation artifacts, and only a reference to the file path is kept, which is not exploitable for verification.
 
 The compilation artifacts will be pushed to `Ethoko`, hence freezing them for later use.
 
@@ -55,24 +58,24 @@ const TARGET_RELEASE_TAG = "2026-02-02";
 const MODULE_SUFFIX = TARGET_RELEASE_TAG.replaceAll("-", "_");
 
 export default buildModule(`release_${MODULE_SUFFIX}`, (m) => {
-  const projectUtils = project("verified-counter");
+  const projectUtils = project("verified-forge-counter");
 
   const oracleArtifact = projectUtils
     .tag(TARGET_RELEASE_TAG)
     // Hardhat Ignition module does not support promises => we use the `sync` variant of artifact retrieval
-    .getContractArtifactSync("project/contracts/Oracle.sol:Oracle");
+    .getContractArtifactSync("src/Oracle.sol:Oracle");
 
   const oracle = m.contract("Oracle", oracleArtifact);
 
   const externalMathLibArtifact = projectUtils
     .tag(TARGET_RELEASE_TAG)
-    .getContractArtifactSync("project/contracts/ExternalMath.sol:ExternalMath");
+    .getContractArtifactSync("src/ExternalMath.sol:ExternalMath");
 
   const externalMathLib = m.library("ExternalMath", externalMathLibArtifact);
 
   const counterArtifact = projectUtils
     .tag(TARGET_RELEASE_TAG)
-    .getContractArtifactSync("project/contracts/Counter.sol:Counter");
+    .getContractArtifactSync("src/Counter.sol:Counter");
 
   const counter = m.contract("Counter", counterArtifact, [oracle], {
     libraries: {
@@ -100,7 +103,7 @@ Once the contracts are deployed, one can verify them on Etherscan using the stat
 
 ```ts
 import SepoliaDeployedAddresses from "./../ignition/deployments/chain-11155111/deployed_addresses.json" with { type: "json" };
-import { project } from "./../.ethoko-typings/index.js";
+import { EthokoBuildInfo, project } from "./../.ethoko-typings/index.js";
 import "dotenv/config";
 
 async function main() {
@@ -121,17 +124,11 @@ async function main() {
   }
   const etherscanClient = new EtherscanVerificationClient(ETHERSCAN_API_KEY);
 
-  const fullCompilationArtifact = await project("verified-counter")
+  const fullCompilationArtifact = await project("verified-forge-counter")
     .tag("2026-02-02")
     .getCompilationArtifact();
 
-  await etherscanClient.verifyContract({
-    sourceCode: JSON.stringify(fullCompilationArtifact.input),
-    address: SepoliaDeployedAddresses["release_2026_02_02#Counter"],
-    fullyQualifiedContractName: "project/contracts/Counter.sol:Counter",
-    constructorArguments: abiEncodeAddress(
-      SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
-    ), // Address of the Oracle contract as constructor argument
+  const verificationPayload = {
     compilerVersion: fullCompilationArtifact.solcLongVersion,
     optimizationUsed:
       fullCompilationArtifact.input.settings?.optimizer?.enabled ?? false,
@@ -139,7 +136,63 @@ async function main() {
       fullCompilationArtifact.input.settings?.optimizer?.runs ?? 0,
     evmVersion: fullCompilationArtifact.input.settings?.evmVersion ?? "london",
     licenseType: "UNLICENSED" as const,
+  };
+
+  const patchedSourceCodeInput = patchInputSources(
+    fullCompilationArtifact.input,
+  );
+  const stringifiedSourceCodeInput = JSON.stringify(
+    patchedSourceCodeInput,
+    null,
+    2,
+  );
+
+  await etherscanClient.verifyContract({
+    sourceCode: stringifiedSourceCodeInput,
+    address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
+    fullyQualifiedContractName: "src/ExternalMath.sol:ExternalMath",
+    constructorArguments: "", // No constructor arguments for this contract
+    ...verificationPayload,
   });
+
+  await etherscanClient.verifyContract({
+    sourceCode: stringifiedSourceCodeInput,
+    address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
+    fullyQualifiedContractName: "src/Oracle.sol:Oracle",
+    constructorArguments: "", // No constructor arguments for this contract
+    ...verificationPayload,
+  });
+
+  await etherscanClient.verifyContract({
+    sourceCode: stringifiedSourceCodeInput,
+    address: SepoliaDeployedAddresses["release_2026_02_02#Counter"],
+    fullyQualifiedContractName: "src/Counter.sol:Counter",
+    constructorArguments: abiEncodeAddress(
+      SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
+    ), // Address of the Oracle contract as constructor argument
+    ...verificationPayload,
+  });
+}
+
+// Etherscan expects sources in a specific format, containing only the `content` field for each source
+function patchInputSources(
+  input: EthokoBuildInfo["input"],
+): EthokoBuildInfo["input"] {
+  const updatedSources: Record<string, { content: string }> = {};
+  for (const [key, source] of Object.entries(input.sources)) {
+    const content = source.content;
+    if (!content) {
+      throw new Error(
+        `Unexpected source format for ${key}: missing 'content' field`,
+      );
+    }
+    // Remove `urls` and `license` fields if they exist, and keep only the `content`
+    updatedSources[key] = { content };
+  }
+  return {
+    ...input,
+    sources: updatedSources,
+  };
 }
 
 function abiEncodeAddress(address: string): string {
@@ -152,7 +205,6 @@ class EtherscanVerificationClient {
 
   async verifyContract(payload: {
     address: string;
-    // `input` field from the Solidity compiler output, which includes the source code and compilation settings
     sourceCode: string;
     fullyQualifiedContractName: string;
     compilerVersion: string;

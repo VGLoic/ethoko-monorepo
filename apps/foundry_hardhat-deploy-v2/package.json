@@ -4,15 +4,14 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "ethoko-typings": "hardhat ethoko typings",
-    "lint": "pnpm run ethoko-typings && eslint . --max-warnings 0",
+    "lint": "hardhat ethoko typings && eslint . --max-warnings 0",
     "check-format": "forge fmt --check",
     "format-contracts": "forge fmt",
     "format": "forge fmt",
     "deploy-contracts": "hardhat deploy --no-compile",
     "hardhat": "hardhat",
     "compile": "forge build --skip test --skip script --use-literal-content --force",
-    "check-types": "pnpm run ethoko-typings && tsc --noEmit",
+    "check-types": "hardhat ethoko typings && tsc --noEmit",
     "test:e2e:apps": "vitest run e2e-test",
     "reset-example": "./ethoko-scripts/reset-example.sh"
   },
