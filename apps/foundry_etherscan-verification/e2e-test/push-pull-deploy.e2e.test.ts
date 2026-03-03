@@ -7,7 +7,7 @@ const TAG_NAME = "2026-02-02";
 describe("[Foundry - Etherscan Verification] Push artifact, pull artifact, deploy", async () => {
   test("it compiles", () =>
     asyncExec(
-      "npx hardhat build --build-profile production --config ./hardhat.config.e2e.ts",
+      "forge build --skip test --skip script --use-literal-content --force",
     ));
 
   test("it pushes the tag", () =>
