@@ -13,7 +13,7 @@ import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
  *
  * # Supported formats
  *
- * We support two output formats for Forge compiler output:
+ * We support two compilation formats for Forge compiler output:
  * 1. The `default` format, obtained by running `forge build` without the `--build-info` option,
  * 2. The `build-info` format, obtained by running `forge build --build-info`.
  *
@@ -32,6 +32,7 @@ import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
  *  - the `id` field, which is a string that probably uniquely identifies the compilation, it is a guess,
  *  - the `language` field, which is the programming language used,
  *  - the `source_id_to_path` field, which is a mapping from contract ID as number (e.g. "0", "1", etc.) to the source file path.
+ *    See the `ForgeCompilerDefaultOutputSchema` for the content of this JSON file.
  * 2. one JSON file PER contract, e.g. `out/Counter.sol/Counter.json`.
  *    The filename is the name of the contract, e.g. `Counter.json`.
  *    The contract file is contained a directory named as either:
@@ -57,8 +58,7 @@ import { ContractMetadataSchema } from "./solc-v0.8.33/contract-metadata-json";
  *
  * # Format inference
  *
- * At first, we need to identify the format of the candidate JSON files.
- * We do this by parsing the candidate JSON files with smaller schemas, that are less strict than the full schemas.
+ * Inferences schemas are used to identify quickly the format of the candidate JSON files.
  * See `FormatInferenceForgeCompilerOutputDefaultFormatSchema` and `FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema`.
  */
 

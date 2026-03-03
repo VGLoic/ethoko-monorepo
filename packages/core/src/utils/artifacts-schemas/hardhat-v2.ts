@@ -22,9 +22,8 @@ import { SolcJsonOutputSchema } from "./solc-v0.8.33/output-json";
  *
  * # Format inference
  *
- * Since we only support one format for Hardhat v2, we can simply check the presence of a specific field with a specific value to identify the format.
- * We check the presence of the `_format` field with the value `hh-sol-build-info-1` to identify the format.
- * See the `FormatInferenceHardhatV2CompilerOutputSchema` for the schema used for format inference.
+ * Inferences schemas are used to identify quickly the format of the candidate JSON files.
+ * See `FormatInferenceHardhatV2CompilerOutputSchema`.
  */
 
 export const HARDHAT_V2_COMPILER_OUTPUT_FORMAT = "hh-sol-build-info-1";
