@@ -50,8 +50,10 @@ export class TestS3StorageProviderFactory extends StorageProviderFactory<S3Bucke
     const storageProvider = new S3BucketProvider({
       bucketName: TEST_CONSTANTS.BUCKET_NAME,
       bucketRegion: TEST_CONSTANTS.LOCALSTACK.REGION,
-      accessKeyId: TEST_CONSTANTS.LOCALSTACK.ACCESS_KEY_ID,
-      secretAccessKey: TEST_CONSTANTS.LOCALSTACK.SECRET_ACCESS_KEY,
+      credentials: {
+        accessKeyId: TEST_CONSTANTS.LOCALSTACK.ACCESS_KEY_ID,
+        secretAccessKey: TEST_CONSTANTS.LOCALSTACK.SECRET_ACCESS_KEY,
+      },
       endpoint: TEST_CONSTANTS.LOCALSTACK.ENDPOINT,
       forcePathStyle: true,
       debug: this.debug,
