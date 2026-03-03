@@ -100,7 +100,20 @@ class EtherscanVerificationClient {
 
   async verifyContract(payload: {
     address: string;
-    // `input` field from the Solidity compiler output, which includes the source code and compilation settings
+    /**
+     * `input` field from the Solidity compiler output, which includes the source code and compilation settings
+     * Notes:
+     * - do not accept the `urls`, `license` fields in sources
+     * ```
+     * "src/Oracle.sol": {
+     *  "license": "UNLICENSED",
+     *  "keccak256": "0xa51dd1806d8690e1e744d9fdabb2cb09705f42c942c0adf165cb9a34ee41b7e0",
+     *  "urls": [],
+     *  "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\ncontract Oracle {\n    uint public by;\n\n    event Updated(uint by);\n\n    function set(uint _by) public {\n        by = _by;\n        emit Updated(_by);\n    }\n}\n"
+     * }
+     * ```
+     * The `content` and `keccak256` are accepted
+     */
     sourceCode: string;
     fullyQualifiedContractName: string;
     compilerVersion: string;
@@ -117,19 +130,6 @@ class EtherscanVerificationClient {
       module: "contract",
       action: "verifysourcecode",
       contractaddress: payload.address,
-      /**
-       * Notes:
-       * - do not accept the `urls`, `license` fields in sources
-       * ```
-       * "src/Oracle.sol": {
-       *  "license": "UNLICENSED",
-       *  "keccak256": "0xa51dd1806d8690e1e744d9fdabb2cb09705f42c942c0adf165cb9a34ee41b7e0",
-       *  "urls": [],
-       *  "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\ncontract Oracle {\n    uint public by;\n\n    event Updated(uint by);\n\n    function set(uint _by) public {\n        by = _by;\n        emit Updated(_by);\n    }\n}\n"
-       * }
-       * ```
-       * The `content` and `keccak256` are accepted
-       */
       sourceCode: payload.sourceCode,
       codeformat: "solidity-standard-json-input",
       contractname: payload.fullyQualifiedContractName,
