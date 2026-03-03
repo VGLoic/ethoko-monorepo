@@ -117,21 +117,17 @@ export async function lookForBuildInfoJsonFile(
       // We verify that the corresponding output file exists
       const matchingOutputPath = inputPath.replace(".json", ".output.json");
       const outputCheckResult = await toAsyncResult(
-        fs.stat(matchingOutputPath).then((stat) => {
-          stat.isFile();
-          return fs
-            .readFile(matchingOutputPath, "utf-8")
-            .then((v) => JSON.parse(v))
-            .then((json) => {
-              if (
-                inferSingleJsonFileFormat(json).type !== "hardhat-v3-output"
-              ) {
-                throw new Error(
-                  "Output file does not seem to be in hardhat v3 output format",
-                );
-              }
-            });
-        }),
+        fs
+          .stat(matchingOutputPath)
+          .then(() => fs.readFile(matchingOutputPath, "utf-8"))
+          .then(JSON.parse)
+          .then((json) => {
+            if (inferSingleJsonFileFormat(json).type !== "hardhat-v3-output") {
+              throw new Error(
+                "Output file does not seem to be in hardhat v3 output format",
+              );
+            }
+          }),
         { debug },
       );
       if (!outputCheckResult.success) {
@@ -148,19 +144,17 @@ export async function lookForBuildInfoJsonFile(
       // We verify that the corresponding input file exists
       const matchingInputPath = inputPath.replace(".output.json", ".json");
       const inputCheckResult = await toAsyncResult(
-        fs.stat(matchingInputPath).then((stat) => {
-          stat.isFile();
-          return fs
-            .readFile(matchingInputPath, "utf-8")
-            .then((v) => JSON.parse(v))
-            .then((json) => {
-              if (inferSingleJsonFileFormat(json).type !== "hardhat-v3-input") {
-                throw new Error(
-                  "Input file does not seem to be in hardhat v3 input format",
-                );
-              }
-            });
-        }),
+        fs
+          .stat(matchingInputPath)
+          .then(() => fs.readFile(matchingInputPath, "utf-8"))
+          .then(JSON.parse)
+          .then((json) => {
+            if (inferSingleJsonFileFormat(json).type !== "hardhat-v3-input") {
+              throw new Error(
+                "Input file does not seem to be in hardhat v3 input format",
+              );
+            }
+          }),
         { debug },
       );
       if (!inputCheckResult.success) {
