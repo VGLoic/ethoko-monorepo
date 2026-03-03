@@ -1,5 +1,5 @@
 import { StorageProvider } from "../storage-provider";
-import { createSpinner } from "@/cli-ui/utils";
+import { createSpinner, warn } from "@/cli-ui/utils";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
@@ -84,6 +84,29 @@ export async function push(
     throw ethokoArtifactParsingResult.error;
   }
   spinner2.succeed("Compilation artifact is valid");
+
+  // We verify that the input sources contain the `content` field.
+  // It is not required for Ethoko but may ensure an easy verification later on.
+  const missingContentInSource = Object.values(
+    ethokoArtifactParsingResult.value.inputArtifact.input.sources,
+  ).some((source) => !("content" in source));
+  if (missingContentInSource) {
+    // For Forge, we encourage users to use the `--use-literal-content` option to ensure the content is included in the artifact, which can help with later verification and debugging
+    if (
+      ethokoArtifactParsingResult.value.inputArtifact.origin.type ===
+        "forge-v1.6-build-info" ||
+      ethokoArtifactParsingResult.value.inputArtifact.origin.type ===
+        "forge-v1.6-default"
+    ) {
+      warn(
+        `The provided Forge compilation artifacts do not include the literal content of the sources. We recommend using the "--use-literal-content" option when generating the build info files with Forge to include the content in the artifact, which can help with later verification and debugging.`,
+      );
+    } else {
+      warn(
+        `The provided compilation artifact does not include the literal content of the sources. This may make later verification and debugging more difficult. If possible, please provide artifacts that include the source content.`,
+      );
+    }
+  }
 
   // Step 3: Check if tag exists
   const spinner3 = createSpinner("Checking if tag exists...", opts.silent);
