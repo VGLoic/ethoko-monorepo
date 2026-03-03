@@ -25,6 +25,10 @@ import { project } from "../.ethoko-typings";
 
 const TARGET_RELEASE = "2026-02-04";
 
+type RemoveReadonly<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 const deployCounter: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment,
 ) {
@@ -44,9 +48,12 @@ const deployCounter: DeployFunction = async function (
   const counterArtifact = await projectUtils.getContractArtifact(
     "src/Counter.sol:Counter",
   );
+  const counterAbi: RemoveReadonly<typeof counterArtifact.abi> = [
+    ...counterArtifact.abi,
+  ];
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      abi: counterArtifact.abi,
+      abi: counterAbi,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },

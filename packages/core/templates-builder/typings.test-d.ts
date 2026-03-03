@@ -20,3 +20,12 @@ test("EthokoContractArtifact matches ContractArtifact in typings", () => {
     {} as unknown as EthokoContractArtifact,
   );
 });
+
+test("EthokoContractArtifact ABI can be narrowed", () => {
+  const artifact = {} as TypingsEthokoContractArtifact<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >;
+  assertType<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >(artifact.abi);
+});

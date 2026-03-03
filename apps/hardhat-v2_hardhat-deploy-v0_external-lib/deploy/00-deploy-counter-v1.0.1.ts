@@ -25,6 +25,10 @@ import { project } from "../.ethoko-typings";
 
 const TARGET_RELEASE = "v1.0.1";
 
+type RemoveReadonly<T> = {
+  -readonly [P in keyof T]: T[P];
+};
+
 const deployCounter: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment,
 ) {
@@ -44,11 +48,13 @@ const deployCounter: DeployFunction = async function (
   const incrementOracleArtifact = await projectUtils.getContractArtifact(
     "src/IncrementOracle.sol:IncrementOracle",
   );
+  const incrementOracleAbi: RemoveReadonly<typeof incrementOracleArtifact.abi> =
+    [...incrementOracleArtifact.abi];
   const incrementOracleDeployment = await hre.deployments.deploy(
     `IncrementOracle@${TARGET_RELEASE}`,
     {
       contract: {
-        abi: incrementOracleArtifact.abi,
+        abi: incrementOracleAbi,
         bytecode: incrementOracleArtifact.evm.bytecode.object,
         metadata: incrementOracleArtifact.metadata,
       },
@@ -61,9 +67,12 @@ const deployCounter: DeployFunction = async function (
   const counterArtifact = await projectUtils.getContractArtifact(
     "src/Counter.sol:Counter",
   );
+  const counterAbi: RemoveReadonly<typeof counterArtifact.abi> = [
+    ...counterArtifact.abi,
+  ];
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      abi: counterArtifact.abi,
+      abi: counterAbi,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },
