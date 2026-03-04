@@ -36,7 +36,7 @@ export default buildModule(`release_${MODULE_SUFFIX}`, (m) => {
     // Hardhat Ignition module does not support promises => we use the `sync` variant of artifact retrieval
     .getContractArtifactSync("src/Oracle.sol:Oracle");
 
-  const oracle = m.contract("Oracle", oracleArtifact);
+  const oracle = m.contract("Oracle", oracleArtifact, [m.getAccount(0)]);
 
   const externalMathLibArtifact = projectUtils
     .tag(TARGET_RELEASE_TAG)
