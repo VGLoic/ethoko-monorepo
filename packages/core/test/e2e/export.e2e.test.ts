@@ -73,7 +73,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(exportResult.deployedLinkReferences).toEqual(expect.any(Object));
         expect(exportResult.evm).toEqual(expect.any(Object));
         const expectedAbi = await fs
-          .readFile(exportFixture.abiPath, "utf-8")
+          .readFile(TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.ABI, "utf-8")
           .then(JSON.parse);
         expect(exportResult.abi).toEqual(expectedAbi);
       },
@@ -159,7 +159,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(exportResult.deployedLinkReferences).toEqual(expect.any(Object));
         expect(exportResult.evm).toEqual(expect.any(Object));
         const expectedAbi = await fs
-          .readFile(exportFixture.abiPath, "utf-8")
+          .readFile(TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.ABI, "utf-8")
           .then(JSON.parse);
         expect(exportResult.abi).toEqual(expectedAbi);
       },
