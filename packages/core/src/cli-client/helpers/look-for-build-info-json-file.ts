@@ -5,9 +5,9 @@ import { type Ora, LOG_COLORS } from "@/cli-ui/utils";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "../error";
 import {
-  inferArtifactFormat,
+  inferOriginalArtifactFormat,
   InferredArtifact,
-} from "@/utils/supported-origins/infer-artifact";
+} from "@/utils/supported-origins/infer-original-artifact-format";
 
 export type BuildInfoPath =
   | {
@@ -15,12 +15,12 @@ export type BuildInfoPath =
         | "hardhat-v2"
         | "forge-v1-default"
         | "forge-v1-with-build-info-option";
-      path: string;
+      buildInfoPath: string;
     }
   | {
       // REMIND ME: distinguish isolated builds
       format: "hardhat-v3";
-      paths: {
+      buildInfoPaths: {
         input: string;
         output: string;
       }[];
@@ -99,7 +99,7 @@ export async function lookForBuildInfoJsonFile(
       );
     }
 
-    const format = inferArtifactFormat(contentResult.value);
+    const format = inferOriginalArtifactFormat(contentResult.value);
     if (!format.recognized) {
       throw new CliError(
         `The provided file "${inputPath}" does not seem to be a valid build info JSON file in a supported format. Please provide a valid build info JSON file. Run with debug mode for more info.`,
@@ -117,7 +117,7 @@ export async function lookForBuildInfoJsonFile(
           .then(() => fs.readFile(matchingOutputPath, "utf-8"))
           .then(JSON.parse)
           .then((json) => {
-            const inferredFormat = inferArtifactFormat(json);
+            const inferredFormat = inferOriginalArtifactFormat(json);
             if (
               !inferredFormat.recognized ||
               inferredFormat.artifact.format !== "hardhat-v3-output"
@@ -136,7 +136,7 @@ export async function lookForBuildInfoJsonFile(
       }
       return {
         format: "hardhat-v3",
-        paths: [{ input: inputPath, output: matchingOutputPath }],
+        buildInfoPaths: [{ input: inputPath, output: matchingOutputPath }],
       };
     }
     if (format.artifact.format === "hardhat-v3-output") {
@@ -148,7 +148,7 @@ export async function lookForBuildInfoJsonFile(
           .then(() => fs.readFile(matchingInputPath, "utf-8"))
           .then(JSON.parse)
           .then((json) => {
-            const inferredFormat = inferArtifactFormat(json);
+            const inferredFormat = inferOriginalArtifactFormat(json);
             if (
               !inferredFormat.recognized ||
               (inferredFormat.artifact.format !==
@@ -170,12 +170,12 @@ export async function lookForBuildInfoJsonFile(
       }
       return {
         format: "hardhat-v3",
-        paths: [{ input: matchingInputPath, output: inputPath }],
+        buildInfoPaths: [{ input: matchingInputPath, output: inputPath }],
       };
     }
 
     return {
-      path: inputPath,
+      buildInfoPath: inputPath,
       format: format.artifact.format,
     };
   }
@@ -252,7 +252,7 @@ export async function lookForBuildInfoJsonFile(
         fs
           .readFile(filePath, "utf-8")
           .then((v) => JSON.parse(v))
-          .then(inferArtifactFormat),
+          .then(inferOriginalArtifactFormat),
         { debug },
       );
       if (!inferrenceResult.success) {
@@ -389,7 +389,7 @@ function filesToOptions(files: FileSummary[]): SelectionOption[] {
       options.push({
         display: `${truncateFilename(file.name)} (${formatBuildInfoFormat(file.artifact.format)}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
         value: {
-          path: file.filePath,
+          buildInfoPath: file.filePath,
           format: file.artifact.format,
         },
       });
@@ -425,7 +425,7 @@ function filesToOptions(files: FileSummary[]): SelectionOption[] {
       const display = `${formatBuildInfoFormat("hardhat-v3")} (Solc ${group.solcLongVersion}, ${formatTimeAgo(group.startWindow)}`;
       const value: BuildInfoPath = {
         format: "hardhat-v3",
-        paths: group.pairs.map((pair) => ({
+        buildInfoPaths: group.pairs.map((pair) => ({
           input: pair.input.path,
           output: pair.output.path,
         })),

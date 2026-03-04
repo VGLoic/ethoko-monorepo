@@ -2,19 +2,12 @@ import {
   EthokoInputArtifact,
   EthokoOutputArtifact,
 } from "@/utils/ethoko-artifacts-schemas/v0";
-import fs from "fs/promises";
 import { CliError } from "../error";
-import { toAsyncResult, toResult } from "@/utils/result";
-import { HardhatV2CompilerOutputSchema } from "@/utils/supported-origins/hardhat-v2/schemas";
-import {
-  ForgeCompilerDefaultOutputSchema,
-  ForgeCompilerOutputWithBuildInfoOptionSchema,
-} from "@/utils/supported-origins/forge-v1/schemas";
-import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
+import { toAsyncResult } from "@/utils/result";
 import type { BuildInfoPath } from "./look-for-build-info-json-file";
-import { forgeArtifactsToEthokoArtifact } from "./format-specific-mappers/forge-artifacts-to-ethoko-artifact";
-import { retrieveForgeContractArtifactsPaths } from "./format-specific-mappers/retrieve-forge-contract-artifacts-paths";
-import { hardhatV3ArtifactsToEthokoArtifact } from "./format-specific-mappers/hardhat-v3-artifacts-to-ethoko-artifact";
+import { mapOriginalArtifactToEthokoArtifact } from "@/utils/supported-origins/map-original-artifact-to-ethoko-artifact";
+
+// REMIND ME: delete this
 
 /**
  * Given a path to a candidate build info JSON file, try to output Ethoko artifacts.
@@ -40,188 +33,31 @@ export async function mapBuildInfoToEthokoArtifact(
   outputArtifact: EthokoOutputArtifact;
   originalContentPaths: string[];
 }> {
-  // Hardhat v3 is not using a single build info JSON file so we take it as a special case
-  if (buildInfoPath.format === "hardhat-v3") {
-    const mappingResult = await toAsyncResult(
-      hardhatV3ArtifactsToEthokoArtifact(buildInfoPath.paths, debug),
-      { debug },
-    );
-    if (!mappingResult.success) {
-      throw new CliError(
-        `Hardhat v3 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide valid Hardhat v3 compilation files or contact us. Run with debug mode for more info.`,
-      );
-    }
-
-    return {
-      inputArtifact: mappingResult.value.inputArtifact,
-      outputArtifact: mappingResult.value.outputArtifact,
-      originalContentPaths: mappingResult.value.originalArtifactPaths,
-    };
-  }
-
-  // @dev readJsonFile throws a CliError so it is safe to use it directly without wrapping it in a try catch block
-  const jsonContent = await readJsonFile(
-    buildInfoPath.path,
-    "build info",
-    debug,
-  );
-
-  // We validate the content and map it to the Ethoko artifact format based on the previously detected format
-  if (buildInfoPath.format === "hardhat-v2") {
-    const parsingResult = HardhatV2CompilerOutputSchema.safeParse(jsonContent);
-    if (!parsingResult.success) {
-      if (debug) {
-        console.error(
-          `Failed to parse the build info file "${buildInfoPath.path}" as a Hardhat V2 build info format. Error: ${parsingResult.error}`,
-        );
-      }
-      throw new CliError(
-        `The provided build info file "${buildInfoPath.path}" seems to be in the Hardhat V2 format but we failed to validate it. Please provide a valid Hardhat V2 build info JSON file. Run with debug mode for more info.`,
-      );
-    }
-    const id = deriveEthokoArtifactId(parsingResult.data.input);
-    const inputArtifact: EthokoInputArtifact = {
-      id,
-      _format: "ethoko-input-v0",
-      origin: {
-        type: "hardhat-v2",
-        id: parsingResult.data.id,
-        format: parsingResult.data._format,
-      },
-      solcLongVersion: parsingResult.data.solcLongVersion,
-      input: parsingResult.data.input,
-    };
-    const outputArtifact: EthokoOutputArtifact = {
-      id,
-      _format: "ethoko-output-v0",
-      output: parsingResult.data.output,
-    };
-    return {
-      inputArtifact,
-      outputArtifact,
-      originalContentPaths: [buildInfoPath.path],
-    };
-  }
-
-  if (buildInfoPath.format === "forge-v1-with-build-info-option") {
-    const parsingResult =
-      ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(jsonContent);
-    if (!parsingResult.success) {
-      if (debug) {
-        console.error(
-          `Failed to parse the build info file "${buildInfoPath.path}" as a Forge build info format with the build info option. Error: ${parsingResult.error}`,
-        );
-      }
-      throw new CliError(
-        `The provided build info file "${buildInfoPath.path}" seems to be in the Forge format with the build info option but we failed to validate it. Please provide a valid Forge build info JSON file with the build info option. Run with debug mode for more info.`,
-      );
-    }
-
-    const contractArtifactsPathsResult = await toAsyncResult(
-      retrieveForgeContractArtifactsPaths(
-        buildInfoPath.path,
-        parsingResult.data.source_id_to_path,
-        debug,
-      ),
-      { debug },
-    );
-    if (!contractArtifactsPathsResult.success) {
-      throw new CliError(
-        `Failed to identify the contract artifacts related to the compilation. Please provide valid compilation files or contact us. Run with debug mode for more info.`,
-      );
-    }
-
-    const id = deriveEthokoArtifactId(parsingResult.data.input);
-    const inputArtifact: EthokoInputArtifact = {
-      id,
-      _format: "ethoko-input-v0",
-      origin: {
-        type: "forge-v1.6-build-info",
-        id: parsingResult.data.id,
-        format: parsingResult.data._format,
-      },
-      solcLongVersion: parsingResult.data.solcLongVersion,
-      input: parsingResult.data.input,
-    };
-    const outputArtifact: EthokoOutputArtifact = {
-      id,
-      _format: "ethoko-output-v0",
-      output: parsingResult.data.output,
-    };
-    return {
-      inputArtifact,
-      outputArtifact,
-      originalContentPaths: [
-        buildInfoPath.path,
-        ...contractArtifactsPathsResult.value,
-      ],
-    };
-  }
-
-  if (buildInfoPath.format === "forge-v1-default") {
-    const parsingResult =
-      ForgeCompilerDefaultOutputSchema.safeParse(jsonContent);
-    if (!parsingResult.success) {
-      if (debug) {
-        console.error(
-          `Failed to parse the build info file "${buildInfoPath.path}" as a Forge build info format without the build info option. Error: ${parsingResult.error}`,
-        );
-      }
-      throw new CliError(
-        `The provided build info file "${buildInfoPath.path}" seems to be in the Forge format without the build info option but we failed to validate it. Please provide a valid Forge build info JSON file without the build info option. Run with debug mode for more info.`,
-      );
-    }
-    // The mapping is not straightforward as we need to reconstruct the input and output from the scattered contract pieces
-    const mappingResult = await toAsyncResult(
-      forgeArtifactsToEthokoArtifact(
-        buildInfoPath.path,
-        parsingResult.data,
-        debug,
-      ),
-      { debug },
-    );
-    if (!mappingResult.success) {
-      throw new CliError(
-        `The provided build info file "${buildInfoPath.path}" seems to be in the Foundry default format but we failed to validate it, please try to build with the "--build-info" option or file an issue with the error details.`,
-      );
-    }
-    return {
-      inputArtifact: mappingResult.value.inputArtifact,
-      outputArtifact: mappingResult.value.outputArtifact,
-      originalContentPaths: mappingResult.value.additionalArtifactsPaths.concat(
-        buildInfoPath.path,
-      ),
-    };
-  }
-
-  buildInfoPath.format satisfies never; // to ensure we covered all the cases
-
-  throw new CliError(
-    `The provided build info file "${buildInfoPath.path}" does not match any of the supported formats. Please provide a valid build info JSON file. Run with debug mode for more info.`,
-  );
-}
-
-async function readJsonFile(
-  path: string,
-  displayName: string,
-  debug: boolean,
-): Promise<unknown> {
-  const contentResult = await toAsyncResult(fs.readFile(path, "utf-8"), {
-    debug,
-  });
-  if (!contentResult.success) {
-    throw new CliError(
-      `The provided ${displayName} path "${path}" could not be read. Please check the permissions and try again. Run with debug mode for more info.`,
-    );
-  }
-  const jsonContentResult = await toResult(
-    () => JSON.parse(contentResult.value),
+  const mappingResult = await toAsyncResult(
+    mapOriginalArtifactToEthokoArtifact(buildInfoPath, debug),
     { debug },
   );
-  if (!jsonContentResult.success) {
-    throw new CliError(
-      `The provided ${displayName} file "${path}" could not be parsed as JSON. Please provide a valid JSON file. Run with debug mode for more info.`,
-    );
+  if (!mappingResult.success) {
+    const errorMessage =
+      FORMAT_TO_ERROR_MESSAGE[buildInfoPath.format] ||
+      `An error occurred while mapping the build info to Ethoko artifacts. Please provide valid build info JSON files or contact us. Run with debug mode for more info.`;
+    throw new CliError(errorMessage);
   }
-  return jsonContentResult.value;
+
+  return {
+    inputArtifact: mappingResult.value.inputArtifact,
+    outputArtifact: mappingResult.value.outputArtifact,
+    originalContentPaths: mappingResult.value.originalContentPaths,
+  };
 }
+
+const FORMAT_TO_ERROR_MESSAGE: Record<BuildInfoPath["format"], string> = {
+  "hardhat-v3":
+    "Hardhat v3 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide valid Hardhat v3 compilation files or contact us. Run with debug mode for more info.",
+  "hardhat-v2":
+    "Hardhat v2 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Hardhat v2 build info JSON file or contact us. Run with debug mode for more info.",
+  "forge-v1-with-build-info-option":
+    "Forge v1 compilation artifacts with the build info option have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Forge v1 build info JSON file or contact us. Run with debug mode for more info.",
+  "forge-v1-default":
+    "Forge v1 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Forge v1 build info JSON file or contact us. Run with debug mode for more info.",
+};

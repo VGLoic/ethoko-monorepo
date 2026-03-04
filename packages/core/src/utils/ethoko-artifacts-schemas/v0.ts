@@ -8,6 +8,7 @@ import {
   HARDHAT_V3_COMPILER_INPUT_FORMAT,
 } from "../supported-origins/hardhat-v3/schemas";
 
+// REMIND ME: think about this origin
 const EthokoArtifactOriginSchema = z.discriminatedUnion("type", [
   z.object({
     id: z.string(),

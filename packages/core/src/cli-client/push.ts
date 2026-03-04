@@ -17,7 +17,7 @@ function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
     buildInfoPath.format === "forge-v1-default" ||
     buildInfoPath.format === "forge-v1-with-build-info-option"
   ) {
-    return `Forge compilation artifact found at ${buildInfoPath.path}`;
+    return `Forge compilation artifact found at ${buildInfoPath.buildInfoPath}`;
   }
   throw new Error(
     `Unsupported build info format: ${buildInfoPath.format satisfies never}`,

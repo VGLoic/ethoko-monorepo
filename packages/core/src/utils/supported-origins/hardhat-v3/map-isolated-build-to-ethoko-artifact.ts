@@ -12,7 +12,7 @@ import {
 } from "@/utils/supported-origins/hardhat-v3/schemas";
 import z from "zod";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
-import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
+import { lookForContractArtifactPath } from "@/utils/look-for-contract-artifact-path";
 import { toAsyncResult } from "@/utils/result";
 
 /**
@@ -28,7 +28,7 @@ import { toAsyncResult } from "@/utils/result";
  * @param pairs The list of pairs of input/output artifacts paths to transform into Ethoko artifacts.
  * @param debug Whether to enable debug logging
  */
-export async function hardhatV3ArtifactsToEthokoArtifact(
+export async function mapHardhatV3ArtifactsToEthokoArtifact(
   pairs: {
     input: string;
     output: string;
@@ -37,7 +37,7 @@ export async function hardhatV3ArtifactsToEthokoArtifact(
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputArtifact: EthokoOutputArtifact;
-  originalArtifactPaths: string[];
+  originalContentPaths: string[];
 }> {
   const firstPair = pairs.at(0);
   if (!firstPair) {
@@ -155,7 +155,7 @@ export async function hardhatV3ArtifactsToEthokoArtifact(
       _format: "ethoko-output-v0",
       output: solcOutput,
     },
-    originalArtifactPaths: pairs
+    originalContentPaths: pairs
       .flatMap((pair) => [pair.input, pair.output])
       .concat(contractArtifactsPaths),
   };

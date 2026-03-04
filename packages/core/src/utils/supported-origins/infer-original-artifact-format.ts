@@ -37,7 +37,13 @@ export type InferredArtifact =
       data: InferredHardhatV2Artifacts["hardhat-v2"];
     };
 
-export function inferArtifactFormat(data: unknown):
+/**
+ * Infer the original artifact format from the given data, which may be in any supported format.
+ * The inference is done by trying to parse the data with the inference schemas for each supported format, and returning the first one that matches.
+ * @param data JSON parsed data of a build info JSON file
+ * @returns The inferred artifact format and the parsed data if recognized, or recognized: false if the format is not recognized
+ */
+export function inferOriginalArtifactFormat(data: unknown):
   | {
       recognized: true;
       artifact: InferredArtifact;

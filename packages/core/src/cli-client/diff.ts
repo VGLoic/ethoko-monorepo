@@ -14,13 +14,13 @@ function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
     return `Hardhat v3 compilation artifact found`;
   }
   if (buildInfoPath.format === "hardhat-v2") {
-    return `Hardhat v2 compilation artifact input file found at ${buildInfoPath.path}`;
+    return `Hardhat v2 compilation artifact input file found at ${buildInfoPath.buildInfoPath}`;
   }
   if (
     buildInfoPath.format === "forge-v1-default" ||
     buildInfoPath.format === "forge-v1-with-build-info-option"
   ) {
-    return `Forge compilation artifact found at ${buildInfoPath.path}`;
+    return `Forge compilation artifact found at ${buildInfoPath.buildInfoPath}`;
   }
   throw new Error(
     `Unsupported build info format: ${buildInfoPath.format satisfies never}`,
