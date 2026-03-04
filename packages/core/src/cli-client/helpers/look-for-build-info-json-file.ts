@@ -4,35 +4,27 @@ import { styleText } from "util";
 import { type Ora, LOG_COLORS } from "@/cli-ui/utils";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "../error";
-import { FormatInferenceHardhatV2CompilerOutputSchema } from "@/utils/supported-origins/hardhat-v2";
 import {
-  FormatInferenceHardhatV3CompilerInputPieceSchema,
-  FormatInferenceHardhatV3CompilerOutputPieceSchema,
-} from "@/utils/supported-origins/hardhat-v3";
-import {
-  FormatInferenceForgeCompilerOutputDefaultFormatSchema,
-  FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema,
-} from "@/utils/supported-origins/forge-v1";
+  inferArtifactFormat,
+  InferredArtifact,
+} from "@/utils/supported-origins/infer-artifact";
 
 export type BuildInfoPath =
   | {
-      format: "hardhat-v2" | "forge-default" | "forge-with-build-info-option";
+      format:
+        | "hardhat-v2"
+        | "forge-v1-default"
+        | "forge-v1-with-build-info-option";
       path: string;
     }
   | {
+      // REMIND ME: distinguish isolated builds
       format: "hardhat-v3";
       paths: {
         input: string;
         output: string;
       }[];
     };
-
-type SupportedFormatPerFile =
-  | { type: "hardhat-v2" }
-  | { type: "hardhat-v3-input"; solcLongVersion: string; id: string }
-  | { type: "hardhat-v3-output"; id: string }
-  | { type: "forge-default" }
-  | { type: "forge-with-build-info-option" };
 
 type SupportedBuildInfoFormat = BuildInfoPath["format"];
 
@@ -107,13 +99,16 @@ export async function lookForBuildInfoJsonFile(
       );
     }
 
-    const format = inferSingleJsonFileFormat(contentResult.value);
-    if (format.type === "unknown") {
+    const format = inferArtifactFormat(contentResult.value);
+    if (!format.recognized) {
       throw new CliError(
         `The provided file "${inputPath}" does not seem to be a valid build info JSON file in a supported format. Please provide a valid build info JSON file. Run with debug mode for more info.`,
       );
     }
-    if (format.type === "hardhat-v3-input") {
+    if (
+      format.artifact.format === "hardhat-v3-input-isolated-build" ||
+      format.artifact.format === "hardhat-v3-input-no-isolated-build"
+    ) {
       // We verify that the corresponding output file exists
       const matchingOutputPath = inputPath.replace(".json", ".output.json");
       const outputCheckResult = await toAsyncResult(
@@ -122,7 +117,11 @@ export async function lookForBuildInfoJsonFile(
           .then(() => fs.readFile(matchingOutputPath, "utf-8"))
           .then(JSON.parse)
           .then((json) => {
-            if (inferSingleJsonFileFormat(json).type !== "hardhat-v3-output") {
+            const inferredFormat = inferArtifactFormat(json);
+            if (
+              !inferredFormat.recognized ||
+              inferredFormat.artifact.format !== "hardhat-v3-output"
+            ) {
               throw new Error(
                 "Output file does not seem to be in hardhat v3 output format",
               );
@@ -140,7 +139,7 @@ export async function lookForBuildInfoJsonFile(
         paths: [{ input: inputPath, output: matchingOutputPath }],
       };
     }
-    if (format.type === "hardhat-v3-output") {
+    if (format.artifact.format === "hardhat-v3-output") {
       // We verify that the corresponding input file exists
       const matchingInputPath = inputPath.replace(".output.json", ".json");
       const inputCheckResult = await toAsyncResult(
@@ -149,7 +148,14 @@ export async function lookForBuildInfoJsonFile(
           .then(() => fs.readFile(matchingInputPath, "utf-8"))
           .then(JSON.parse)
           .then((json) => {
-            if (inferSingleJsonFileFormat(json).type !== "hardhat-v3-input") {
+            const inferredFormat = inferArtifactFormat(json);
+            if (
+              !inferredFormat.recognized ||
+              (inferredFormat.artifact.format !==
+                "hardhat-v3-input-isolated-build" &&
+                inferredFormat.artifact.format !==
+                  "hardhat-v3-input-no-isolated-build")
+            ) {
               throw new Error(
                 "Input file does not seem to be in hardhat v3 input format",
               );
@@ -170,7 +176,7 @@ export async function lookForBuildInfoJsonFile(
 
     return {
       path: inputPath,
-      format: format.type,
+      format: format.artifact.format,
     };
   }
 
@@ -242,17 +248,17 @@ export async function lookForBuildInfoJsonFile(
         };
       }
 
-      const formatResult = await toAsyncResult(
+      const inferrenceResult = await toAsyncResult(
         fs
           .readFile(filePath, "utf-8")
           .then((v) => JSON.parse(v))
-          .then(inferSingleJsonFileFormat),
+          .then(inferArtifactFormat),
         { debug },
       );
-      if (!formatResult.success) {
+      if (!inferrenceResult.success) {
         if (debug) {
           console.error(
-            `Failed to infer format for file "${filePath}". Error: ${formatResult.error}`,
+            `Failed to infer format for file "${filePath}". Error: ${inferrenceResult.error}`,
           );
         }
         return {
@@ -260,7 +266,7 @@ export async function lookForBuildInfoJsonFile(
           name: file.name,
         };
       }
-      if (formatResult.value.type === "unknown") {
+      if (!inferrenceResult.value.recognized) {
         if (debug) {
           console.error(
             `File "${filePath}" is not a valid build info JSON file (format inferred as "unknown"). It will be ignored.`,
@@ -279,8 +285,8 @@ export async function lookForBuildInfoJsonFile(
           filePath,
           mtime: statsResult.value.mtime,
           size: statsResult.value.size,
-          format: formatResult.value,
-        },
+          artifact: inferrenceResult.value.artifact,
+        } satisfies FileSummary,
       };
     }),
   );
@@ -331,7 +337,7 @@ type FileSummary = {
   filePath: string;
   mtime: Date;
   size: number;
-  format: SupportedFormatPerFile;
+  artifact: InferredArtifact;
 };
 function filesToOptions(files: FileSummary[]): SelectionOption[] {
   const options: SelectionOption[] = [];
@@ -349,19 +355,23 @@ function filesToOptions(files: FileSummary[]): SelectionOption[] {
     mtime: Date;
   }[] = [];
   for (const file of files) {
-    if (file.format.type === "hardhat-v3-input") {
-      const hardhatV3BuildInfoId = file.format.id;
+    // REMIND ME: distinguish isolated builds
+    if (
+      file.artifact.format === "hardhat-v3-input-no-isolated-build" ||
+      file.artifact.format === "hardhat-v3-input-isolated-build"
+    ) {
+      const hardhatV3BuildInfoId = file.artifact.data.id;
       // We check if the corresponding output file is present in the list of files, if not, we ignore this file since it is not a valid build info on its own
       const matchingOutputFile = files.find(
         (f) =>
-          f.format.type === "hardhat-v3-output" &&
-          f.format.id === hardhatV3BuildInfoId,
+          f.artifact.format === "hardhat-v3-output" &&
+          f.artifact.data.id === hardhatV3BuildInfoId,
       );
       if (!matchingOutputFile) {
         continue;
       }
       hardhatV3Pairs.push({
-        solcLongVersion: file.format.solcLongVersion,
+        solcLongVersion: file.artifact.data.solcLongVersion,
         id: hardhatV3BuildInfoId,
         mtime: file.mtime,
         input: {
@@ -373,14 +383,14 @@ function filesToOptions(files: FileSummary[]): SelectionOption[] {
           size: matchingOutputFile.size,
         },
       });
-    } else if (file.format.type === "hardhat-v3-output") {
+    } else if (file.artifact.format === "hardhat-v3-output") {
       // Hardhat V3 output files are ignored as they will be handled together with their corresponding input file
     } else {
       options.push({
-        display: `${truncateFilename(file.name)} (${formatBuildInfoFormat(file.format.type)}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
+        display: `${truncateFilename(file.name)} (${formatBuildInfoFormat(file.artifact.format)}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
         value: {
           path: file.filePath,
-          format: file.format.type,
+          format: file.artifact.format,
         },
       });
     }
@@ -430,53 +440,6 @@ function filesToOptions(files: FileSummary[]): SelectionOption[] {
   options.push(...hardhatV3OptionGroups);
 
   return options;
-}
-
-function inferSingleJsonFileFormat(
-  jsonContent: unknown,
-): SupportedFormatPerFile | { type: "unknown" } {
-  const hardhatV3ParsingResult =
-    FormatInferenceHardhatV3CompilerInputPieceSchema.safeParse(jsonContent);
-  if (hardhatV3ParsingResult.success) {
-    return {
-      type: "hardhat-v3-input",
-      solcLongVersion: hardhatV3ParsingResult.data.solcLongVersion,
-      id: hardhatV3ParsingResult.data.id,
-    };
-  }
-
-  const hardhatV3OutputParsingResult =
-    FormatInferenceHardhatV3CompilerOutputPieceSchema.safeParse(jsonContent);
-  if (hardhatV3OutputParsingResult.success) {
-    return {
-      type: "hardhat-v3-output",
-      id: hardhatV3OutputParsingResult.data.id,
-    };
-  }
-
-  const forgeDefaultParsingResult =
-    FormatInferenceForgeCompilerOutputDefaultFormatSchema.safeParse(
-      jsonContent,
-    );
-  if (forgeDefaultParsingResult.success) {
-    return { type: "forge-default" };
-  }
-
-  const forgeWithBuildInfoOptionParsingResult =
-    FormatInferenceForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(
-      jsonContent,
-    );
-  if (forgeWithBuildInfoOptionParsingResult.success) {
-    return { type: "forge-with-build-info-option" };
-  }
-
-  const hardhatV2ParsingResult =
-    FormatInferenceHardhatV2CompilerOutputSchema.safeParse(jsonContent);
-  if (hardhatV2ParsingResult.success) {
-    return { type: "hardhat-v2" };
-  }
-
-  return { type: "unknown" };
 }
 
 type SelectionOption = {
@@ -644,8 +607,8 @@ const BUILD_INFO_FORMAT_TO_HUMAN_READABLE: Record<
 > = {
   "hardhat-v2": "Hardhat v2",
   "hardhat-v3": "Hardhat v3",
-  "forge-default": "Forge",
-  "forge-with-build-info-option": "Forge",
+  "forge-v1-default": "Forge",
+  "forge-v1-with-build-info-option": "Forge",
 };
 function formatBuildInfoFormat(format: SupportedBuildInfoFormat): string {
   return BUILD_INFO_FORMAT_TO_HUMAN_READABLE[format];

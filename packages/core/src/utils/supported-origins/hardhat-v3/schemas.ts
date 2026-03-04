@@ -1,9 +1,9 @@
 import z from "zod";
-import { SolcJsonInputSchema } from "../solc-artifacts-schemas/v0.8.33/input-json";
+import { SolcJsonInputSchema } from "../../solc-artifacts-schemas/v0.8.33/input-json";
 import {
   AbiItemSchema,
   SolcJsonOutputSchema,
-} from "../solc-artifacts-schemas/v0.8.33/output-json";
+} from "../../solc-artifacts-schemas/v0.8.33/output-json";
 
 /**
  * # Supported formats
@@ -85,15 +85,14 @@ export const HardhatV3CompilerOutputPieceSchema = z.object({
 export const FormatInferenceHardhatV3CompilerInputPieceSchema = z.object({
   _format: z.literal(HARDHAT_V3_COMPILER_INPUT_FORMAT),
   solcLongVersion: z.string(),
+  userSourceNameMap: z.record(z.string(), z.string()),
   id: z.string(),
-  input: z.any(),
 });
 
 // This is a smaller schema used for format inference
 export const FormatInferenceHardhatV3CompilerOutputPieceSchema = z.object({
   _format: z.literal(HARDHAT_V3_COMPILER_OUTPUT_FORMAT),
   id: z.string(),
-  output: z.any(),
 });
 
 // Schema for output of a contract in its dedicated file

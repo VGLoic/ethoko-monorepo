@@ -4,7 +4,7 @@ import {
   EthokoOutputArtifact,
   EthokoOutputArtifactSchema,
 } from "@/utils/ethoko-artifacts-schemas/v0";
-import { ForgeCompilerDefaultOutputSchema } from "@/utils/supported-origins/forge-v1";
+import { ForgeCompilerDefaultOutputSchema } from "@/utils/supported-origins/forge-v1/schemas";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import z from "zod";
 import path from "path";

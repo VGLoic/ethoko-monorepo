@@ -14,8 +14,8 @@ function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
     return `Hardhat v2 compilation artifact found`;
   }
   if (
-    buildInfoPath.format === "forge-default" ||
-    buildInfoPath.format === "forge-with-build-info-option"
+    buildInfoPath.format === "forge-v1-default" ||
+    buildInfoPath.format === "forge-v1-with-build-info-option"
   ) {
     return `Forge compilation artifact found at ${buildInfoPath.path}`;
   }

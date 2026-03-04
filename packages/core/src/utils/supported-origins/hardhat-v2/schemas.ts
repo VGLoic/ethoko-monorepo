@@ -1,6 +1,6 @@
 import z from "zod";
-import { SolcJsonInputSchema } from "./../solc-artifacts-schemas/v0.8.33/input-json";
-import { SolcJsonOutputSchema } from "./../solc-artifacts-schemas/v0.8.33/output-json";
+import { SolcJsonInputSchema } from "./../../solc-artifacts-schemas/v0.8.33/input-json";
+import { SolcJsonOutputSchema } from "./../../solc-artifacts-schemas/v0.8.33/output-json";
 
 /**
  * # Supported format

@@ -5,11 +5,11 @@ import {
 import fs from "fs/promises";
 import { CliError } from "../error";
 import { toAsyncResult, toResult } from "@/utils/result";
-import { HardhatV2CompilerOutputSchema } from "@/utils/supported-origins/hardhat-v2";
+import { HardhatV2CompilerOutputSchema } from "@/utils/supported-origins/hardhat-v2/schemas";
 import {
   ForgeCompilerDefaultOutputSchema,
   ForgeCompilerOutputWithBuildInfoOptionSchema,
-} from "@/utils/supported-origins/forge-v1";
+} from "@/utils/supported-origins/forge-v1/schemas";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import type { BuildInfoPath } from "./look-for-build-info-json-file";
 import { forgeArtifactsToEthokoArtifact } from "./format-specific-mappers/forge-artifacts-to-ethoko-artifact";
@@ -103,7 +103,7 @@ export async function mapBuildInfoToEthokoArtifact(
     };
   }
 
-  if (buildInfoPath.format === "forge-with-build-info-option") {
+  if (buildInfoPath.format === "forge-v1-with-build-info-option") {
     const parsingResult =
       ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(jsonContent);
     if (!parsingResult.success) {
@@ -158,7 +158,7 @@ export async function mapBuildInfoToEthokoArtifact(
     };
   }
 
-  if (buildInfoPath.format === "forge-default") {
+  if (buildInfoPath.format === "forge-v1-default") {
     const parsingResult =
       ForgeCompilerDefaultOutputSchema.safeParse(jsonContent);
     if (!parsingResult.success) {

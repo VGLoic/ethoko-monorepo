@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import path from "node:path";
 import { toAsyncResult } from "@/utils/result";
-import { ForgeCompilerContractOutputSchema } from "@/utils/supported-origins/forge-v1";
+import { ForgeCompilerContractOutputSchema } from "@/utils/supported-origins/forge-v1/schemas";
 import z from "zod";
 import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
 import { warn } from "@/cli-ui";

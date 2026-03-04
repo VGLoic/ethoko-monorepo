@@ -9,7 +9,7 @@ import {
   HardhatV3CompilerContractOutputSchema,
   HardhatV3CompilerInputPieceSchema,
   HardhatV3CompilerOutputPieceSchema,
-} from "@/utils/supported-origins/hardhat-v3";
+} from "@/utils/supported-origins/hardhat-v3/schemas";
 import z from "zod";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import { lookForContractArtifactPath } from "./look-for-contract-artifact-path";
