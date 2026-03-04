@@ -348,7 +348,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
     mtime: Date;
   }[] = [];
   for (const file of files) {
-    // REMIND ME: distinguish isolated builds
+    // TODO: handle isolated build
     if (
       file.artifact.format === "hardhat-v3-input-no-isolated-build" ||
       file.artifact.format === "hardhat-v3-input-isolated-build"

@@ -16,6 +16,7 @@ export type OriginalBuildInfoPaths =
       buildInfoPath: string;
     }
   | {
+      // TODO: handle isolated build
       format: "hardhat-v3";
       buildInfoPaths: {
         input: string;
