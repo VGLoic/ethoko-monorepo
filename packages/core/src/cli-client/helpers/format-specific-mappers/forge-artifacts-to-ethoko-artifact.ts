@@ -3,19 +3,19 @@ import {
   EthokoInputArtifactSchema,
   EthokoOutputArtifact,
   EthokoOutputArtifactSchema,
-} from "@/utils/artifacts-schemas/ethoko-v0";
-import { ForgeCompilerDefaultOutputSchema } from "@/utils/artifacts-schemas/supported-origins/forge-v1";
+} from "@/utils/ethoko-artifacts-schemas/v0";
+import { ForgeCompilerDefaultOutputSchema } from "@/utils/supported-origins/forge-v1";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import z from "zod";
 import path from "path";
 import {
   SettingsSchema,
   SolcJsonInputSchema,
-} from "@/utils/artifacts-schemas/solc-v0.8.33/input-json";
+} from "@/utils/solc-artifacts-schemas/v0.8.33/input-json";
 import {
   SolcContractSchema,
   SolcJsonOutputSchema,
-} from "@/utils/artifacts-schemas/solc-v0.8.33/output-json";
+} from "@/utils/solc-artifacts-schemas/v0.8.33/output-json";
 import { lookForForgeContractArtifactPath } from "./retrieve-forge-contract-artifacts-paths";
 import { warn } from "@/cli-ui/utils";
 

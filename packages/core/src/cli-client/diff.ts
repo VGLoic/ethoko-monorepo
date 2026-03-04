@@ -6,7 +6,7 @@ import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { lookForBuildInfoJsonFile } from "./helpers/look-for-build-info-json-file";
 import { mapBuildInfoToEthokoArtifact } from "./helpers/map-build-info-to-ethoko-artifact";
-import { EthokoOutputArtifact } from "@/utils/artifacts-schemas/ethoko-v0";
+import { EthokoOutputArtifact } from "@/utils/ethoko-artifacts-schemas/v0";
 import type { BuildInfoPath } from "./helpers/look-for-build-info-json-file";
 
 function buildInfoPathToSuccessText(buildInfoPath: BuildInfoPath): string {
