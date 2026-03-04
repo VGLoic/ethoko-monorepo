@@ -19,14 +19,14 @@ contract Counter {
         oracle = _oracle;
     }
 
-    function incBy(uint by) public {
-        require(by > 0, "incBy: increment should be positive");
+    function inc() public {
+        uint by = oracle.by();
         x = x.add(by);
         emit Increment(by);
     }
 
-    function mulBy(uint by) public {
-        require(by > 0, "mulBy: multiplier should be positive");
+    function mul() public {
+        uint by = oracle.by();
         x = x.mul(by);
         emit Multiply(by);
     }
