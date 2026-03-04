@@ -27,7 +27,7 @@ function buildInfoPathToSuccessText(paths: OriginalBuildInfoPaths): string {
   ) {
     return `Forge compilation artifact found at ${paths.buildInfoPath}`;
   }
-  throw new Error(
+  throw new CliError(
     `Unsupported build info format: ${paths.format satisfies never}`,
   );
 }
