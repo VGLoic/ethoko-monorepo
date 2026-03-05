@@ -8,6 +8,8 @@ export async function setup(): Promise<void> {
 
   await cleanUpLocalEthokoStorage();
 
+  await fs.mkdir(E2E_FOLDER_PATH, { recursive: true });
+
   console.log("\n✅ Test ready to be run!\n");
 }
 
@@ -27,6 +29,6 @@ async function cleanUpLocalEthokoStorage() {
     .then(() => true)
     .catch(() => false);
   if (doesExist) {
-    await fs.rm(E2E_FOLDER_PATH, { recursive: true });
+    // await fs.rm(E2E_FOLDER_PATH, { recursive: true });
   }
 }
