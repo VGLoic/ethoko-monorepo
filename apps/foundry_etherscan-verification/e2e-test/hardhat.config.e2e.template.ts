@@ -1,18 +1,19 @@
 import hardhatToolboxViemPlugin from "@nomicfoundation/hardhat-toolbox-viem";
-import { configVariable, defineConfig } from "hardhat/config";
+import { defineConfig } from "hardhat/config";
 import HardhatEthoko from "hardhat-ethoko";
-import "dotenv/config";
 
+/**
+ * This is a template Hardhat config file for the E2E tests. The actual config file used in the tests is generated from this template by replacing the placeholders with the appropriate values.
+ */
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin, HardhatEthoko],
   ethoko: {
     project: "verified-forge-counter",
-    pulledArtifactsPath: "./.ethoko-e2e/.ethoko",
-    typingsPath: "./.ethoko-typings",
-    compilationOutputPath: "./out",
+    pulledArtifactsPath: "PULLED_ARTIFACTS_PATH",
+    typingsPath: "TYPINGS_PATH",
     storageConfiguration: {
       type: "local",
-      path: "./.ethoko-e2e/.storage",
+      path: "STORAGE_PATH",
     },
   },
   solidity: {
@@ -40,16 +41,8 @@ export default defineConfig({
       type: "edr-simulated",
       chainType: "op",
     },
-    sepolia: {
-      type: "http",
-      chainType: "l1",
-      url: configVariable("SEPOLIA_RPC_URL"),
-      accounts: {
-        mnemonic: configVariable("SEPOLIA_MNEMONIC"),
-      },
-    },
   },
   paths: {
-    sources: "./src", // Use ./src rather than ./contracts as Hardhat expects
+    sources: "./../src", // Use ./../src as we are in the `.ethoko-e2e` folder
   },
 });
