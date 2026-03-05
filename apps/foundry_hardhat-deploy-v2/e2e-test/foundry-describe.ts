@@ -78,7 +78,7 @@ export function foundryDescribe(args: {
       const tmpDeploymentScript = `deploy/00-deploy-counter-${testId}.ts`;
       await fs.writeFile(tmpDeploymentScript, updatedScriptContent);
       return async () => {
-        await fs.rm(tmpDeploymentScript);
+        await fs.rm(tmpDeploymentScript, { force: true });
       };
     });
 

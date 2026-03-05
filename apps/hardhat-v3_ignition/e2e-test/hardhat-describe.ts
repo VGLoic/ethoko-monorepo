@@ -81,8 +81,8 @@ export function hardhatDescribe(args: {
 
       await fs.writeFile(ignitionDeployPath, updatedScriptContent);
       return async () => {
-        await fs.rm(ignitionDeployPath);
-        await fs.rm(hardhatConfigPath);
+        await fs.rm(ignitionDeployPath, { force: true });
+        await fs.rm(hardhatConfigPath, { force: true });
       };
     });
 

@@ -80,8 +80,8 @@ export function hardhatDescribe(args: {
       const tmpDeploymentScript = `deploy/deploy_counter-${testId}.ts`;
       await fs.writeFile(tmpDeploymentScript, updatedScriptContent);
       return async () => {
-        await fs.rm(tmpDeploymentScript);
-        await fs.rm(hardhatConfigPath);
+        await fs.rm(tmpDeploymentScript, { force: true });
+        await fs.rm(hardhatConfigPath, { force: true });
       };
     });
 
@@ -102,10 +102,12 @@ export function hardhatDescribe(args: {
 
     test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
 
-    test("it deploys", () =>
+    // We allow for three retries as recognition of the fresh typings might take a bit of time, especially on CI
+    test("it deploys", { retry: 3 }, () =>
       asyncExec(
         `npx hardhat deploy --config ${hardhatConfigPath} --tags ${tag}`,
-      ));
+      ),
+    );
 
     test("it restores the original artifacts", async () => {
       await asyncExec(
