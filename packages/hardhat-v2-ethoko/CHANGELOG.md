@@ -1,5 +1,22 @@
 # hardhat-v2-ethoko
 
+## 0.5.0
+
+### Minor Changes
+
+- e522639: Allow to use default AWS credentials chain
+
+### Patch Changes
+
+- Updated dependencies [3f487b9]
+- Updated dependencies [29aced9]
+- Updated dependencies [ed133f0]
+- Updated dependencies [2aec2db]
+- Updated dependencies [2154b28]
+- Updated dependencies [adc4cc7]
+- Updated dependencies [e522639]
+  - @ethoko/core@0.9.0
+
 ## 0.4.4
 
 ### Patch Changes
