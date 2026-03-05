@@ -25,6 +25,9 @@ importers:
 
   apps/foundry_etherscan-verification:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -73,6 +76,9 @@ importers:
 
   apps/foundry_hardhat-deploy-v2:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -136,6 +142,9 @@ importers:
 
   apps/hardhat-v2_hardhat-deploy-v0:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -187,6 +196,9 @@ importers:
 
   apps/hardhat-v2_hardhat-deploy-v0_external-lib:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -238,6 +250,9 @@ importers:
 
   apps/hardhat-v3_etherscan-verification:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -292,6 +307,9 @@ importers:
 
   apps/hardhat-v3_hardhat-deploy-v2:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -355,6 +373,9 @@ importers:
 
   apps/hardhat-v3_ignition:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -403,6 +424,9 @@ importers:
 
   apps/uniswap-v4-core:
     devDependencies:
+      '@ethoko/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       '@ethoko/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
