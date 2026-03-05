@@ -13,3 +13,6 @@
 [submodule "apps/uniswap-v4-core/lib/openzeppelin-contracts"]
 	path = apps/uniswap-v4-core/lib/openzeppelin-contracts
 	url = https://github.com/openzeppelin/openzeppelin-contracts
+[submodule "apps/foundry_etherscan-verification/lib/openzeppelin-contracts"]
+	path = apps/foundry_etherscan-verification/lib/openzeppelin-contracts
+	url = https://github.com/openzeppelin/openzeppelin-contracts

@@ -2,6 +2,8 @@ import SepoliaDeployedAddresses from "./../ignition/deployments/chain-11155111/d
 import { EthokoBuildInfoInput, project } from "./../.ethoko-typings/index.js";
 import "dotenv/config";
 
+const DEPLOYER_ADDRESS = "0x25371B936fD45e67F00dfEa1cd6A3e77105DD0FA";
+
 async function main() {
   console.log("\nStarting Etherscan verification for release 2026-02-02...\n");
 
@@ -37,11 +39,7 @@ async function main() {
   const patchedSourceCodeInput = patchInputSources(
     inputCompilationArtifact.input,
   );
-  const stringifiedSourceCodeInput = JSON.stringify(
-    patchedSourceCodeInput,
-    null,
-    2,
-  );
+  const stringifiedSourceCodeInput = JSON.stringify(patchedSourceCodeInput);
 
   await etherscanClient.verifyContract({
     sourceCode: stringifiedSourceCodeInput,
@@ -55,7 +53,7 @@ async function main() {
     sourceCode: stringifiedSourceCodeInput,
     address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
     fullyQualifiedContractName: "src/Oracle.sol:Oracle",
-    constructorArguments: "", // No constructor arguments for this contract
+    constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
     ...verificationPayload,
   });
 
@@ -148,31 +146,33 @@ class EtherscanVerificationClient {
       },
     );
 
-    const data = await response.json();
-    if (
-      typeof data === "object" &&
-      data !== null &&
-      "status" in data &&
-      data.status === "0"
-    ) {
-      if (
-        "result" in data &&
-        data.result === "Contract source code already verified"
-      ) {
-        console.log(
-          `Contract ${payload.fullyQualifiedContractName} already verified\n`,
-        );
+    const rawResponse = await response.text();
+    try {
+      const data = JSON.parse(rawResponse);
+      if ("status" in data && data.status === "0") {
+        if (
+          "result" in data &&
+          data.result === "Contract source code already verified"
+        ) {
+          console.log(
+            `Contract ${payload.fullyQualifiedContractName} already verified\n`,
+          );
+        } else {
+          console.error(
+            `Verification failed for ${payload.fullyQualifiedContractName}:`,
+            data,
+          );
+        }
       } else {
-        console.error(
-          `Verification failed for ${payload.fullyQualifiedContractName}:`,
+        console.log(
+          `Verification submitted for ${payload.fullyQualifiedContractName}:\n`,
           data,
         );
       }
-    } else {
-      console.log(
-        `Verification submitted for ${payload.fullyQualifiedContractName}:\n`,
-        data,
-      );
+    } catch (error) {
+      console.error("Failed to parse Etherscan response as JSON:", error);
+      console.error("Raw response from Etherscan:", rawResponse);
+      return;
     }
   }
 }

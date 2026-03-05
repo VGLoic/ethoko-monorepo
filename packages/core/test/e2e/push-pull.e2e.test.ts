@@ -7,27 +7,15 @@ import {
   STORAGE_PROVIDER_STRATEGIES,
   storageProviderTest,
 } from "@test/helpers/storage-provider-test";
+import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
+import { deriveAllPathsInDirectory } from "@test/helpers/derive-all-paths-in-directory";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Push-Pull E2E Tests (%s)",
   ([, storageProviderFactory]) => {
     storageProviderTest.scoped({ storageProviderFactory });
 
-    storageProviderTest.for([
-      [
-        "Hardhat V2 Counter",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER,
-      ],
-      ["Foundry Counter", TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER],
-      [
-        "Hardhat V3 Counter",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
-      ],
-      [
-        "Foundry Build Info Counter",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER,
-      ],
-    ] as const)(
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "push artifact [%s] without tag → pull by ID",
       async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
@@ -85,28 +73,24 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           artifactId,
         );
 
-        if (localArtifact.origin.type === "hardhat-v3") {
-          // Hardhat v3 has a list of IDs
-          const originalIds = await Promise.all(
-            artifactFixture.buildInfoPaths.map((path) => {
-              const content = fs
-                .readFile(path, "utf-8")
-                .then((c) => JSON.parse(c) as { id: string });
-              return content.then((json) => json.id);
-            }),
-          );
-          expect(originalIds).toEqual(
-            localArtifact.origin.pairs.map((p) => p.id),
-          );
-        } else {
-          const originalContent = await fs.readFile(
-            artifactFixture.buildInfoPaths[0],
-            "utf-8",
-          );
-          const originalJson = JSON.parse(originalContent) as { id: string };
-
-          expect(localArtifact.origin.id).toBe(originalJson.id);
-        }
+        const expectedBuildInfoPaths = await deriveAllPathsInDirectory(
+          `${artifactFixture.folderPath}/build-info`,
+        );
+        const expectedOriginalIds = await Promise.all(
+          expectedBuildInfoPaths.map((path) =>
+            fs
+              .readFile(path, "utf-8")
+              .then((c) => JSON.parse(c) as { id: string })
+              .then((json) => json.id),
+          ),
+        );
+        const originalIdsInArtifact =
+          localArtifact.origin.type === "hardhat-v3"
+            ? localArtifact.origin.pairs.map((p) => p.id)
+            : [localArtifact.origin.id];
+        expect(originalIdsInArtifact.toSorted()).toEqual(
+          Array.from(new Set(expectedOriginalIds)).toSorted(),
+        );
       },
     );
 
@@ -116,7 +100,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
         const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -176,7 +160,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           TEST_CONSTANTS.PROJECTS.MULTI_ARTIFACT,
         );
         const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -226,7 +210,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         const tag = TEST_CONSTANTS.TAGS.LATEST;
         const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -275,7 +259,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
         const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
         await localStorage.ensureProjectSetup(project);
 

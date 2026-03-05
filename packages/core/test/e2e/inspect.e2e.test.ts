@@ -6,19 +6,18 @@ import {
   STORAGE_PROVIDER_STRATEGIES,
   storageProviderTest,
 } from "@test/helpers/storage-provider-test";
+import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Inspect E2E Tests (%s)",
   ([, storageProviderFactory]) => {
     storageProviderTest.scoped({ storageProviderFactory });
 
-    storageProviderTest(
-      "inspect artifact by tag",
-      async ({ storageProvider, localStorage }) => {
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - inspect artifact by tag",
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
-        const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -29,7 +28,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           {
             force: false,
-            debug: false,
+            debug: true,
             silent: true,
           },
         );
@@ -76,12 +75,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       },
     );
 
-    storageProviderTest(
-      "inspect artifact by ID",
-      async ({ storageProvider, localStorage }) => {
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - inspect artifact by ID",
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-        const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER;
 
         await localStorage.ensureProjectSetup(project);
 

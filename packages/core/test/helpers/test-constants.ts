@@ -19,88 +19,190 @@ export const TEST_CONSTANTS = {
     LATEST: "latest",
   },
   ARTIFACTS_FIXTURES: {
-    HARDHAT_V2_COUNTER: {
-      folderPath: path.resolve(
-        process.cwd(),
-        "test/fixtures/hardhat-v2-counter",
-      ),
-      buildInfoPaths: [
-        path.resolve(
-          process.cwd(),
-          "test/fixtures/hardhat-v2-counter/build-info/sample-artifact.json",
-        ),
-      ],
-      fullyQualifiedContractPaths: [
-        "src/Counter.sol:Counter",
-        "src/IncrementOracle.sol:IncrementOracle",
-      ],
-      exportExpectedResult: {
-        path: "src/Counter.sol",
-        name: "Counter",
-        abiPath: path.resolve(
-          process.cwd(),
-          "test/fixtures/hardhat-v2-counter/abis/counter.json",
-        ),
+    // Group #1: Unique Counter contract
+    COUNTER: {
+      TARGETS: {
+        HARDHAT_V2: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter_hardhat-v2",
+          ),
+          fullyQualifiedContractPaths: ["src/Counter.sol:Counter"],
+          exportExpectedResult: {
+            path: "src/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter.abi.json",
+          ),
+        },
+        HARDHAT_V3: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter_hardhat-v3",
+          ),
+          fullyQualifiedContractPaths: [
+            "project/contracts/Counter.sol:Counter",
+          ],
+          exportExpectedResult: {
+            path: "project/contracts/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter.abi.json",
+          ),
+        },
+        FOUNDRY_DEFAULT: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter_foundry-default",
+          ),
+          fullyQualifiedContractPaths: ["src/Counter.sol:Counter"],
+          exportExpectedResult: {
+            path: "src/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter.abi.json",
+          ),
+        },
+        FOUNDRY_BUILD_INFO: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter_foundry-build-info",
+          ),
+          fullyQualifiedContractPaths: ["src/Counter.sol:Counter"],
+          exportExpectedResult: {
+            path: "src/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/counter.abi.json",
+          ),
+        },
       },
     },
-    HARDHAT_V3_COUNTER: {
-      folderPath: path.resolve(
-        process.cwd(),
-        "test/fixtures/hardhat-v3-counter",
-      ),
-      buildInfoPaths: [
-        path.resolve(
-          process.cwd(),
-          "test/fixtures/hardhat-v3-counter/build-info/sample-artifact.json",
-        ),
-      ],
-      fullyQualifiedContractPaths: ["project/contracts/Counter.sol:Counter"],
-      exportExpectedResult: {
-        path: "project/contracts/Counter.sol",
-        name: "Counter",
-        abiPath: path.resolve(
-          process.cwd(),
-          "test/fixtures/hardhat-v3-counter/abis/counter.json",
-        ),
-      },
-    },
-    FOUNDRY_COUNTER: {
-      folderPath: path.resolve(process.cwd(), "test/fixtures/foundry-counter"),
-      buildInfoPaths: [
-        path.resolve(
-          process.cwd(),
-          "test/fixtures/foundry-counter/build-info/sample-artifact.json",
-        ),
-      ],
-      fullyQualifiedContractPaths: ["src/Counter.sol:Counter"],
-      exportExpectedResult: {
-        path: "src/Counter.sol",
-        name: "Counter",
-        abiPath: path.resolve(
-          process.cwd(),
-          "test/fixtures/foundry-counter/abis/counter.json",
-        ),
-      },
-    },
-    FOUNDRY_BUILD_INFO_COUNTER: {
-      folderPath: path.resolve(
-        process.cwd(),
-        "test/fixtures/foundry-build-info-counter",
-      ),
-      buildInfoPaths: [
-        path.resolve(
-          process.cwd(),
-          "test/fixtures/foundry-build-info-counter/build-info/sample-artifact.json",
-        ),
-      ],
-      fullyQualifiedContractPaths: ["src/Counter.sol:Counter"],
-      exportExpectedResult: {
-        path: "src/Counter.sol",
-        name: "Counter",
-        abiPath: path.resolve(
-          process.cwd(),
-          "test/fixtures/foundry-build-info-counter/abis/counter.json",
-        ),
+    // Group #2: Mix
+    // InternalMath: internal library
+    // ExternalMath: external library
+    // Oracle: contract: depending of Ownable of OpenZeppelin
+    // Counter contract: depending of InternalMath, ExternalMath and Oracle contracts
+    MIX: {
+      TARGETS: {
+        HARDHAT_V2: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix_hardhat-v2",
+          ),
+          fullyQualifiedContractPaths: [
+            "@openzeppelin/contracts/access/Ownable.sol:Ownable",
+            "@openzeppelin/contracts/utils/Context.sol:Context",
+            "src/Counter.sol:Counter",
+            "src/ExternalMath.sol:ExternalMath",
+            "src/InternalMath.sol:InternalMath",
+            "src/Oracle.sol:Oracle",
+          ],
+          exportExpectedResult: {
+            path: "src/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix.counter.abi.json",
+          ),
+        },
+        HARDHAT_V3_ISOLATED_BUILD: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix_hardhat-v3-isolated-build",
+          ),
+          fullyQualifiedContractPaths: [
+            "npm/@openzeppelin/contracts@5.6.1/access/Ownable.sol:Ownable",
+            "npm/@openzeppelin/contracts@5.6.1/utils/Context.sol:Context",
+            "project/contracts/Counter.sol:Counter",
+            "project/contracts/ExternalMath.sol:ExternalMath",
+            "project/contracts/InternalMath.sol:InternalMath",
+            "project/contracts/Oracle.sol:Oracle",
+          ],
+          exportExpectedResult: {
+            path: "project/contracts/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix.counter.abi.json",
+          ),
+        },
+        HARDHAT_V3_NON_ISOLATED_BUILD: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix_hardhat-v3-non-isolated-build",
+          ),
+          fullyQualifiedContractPaths: [
+            "npm/@openzeppelin/contracts@5.6.1/access/Ownable.sol:Ownable",
+            "npm/@openzeppelin/contracts@5.6.1/utils/Context.sol:Context",
+            "project/contracts/Counter.sol:Counter",
+            "project/contracts/ExternalMath.sol:ExternalMath",
+            "project/contracts/InternalMath.sol:InternalMath",
+            "project/contracts/Oracle.sol:Oracle",
+          ],
+          exportExpectedResult: {
+            path: "project/contracts/Counter.sol",
+            name: "Counter",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix.counter.abi.json",
+          ),
+        },
+        FOUNDRY_DEFAULT: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix_foundry-default",
+          ),
+          fullyQualifiedContractPaths: [
+            "lib/openzeppelin-contracts/contracts/access/Ownable.sol:Ownable",
+            "lib/openzeppelin-contracts/contracts/utils/Context.sol:Context",
+            "src/Counter.sol:Counter",
+            "src/ExternalMath.sol:ExternalMath",
+            "src/InternalMath.sol:InternalMath",
+            "src/Oracle.sol:Oracle",
+          ],
+          exportExpectedResult: {
+            name: "Counter",
+            path: "src/Counter.sol",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix.counter.abi.json",
+          ),
+        },
+        FOUNDRY_BUILD_INFO: {
+          folderPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix_foundry-build-info",
+          ),
+          fullyQualifiedContractPaths: [
+            "lib/openzeppelin-contracts/contracts/access/Ownable.sol:Ownable",
+            "lib/openzeppelin-contracts/contracts/utils/Context.sol:Context",
+            "src/Counter.sol:Counter",
+            "src/ExternalMath.sol:ExternalMath",
+            "src/InternalMath.sol:InternalMath",
+            "src/Oracle.sol:Oracle",
+          ],
+          exportExpectedResult: {
+            name: "Counter",
+            path: "src/Counter.sol",
+          },
+          abiPath: path.resolve(
+            process.cwd(),
+            "test/fixtures/mix.counter.abi.json",
+          ),
+        },
       },
     },
   },

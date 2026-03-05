@@ -9,6 +9,8 @@ import {
   STORAGE_PROVIDER_STRATEGIES,
   storageProviderTest,
 } from "@test/helpers/storage-provider-test";
+import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
+import { deriveAllPathsInDirectory } from "@test/helpers/derive-all-paths-in-directory";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Restore E2E Tests (%s)",
@@ -36,7 +38,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
           const tag = TEST_CONSTANTS.TAGS.V1;
           const artifactFixture =
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
           await localStorage.ensureProjectSetup(project);
 
@@ -89,7 +91,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
           const tag = TEST_CONSTANTS.TAGS.V1;
           const artifactFixture =
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
           await localStorage.ensureProjectSetup(project);
 
@@ -146,7 +148,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
           const tag = TEST_CONSTANTS.TAGS.V1;
           const artifactFixture =
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
           await localStorage.ensureProjectSetup(project);
 
@@ -198,7 +200,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
           const tag = TEST_CONSTANTS.TAGS.V1;
           const artifactFixture =
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+            TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
           await localStorage.ensureProjectSetup(project);
 
@@ -285,58 +287,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       );
     });
 
-    storageProviderTest.for([
-      [
-        "Hardhat V3",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
-        [
-          ...TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.buildInfoPaths.flatMap(
-            (buildInfoPath) => [
-              buildInfoPath,
-              buildInfoPath.replace(".json", ".output.json"),
-            ],
-          ),
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.folderPath,
-            "contracts/Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-      [
-        "Hardhat V2",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER,
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER.buildInfoPaths,
-      ],
-      [
-        "Forge default",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER,
-        [
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.buildInfoPaths[0],
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.folderPath,
-            "Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-      [
-        "Forge with build-info",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER,
-        [
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
-            .buildInfoPaths[0],
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
-              .folderPath,
-            "Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-    ] as const)(
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - restore by tag",
-      async (
-        [, artifactFixture, expectedOriginalPaths],
-        { storageProvider, localStorage },
-      ) => {
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
 
@@ -371,6 +324,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         expect(result.project).toBe(project);
         expect(result.tag).toBe(tag);
+        const expectedOriginalPaths = await deriveAllPathsInDirectory(
+          artifactFixture.folderPath,
+        );
         const expectedPaths = expectedOriginalPaths.map(sanitizePath);
 
         expect(result.filesRestored.length).toBe(expectedPaths.length);
@@ -383,58 +339,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       },
     );
 
-    storageProviderTest.for([
-      [
-        "Hardhat V3",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER,
-        [
-          ...TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.buildInfoPaths.flatMap(
-            (buildInfoPath) => [
-              buildInfoPath,
-              buildInfoPath.replace(".json", ".output.json"),
-            ],
-          ),
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER.folderPath,
-            "contracts/Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-      [
-        "Hardhat V2",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER,
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V2_COUNTER.buildInfoPaths,
-      ],
-      [
-        "Forge default",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER,
-        [
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.buildInfoPaths[0],
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_COUNTER.folderPath,
-            "Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-      [
-        "Forge with build-info",
-        TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER,
-        [
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
-            .buildInfoPaths[0],
-          path.resolve(
-            TEST_CONSTANTS.ARTIFACTS_FIXTURES.FOUNDRY_BUILD_INFO_COUNTER
-              .folderPath,
-            "Counter.sol/Counter.json",
-          ),
-        ],
-      ],
-    ] as const)(
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - restore by ID",
-      async (
-        [, artifactFixture, expectedOriginalPaths],
-        { storageProvider, localStorage },
-      ) => {
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
         await localStorage.ensureProjectSetup(project);
@@ -475,6 +382,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(result.project).toBe(project);
         expect(result.tag).toBe(null);
         expect(result.id).toBe(artifactId);
+        const expectedOriginalPaths = await deriveAllPathsInDirectory(
+          artifactFixture.folderPath,
+        );
         const expectedPaths = expectedOriginalPaths.map(sanitizePath);
 
         expect(result.filesRestored.length).toBe(expectedPaths.length);

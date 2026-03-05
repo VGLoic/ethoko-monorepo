@@ -7,19 +7,18 @@ import {
   STORAGE_PROVIDER_STRATEGIES,
   storageProviderTest,
 } from "@test/helpers/storage-provider-test";
+import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Export E2E Tests (%s)",
   ([, storageProviderFactory]) => {
     storageProviderTest.scoped({ storageProviderFactory });
 
-    storageProviderTest(
-      "export contract artifact by tag",
-      async ({ storageProvider, localStorage }) => {
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - export contract artifact by tag",
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
-        const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -72,40 +71,20 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(exportResult.linkReferences).toEqual(expect.any(Object));
         expect(exportResult.deployedLinkReferences).toEqual(expect.any(Object));
         expect(exportResult.evm).toEqual(expect.any(Object));
-        const expectedAbi = await fs
-          .readFile(exportFixture.abiPath, "utf-8")
-          .then(JSON.parse);
-        expect(exportResult.abi).toEqual(expectedAbi);
+        const expectedAbi = (await fs
+          .readFile(artifactFixture.abiPath, "utf-8")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .then(JSON.parse)) as any[];
+        expect(exportResult.abi.sort(sortAbiItem)).toEqual(
+          expectedAbi.sort(sortAbiItem),
+        );
       },
     );
 
-    storageProviderTest(
-      "export with non-existent artifact returns error",
-      async ({ localStorage }) => {
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - export contract artifact by ID",
+      async ([, artifactFixture], { storageProvider, localStorage }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-
-        await localStorage.ensureProjectSetup(project);
-
-        await expect(
-          exportContractArtifact(
-            { project, search: { type: "tag", tag: "non-existent-tag" } },
-            "Counter",
-            localStorage,
-            {
-              debug: false,
-              silent: true,
-            },
-          ),
-        ).rejects.toThrow();
-      },
-    );
-
-    storageProviderTest(
-      "export contract artifact by ID",
-      async ({ storageProvider, localStorage }) => {
-        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
-        const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
 
         await localStorage.ensureProjectSetup(project);
 
@@ -158,10 +137,34 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(exportResult.linkReferences).toEqual(expect.any(Object));
         expect(exportResult.deployedLinkReferences).toEqual(expect.any(Object));
         expect(exportResult.evm).toEqual(expect.any(Object));
-        const expectedAbi = await fs
-          .readFile(exportFixture.abiPath, "utf-8")
-          .then(JSON.parse);
-        expect(exportResult.abi).toEqual(expectedAbi);
+        const expectedAbi = (await fs
+          .readFile(artifactFixture.abiPath, "utf-8")
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          .then(JSON.parse)) as any[];
+        expect(exportResult.abi.sort(sortAbiItem)).toEqual(
+          expectedAbi.sort(sortAbiItem),
+        );
+      },
+    );
+
+    storageProviderTest(
+      "export with non-existent artifact returns error",
+      async ({ localStorage }) => {
+        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+
+        await localStorage.ensureProjectSetup(project);
+
+        await expect(
+          exportContractArtifact(
+            { project, search: { type: "tag", tag: "non-existent-tag" } },
+            "Counter",
+            localStorage,
+            {
+              debug: false,
+              silent: true,
+            },
+          ),
+        ).rejects.toThrow();
       },
     );
 
@@ -173,7 +176,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await localStorage.ensureProjectSetup(project);
 
         const artifactFixture =
-          TEST_CONSTANTS.ARTIFACTS_FIXTURES.HARDHAT_V3_COUNTER;
+          TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -214,3 +217,20 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
   },
 );
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function sortAbiItem(a: any, b: any): number {
+  if (a.name < b.name) {
+    return -1;
+  }
+  if (a.name > b.name) {
+    return 1;
+  }
+  if (a.type < b.type) {
+    return -1;
+  }
+  if (a.type > b.type) {
+    return 1;
+  }
+  return 0;
+}
