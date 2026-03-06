@@ -1,5 +1,6 @@
 import fs from "fs/promises";
-import { E2E_FOLDER_PATH } from "./e2e-folder-path.js";
+import { BUILD, E2E_FOLDER_PATH } from "./config.js";
+import { asyncExec } from "./async-exec.js";
 
 export async function setup(): Promise<void> {
   console.log("\n========================================");
@@ -9,6 +10,9 @@ export async function setup(): Promise<void> {
   await cleanUpLocalEthokoStorage();
 
   await fs.mkdir(E2E_FOLDER_PATH, { recursive: true });
+
+  console.log("🔨 Compiling contracts...");
+  await asyncExec(BUILD.command);
 
   console.log("\n✅ Test ready to be run!\n");
 }
