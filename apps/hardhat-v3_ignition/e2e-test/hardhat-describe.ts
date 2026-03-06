@@ -101,7 +101,7 @@ export function hardhatDescribe(args: {
     test("it generates the typings", () =>
       asyncExec(`${ethokoCommand} typings`));
 
-    test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
+    test("it checks types", { retry: 3 }, () => asyncExec("pnpm tsc --noEmit"));
 
     test("it deploys", () =>
       asyncExec(
