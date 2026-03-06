@@ -1,6 +1,5 @@
 import fs from "fs/promises";
-import { E2E_FOLDER_PATH } from "./e2e-folder-path.js";
-import { BUILDS } from "./config.js";
+import { BUILDS, E2E_FOLDER_PATH } from "./config.js";
 import { asyncExec } from "./async-exec.js";
 
 export async function setup(): Promise<void> {
