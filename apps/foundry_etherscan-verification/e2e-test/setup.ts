@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import { asyncExec } from "./async-exec.js";
+import { asyncExec } from "./helpers/async-exec.js";
 import { GlobalFolder } from "./helpers/global-folder.js";
 import { COMPILATION_TARGETS } from "./compilation-targets.js";
 

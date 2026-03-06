@@ -1,5 +1,5 @@
 import { test } from "vitest";
-import { asyncExec } from "./async-exec.js";
+import { asyncExec } from "./helpers/async-exec.js";
 import { COMPILATION_TARGETS } from "./compilation-targets.js";
 import { GlobalFolder } from "./helpers/global-folder.js";
 

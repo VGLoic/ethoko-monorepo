@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { GlobalFolder } from "./helpers/global-folder.js";
-import { asyncExec } from "./async-exec.js";
+import { asyncExec } from "./helpers/async-exec.js";
 import { COMPILATION_TARGETS } from "./compilation-targets.js";
 
 export async function setup(): Promise<void> {
