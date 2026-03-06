@@ -1,6 +1,7 @@
 import { test } from "vitest";
 import { asyncExec } from "./async-exec.js";
-import { E2E_FOLDER_PATH, BUILD } from "./config.js";
+import { COMPILATION_TARGETS } from "./compilation-targets.js";
+import { GlobalFolder } from "./helpers/global-folder.js";
 
 export function testPushPull({
   ethokoCommand,
@@ -13,7 +14,7 @@ export function testPushPull({
   // This is likely due to some eventual consistency in the file system, but we haven't investigated further as allowing for retries is a simple workaround.
   test("it pushes the tag", { retry: 3 }, () =>
     asyncExec(
-      `${ethokoCommand} push --tag ${tag} --artifact-path ${BUILD.outputPath} --debug`,
+      `${ethokoCommand} push --tag ${tag} --artifact-path ${COMPILATION_TARGETS.WITHOUT_BUILD_INFO_WITHOUT_TEST.outputPath} --debug`,
     ),
   );
 
@@ -23,8 +24,8 @@ export function testPushPull({
 
   test("it restores the original artifacts", async () => {
     await asyncExec(
-      `${ethokoCommand} restore --tag ${tag} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${tag}`,
+      `${ethokoCommand} restore --tag ${tag} --output ./${GlobalFolder.path}/restored-artifacts-${tag}`,
     );
-    await asyncExec(`ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${tag}`);
+    await asyncExec(`ls -la ./${GlobalFolder.path}/restored-artifacts-${tag}`);
   });
 }
