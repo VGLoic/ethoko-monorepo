@@ -5,74 +5,74 @@ on:
       - main
 concurrency: ${{ github.workflow }}-${{ github.ref }}
 jobs:
-  # build:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-      # - uses: actions/setup-node@v6
-      #   with:
-      #     node-version-file: .nvmrc
-      #     cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm build
-  # check-format:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-  #     - name: Install Foundry
-  #       uses: foundry-rs/foundry-toolchain@v1
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version-file: .nvmrc
-  #         cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm check-format
-  # check-types:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version-file: .nvmrc
-  #         cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm check-types
-  # lint:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version-file: .nvmrc
-  #         cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm lint
-  # test:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version-file: .nvmrc
-  #         cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm test
-  # test-e2e-core:
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v5
-  #     - uses: pnpm/action-setup@v4
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version-file: .nvmrc
-  #         cache: "pnpm"
-  #     - run: pnpm install
-  #     - run: pnpm test:e2e:core
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm build
+  check-format:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - name: Install Foundry
+        uses: foundry-rs/foundry-toolchain@v1
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm check-format
+  check-types:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm check-types
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm lint
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm test
+  test-e2e-core:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm test:e2e:core
   test-e2e-apps:
     runs-on: ubuntu-latest
     steps:
@@ -92,4 +92,4 @@ jobs:
       # Note that it works very well for the other apps without this step
       - run: pnpm build --filter=@ethoko/cli
       - run: pnpm install --filter=uniswap-v4-core
-      - run: pnpm test:e2e:apps --filter=uniswap-v4-core
+      - run: pnpm test:e2e:apps
