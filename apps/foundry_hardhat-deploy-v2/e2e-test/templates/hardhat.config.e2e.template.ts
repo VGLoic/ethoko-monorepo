@@ -9,7 +9,7 @@ import HardhatDeploy from "hardhat-deploy";
 export default defineConfig({
   plugins: [hardhatToolboxViemPlugin, HardhatEthoko, HardhatDeploy],
   ethoko: {
-    project: "forge-counter",
+    project: "PROJECT_NAME",
     pulledArtifactsPath: "PULLED_ARTIFACTS_PATH",
     typingsPath: "TYPINGS_PATH",
     storageConfiguration: {

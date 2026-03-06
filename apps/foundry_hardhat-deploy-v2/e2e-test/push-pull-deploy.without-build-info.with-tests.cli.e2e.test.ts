@@ -1,14 +1,43 @@
-import { E2E_FOLDER_PATH } from "./e2e-folder-path.js";
-import { foundryDescribe } from "./foundry-describe.js";
+import { beforeAll, describe } from "vitest";
+import crypto from "crypto";
+import {
+  BUILDS,
+  CliConfigSetup,
+  ConfigSetup,
+  HardhatConfigSetup,
+  HardhatDeployScriptSetup,
+} from "./config.js";
+import { testPushPullDeploy } from "./test-push-pull-deploy.js";
 
-const outputArtifactsPath = `${E2E_FOLDER_PATH}/out-2026-cli-forge-default-full`;
+describe("[Foundry Hardhat-deploy v2] - Compilation WITHOUT --build-info WITH test and scripts - Push artifact, pull artifact, deploy - CLI", () => {
+  // The testId is used to create unique paths for the storage, pulled artifacts and typings for each test run
+  const testId = crypto.randomBytes(16).toString("hex");
+  const tag = testId;
 
-foundryDescribe({
-  title:
-    "[Foundry Hardhat-deploy v2] - Default compilation WITHOUT --build-info WITH test and scripts - Push artifact, pull artifact, deploy",
-  build: {
-    command: `forge build --out ${outputArtifactsPath} --cache-path ${outputArtifactsPath}-cache`,
-    outputArtifactsPath,
-  },
-  runner: "cli",
+  const config = new ConfigSetup(testId);
+  const cliConfigSetup = new CliConfigSetup(config);
+  const hardhatConfigSetup = new HardhatConfigSetup(config);
+  const deploymentScriptSetup = new HardhatDeployScriptSetup(config);
+
+  const ethokoCommand = `pnpm ethoko --config ${cliConfigSetup.cliConfigPath}`;
+
+  beforeAll(async () => {
+    const cliCleanup = await cliConfigSetup.setup();
+    const hardhatCleanup = await hardhatConfigSetup.setup();
+    const deploymentScriptCleanup = await deploymentScriptSetup.setup();
+
+    return async () => {
+      await config.cleanup();
+      await cliCleanup();
+      await hardhatCleanup();
+      await deploymentScriptCleanup();
+    };
+  });
+
+  testPushPullDeploy({
+    ethokoCommand,
+    tag,
+    hardhatConfigPath: hardhatConfigSetup.hardhatConfigPath,
+    outputArtifactsPath: BUILDS.WITHOUT_BUILD_INFO_WITH_TEST.outputPath,
+  });
 });
