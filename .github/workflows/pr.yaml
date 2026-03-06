@@ -87,9 +87,10 @@ jobs:
           node-version-file: .nvmrc
           cache: "pnpm"
       - run: pnpm install
-      # For obscure reasons, the CLI needs to be explictly built and reinstalled in `uniswap-v4-core` for the e2e tests.
-      # Otherwise, the observed behavior is that uniswap-v4-core is not finding the Ethoko CLI binary
+      # For obscure reasons, the CLI needs to be explictly built and reinstalled in `uniswap-v4-core` and `hardhat-v2_hardhat-deploy-v0` for the e2e tests.
+      # Otherwise, the observed behavior is that the apps are not finding the Ethoko CLI binary
       # Note that it works very well for the other apps without this step
       - run: pnpm build --filter=@ethoko/cli
       - run: pnpm install --filter=uniswap-v4-core
+      - run: pnpm install --filter=hardhat-v2_hardhat-deploy-v0
       - run: pnpm test:e2e:apps
