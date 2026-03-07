@@ -1,39 +1,41 @@
-import { describe, test } from "vitest";
-import { asyncExec } from "./async-exec";
-import { E2E_FOLDER_PATH } from "./e2e-folder-path";
+import { beforeAll, describe } from "vitest";
+import crypto from "crypto";
+import { COMPILATION_TARGETS } from "./compilation-targets.js";
+import {
+  ConfigSetup,
+  HardhatConfigSetup,
+  HardhatDeployScriptSetup,
+} from "./helpers/test-setup.js";
+import { testPushPullDeploy } from "./test-push-pull-deploy.js";
 
-const TAG_NAME = "2026-02-04";
+describe("[Hardhat v2 - Hardhat-deploy v0] Push artifact, pull artifact, deploy - Hardhat Plugin", () => {
+  const testId = crypto.randomBytes(16).toString("hex");
+  const tag = testId;
 
-describe("[Hardhat v2 - Hardhat-deploy v0] Push artifact, pull artifact, deploy", async () => {
-  test("it compiles", () =>
-    asyncExec(
-      "npx hardhat compile --force --no-typechain --config ./hardhat.config.e2e.ts",
-    ));
+  const config = new ConfigSetup(testId);
+  const hardhatConfigSetup = new HardhatConfigSetup(config);
+  const deploymentScriptSetup = new HardhatDeployScriptSetup(config);
 
-  test("it pushes the tag", () =>
-    asyncExec(
-      `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${TAG_NAME}`,
-    ));
+  const ethokoCommand = `pnpm hardhat ethoko --config ${hardhatConfigSetup.hardhatConfigPath}`;
 
-  test("it pulls the tag", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
+  beforeAll(async () => {
+    const configCleanup = await config.setup();
+    const hardhatCleanup = await hardhatConfigSetup.setup();
+    const deploymentScriptCleanup = await deploymentScriptSetup.setup();
 
-  test("it generates the typings", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko typings"));
+    return async () => {
+      await deploymentScriptCleanup();
+      await hardhatCleanup();
+      await configCleanup();
+    };
+  });
 
-  test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
-
-  test("it deploys", () =>
-    asyncExec(
-      "npx hardhat --config ./hardhat.config.e2e.ts deploy --no-compile",
-    ));
-
-  test("it restores the original artifacts", async () => {
-    await asyncExec(
-      `npx hardhat --config ./hardhat.config.e2e.ts ethoko restore --tag ${TAG_NAME} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
-    );
-    await asyncExec(
-      `ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
-    );
+  testPushPullDeploy({
+    ethokoCommand,
+    tag,
+    hardhatConfigPath: hardhatConfigSetup.hardhatConfigPath,
+    outputArtifactsPath: COMPILATION_TARGETS.DEFAULT.outputPath,
+    deploymentScriptFolderPath:
+      deploymentScriptSetup.deploymentScriptFolderPath,
   });
 });
