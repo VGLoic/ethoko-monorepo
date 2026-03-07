@@ -28,12 +28,9 @@ export async function teardown(): Promise<void> {
 }
 
 async function compileContracts() {
-  await Promise.all([
-    asyncExec(COMPILATION_TARGETS.WITHOUT_BUILD_INFO_WITHOUT_TEST.command),
-    asyncExec(COMPILATION_TARGETS.WITHOUT_BUILD_INFO_WITH_TEST.command),
-    asyncExec(COMPILATION_TARGETS.WITH_BUILD_INFO_WITHOUT_TEST.command),
-    asyncExec(COMPILATION_TARGETS.WITH_BUILD_INFO_WITH_TEST.command),
-  ]);
+  for (const target of Object.values(COMPILATION_TARGETS)) {
+    await asyncExec(target.command);
+  }
 }
 
 async function cleanUpCompiledArtifacts() {
