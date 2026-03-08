@@ -28,8 +28,14 @@ export async function teardown(): Promise<void> {
 }
 
 async function compileContracts() {
-  for (const target of Object.values(COMPILATION_TARGETS)) {
-    await asyncExec(target.command);
+  const [firstCommand, ...restCommands] = Object.values(
+    COMPILATION_TARGETS,
+  ).map((target) => target.command);
+  // We run one command before the others in order to load solc once and not have concurrent lazy load of solc
+  // See https://github.com/foundry-rs/foundry/issues/4736
+  await asyncExec(firstCommand);
+  for (const command of restCommands) {
+    await asyncExec(command);
   }
 }
 
