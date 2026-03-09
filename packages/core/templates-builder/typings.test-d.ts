@@ -5,10 +5,10 @@ import type {
   EthokoBuildInfoOutput,
 } from "./typings";
 import type {
-  EthokoContractArtifact,
   EthokoInputArtifact,
   EthokoOutputArtifact,
 } from "@/utils/ethoko-artifacts-schemas/v0";
+import { ExportContractArtifactResult } from "@/cli-client";
 
 test("EthokoBuildInfoInput in generated typings is ok with Ethoko artifacts", () => {
   assertType<EthokoBuildInfoInput>({} as unknown as EthokoInputArtifact);
@@ -19,7 +19,7 @@ test("EthokoBuildInfoOutput in generated typings is ok with Ethoko artifacts", (
 
 test("EthokoContractArtifact matches ContractArtifact in typings", () => {
   assertType<TypingsEthokoContractArtifact>(
-    {} as unknown as EthokoContractArtifact,
+    {} as unknown as ExportContractArtifactResult,
   );
 });
 
