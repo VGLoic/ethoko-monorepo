@@ -27,6 +27,6 @@ export const config = [
     },
   },
   {
-    ignores: ["dist/**", "artifacts/**", "node_modules/**", "out/**"],
+    ignores: ["dist/**", "artifacts/**", "node_modules/**", "out/**", "lib/**", "generated/**" ],
   },
 ];

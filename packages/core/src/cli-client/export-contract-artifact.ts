@@ -1,10 +1,51 @@
 import { LocalStorage } from "../local-storage";
-import { EthokoContractArtifact } from "../utils/ethoko-artifacts-schemas/v0";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 
-export type ExportContractArtifactResult = EthokoContractArtifact & {
+type ContractBytecode = {
+  functionDebugData?: unknown;
+  object: string;
+  opcodes?: string;
+  sourceMap?: string;
+  generatedSources?: unknown[];
+  linkReferences: Record<
+    string,
+    Record<string, { start: number; length: number }[]>
+  >;
+};
+export type ExportContractArtifactResult = {
   tag: string | null;
+  _format: "ethoko-contract-artifact-v0";
+  id: string;
+  project: string;
+  abi: unknown[];
+  metadata: string;
+  bytecode: `0x${string}`;
+  deployedBytecode: `0x${string}`;
+  linkReferences: Record<
+    string,
+    Record<string, { start: number; length: number }[]>
+  >;
+  deployedLinkReferences: Record<
+    string,
+    Record<string, { start: number; length: number }[]>
+  >;
+  contractName: string;
+  sourceName: string;
+  userdoc?: unknown;
+  devdoc?: unknown;
+  storageLayout?: unknown;
+  evm: {
+    assembly?: string;
+    bytecode: ContractBytecode;
+    deployedBytecode?: ContractBytecode & { immutableReferences?: unknown };
+    gasEstimates?: {
+      creation?: Record<string, string>;
+      external?: Record<string, string>;
+      internal?: Record<string, string>;
+    } | null;
+    methodIdentifiers?: Record<string, string>;
+  };
 };
 
 export async function exportContractArtifact(
@@ -91,11 +132,9 @@ export async function exportContractArtifact(
       contract,
       artifactResult.value.id,
       artifact.project,
+      artifact.search.type === "tag" ? artifact.search.tag : null,
     );
-    return {
-      ...contractArtifact,
-      tag: artifact.search.type === "tag" ? artifact.search.tag : null,
-    };
+    return contractArtifact;
   }
 
   // Else, we should be in the fully qualified contract name case, so we should have a string in the format <sourcePath>:<contractName>
@@ -134,11 +173,9 @@ export async function exportContractArtifact(
     contract,
     artifactResult.value.id,
     artifact.project,
+    artifact.search.type === "tag" ? artifact.search.tag : null,
   );
-  return {
-    ...contractArtifact,
-    tag: artifact.search.type === "tag" ? artifact.search.tag : null,
-  };
+  return contractArtifact;
 }
 
 function deriveDisplayArtifactName(
@@ -156,9 +193,11 @@ function prefixWith0x(s: string): `0x${string}` {
   return `0x${s}`;
 }
 
-type ContractOutput = EthokoContractArtifact extends { evm: infer EvmType }
+type ContractOutput = ExportContractArtifactResult extends {
+  evm: infer EvmType;
+}
   ? {
-      abi: EthokoContractArtifact["abi"];
+      abi: ExportContractArtifactResult["abi"];
       metadata?: string;
       userdoc?: unknown;
       devdoc?: unknown;
@@ -179,8 +218,10 @@ function buildContractArtifact(
   contract: ContractOutput,
   artifactId: string,
   project: string,
-): EthokoContractArtifact {
+  tag: string | null,
+): ExportContractArtifactResult {
   return {
+    tag,
     _format: "ethoko-contract-artifact-v0",
     id: artifactId,
     project,
@@ -205,6 +246,6 @@ function buildContractArtifact(
     userdoc: contract.userdoc,
     devdoc: contract.devdoc,
     storageLayout: contract.storageLayout,
-    evm: contract.evm as EthokoContractArtifact["evm"],
+    evm: contract.evm as ExportContractArtifactResult["evm"],
   };
 }

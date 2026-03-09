@@ -260,6 +260,7 @@ function buildInfoToContractArtifact(
     );
   }
   return {
+    tag,
     _format: "ethoko-contract-artifact-v0",
     id: buildInfoOutput.id,
     project,
@@ -622,6 +623,10 @@ interface LinkReferences {
 export interface EthokoContractArtifact<
   TAbi extends readonly unknown[] = readonly unknown[],
 > {
+  /**
+   * Tag of the artifact, null if the artifact was retrieved using an ID instead of a tag
+   */
+  readonly tag: string | null;
   /**
    * Format, hardcoded to `ethoko-contract-artifact-v0` for now
    */
