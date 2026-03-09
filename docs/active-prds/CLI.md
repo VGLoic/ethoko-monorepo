@@ -1358,14 +1358,14 @@ pnpm test:e2e:apps
 
 **Tasks:**
 
-1. Install Bun via pnpm devDependency in `packages/cli`
-2. Create build script (`scripts/build-binary.ts`) using Bun API
-   - Loop through 5 platforms
-   - Use `Bun.build({ compile: { ... } })` for each target
-   - Output to `binaries/` directory
-3. Test local platform binary
-4. Add `build:binary` script to `package.json`
-5. Add CI smoke test (Ubuntu only) for `--version`
+1. ✅ Install Bun via pnpm devDependency in `packages/cli`
+2. ✅ Create build script (`scripts/build-binary.ts`) using Bun API
+   - ✅ Loop through 5 platforms
+   - ✅ Use `Bun.build({ compile: { ... } })` for each target
+   - ✅ Output to `binaries/` directory
+3. ✅ Test local platform binary
+4. ✅ Add `build:binary` script to `package.json`
+5. ✅ Add CI smoke test (Ubuntu only) for `--version`
 
 **Build Script Implementation:**
 
@@ -1422,6 +1422,14 @@ pnpm --filter @ethoko/cli build:binary
 - ✅ 5 compiled binaries in `packages/cli/binaries/`
 - ✅ Binaries are 30-50MB each
 - ✅ Binaries run without Node.js
+
+**Implementation Notes:**
+
+- ✅ `packages/cli/scripts/build-binary.ts` (Bun API build script)
+- ✅ `packages/cli/package.json` includes `build:binary`, `bun`, `@types/bun`
+- ✅ `packages/cli/tsconfig.json` includes `scripts` + `bun` types
+- ✅ `.github/workflows/pr.yaml` runs Ubuntu smoke test
+- ✅ Root `package.json` allowlists Bun via `pnpm.onlyBuiltDependencies`
 
 ---
 
