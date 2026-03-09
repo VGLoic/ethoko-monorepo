@@ -1,7 +1,7 @@
 # Product Requirements Document: Ethoko Standalone CLI
 
 **Document Version:** 1.0  
-**Last Updated:** March 5, 2026  
+**Last Updated:** March 9, 2026  
 **Status:** Draft - Ready for Implementation  
 **Owner:** Engineering Team
 
@@ -872,7 +872,7 @@ COPY ethoko /usr/local/bin/ethoko
 ### Phase 1: CLI Package Structure + Integration Tests (11-12 hours)
 
 **Status:** ✅ Completed  
-**Last Updated:** March 5, 2026
+**Last Updated:** March 9, 2026
 
 **Goal:** Create `@ethoko/cli` package with all commands runnable with Node.js, AND update all integration apps to test both Hardhat plugin and CLI in parallel.
 
@@ -993,11 +993,11 @@ COPY ethoko /usr/local/bin/ethoko
 
 **Key Architecture Changes:**
 
-1. ✅ **Compilation moves to `setup.ts`** - Run once before all tests
-2. ✅ **Tests run in parallel** - Hardhat plugin + CLI simultaneously
-3. ✅ **Separate CLI test files** - `push-pull-deploy.cli.e2e.test.ts`
-4. ✅ **Different tags prevent conflicts** - `2026-hardhat-plugin` vs `2026-cli`
-5. ✅ **Duplicate deployment scripts** - Per-tag deployment files
+1. ✅ **Helper-driven E2E harness** - Shared setup utilities per app (config + storage)
+2. ✅ **Per-test config generation** - Temporary Hardhat/CLI config files from templates
+3. ✅ **Per-test unique tags** - Randomized tags avoid storage collisions in parallel runs
+4. ✅ **Separate CLI/Hardhat suites** - `*.cli.e2e.test.ts` and `*.hardhat.e2e.test.ts`
+5. ✅ **Targeted compilation helpers** - Isolated vs non-isolated build targets where needed
 
 ---
 
@@ -1025,54 +1025,43 @@ COPY ethoko /usr/local/bin/ethoko
 }
 ```
 
-**2. Create `ethoko.json`** (extract from `hardhat.config.e2e.ts`):
+**2. Add E2E config templates** (Hardhat + CLI):
 
 ```json
 {
-  "project": "ignited-counter",
-  "pulledArtifactsPath": "./.ethoko-e2e/.ethoko",
-  "typingsPath": "./.ethoko-typings",
+  "project": "PROJECT_NAME",
+  "pulledArtifactsPath": "PULLED_ARTIFACTS_PATH",
+  "typingsPath": "TYPINGS_PATH",
   "compilationOutputPath": "./artifacts",
   "storage": {
     "type": "local",
-    "path": "./.ethoko-e2e/.storage"
+    "path": "STORAGE_PATH"
   }
 }
 ```
 
-**3. Update `e2e-test/setup.ts`** - Add compilation:
+**3. Use helper setup utilities** - Generate temp configs + folders:
 
 ```typescript
 import { asyncExec } from "./async-exec.js";
 
-export async function setup(): Promise<void> {
-  console.log("\n🚀 Starting [App Name] E2E Test Suite\n");
-  await cleanUpLocalEthokoStorage();
-
-  // Compile once for all tests
-  console.log("📦 Compiling contracts...");
-  await asyncExec("npx hardhat build --config ./hardhat.config.e2e.ts");
-  console.log("✅ Compilation complete\n");
-
-  console.log("\n✅ Tests ready to run!\n");
-}
+const config = new ConfigSetup(testId);
+const cliConfigSetup = new CliConfigSetup(config);
+const hardhatConfigSetup = new HardhatConfigSetup(config);
 ```
 
-**4. Update existing test file** - Remove compilation test, update tag:
+**4. Update existing test file** - Use helper + per-test tag:
 
 ```typescript
-const TAG_NAME = "2026-hardhat-plugin";
+const tag = testId;
 
 describe("[App] Push/pull/deploy - Hardhat Plugin", async () => {
-  // NO MORE "it compiles" test - moved to setup.ts
-
   test("it pushes the tag", () =>
     asyncExec(
-      `npx hardhat --config ./hardhat.config.e2e.ts ethoko push --tag ${TAG_NAME}`,
+      `${ethokoCommand} push --tag ${tag} --artifact-path ${outputArtifactsPath}`,
     ));
 
-  test("it pulls the tag", () =>
-    asyncExec("npx hardhat --config ./hardhat.config.e2e.ts ethoko pull"));
+  test("it pulls the tag", () => asyncExec(`${ethokoCommand} pull`));
 
   // ... rest of tests
 });
@@ -1085,15 +1074,17 @@ import { describe, test } from "vitest";
 import { asyncExec } from "./async-exec.js";
 import { E2E_FOLDER_PATH } from "./e2e-folder-path.js";
 
-const TAG_NAME = "2026-cli";
+const tag = testId;
 
 describe("[App] Push/pull/deploy - CLI", async () => {
   test("it pushes the tag", () =>
-    asyncExec(`pnpm ethoko push --tag ${TAG_NAME}`));
+    asyncExec(
+      `${ethokoCommand} push --tag ${tag} --artifact-path ${outputArtifactsPath}`,
+    ));
 
-  test("it pulls the tag", () => asyncExec("pnpm ethoko pull"));
+  test("it pulls the tag", () => asyncExec(`${ethokoCommand} pull`));
 
-  test("it generates the typings", () => asyncExec("pnpm ethoko typings"));
+  test("it generates the typings", () => asyncExec(`${ethokoCommand} typings`));
 
   test("it checks types", () => asyncExec("pnpm tsc --noEmit"));
 
@@ -1104,11 +1095,9 @@ describe("[App] Push/pull/deploy - CLI", async () => {
 
   test("it restores the original artifacts", async () => {
     await asyncExec(
-      `pnpm ethoko restore --tag ${TAG_NAME} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
+      `${ethokoCommand} restore --tag ${tag} --output ./${E2E_FOLDER_PATH}/restored-artifacts-${tag}`,
     );
-    await asyncExec(
-      `ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${TAG_NAME}`,
-    );
+    await asyncExec(`ls -la ./${E2E_FOLDER_PATH}/restored-artifacts-${tag}`);
   });
 });
 ```
@@ -1121,15 +1110,15 @@ describe("[App] Push/pull/deploy - CLI", async () => {
 
 **Files created per app:**
 
-- `ethoko.json`
+- `e2e-test/helpers/templates/ethoko.config.e2e.template.json`
+- `e2e-test/helpers/templates/hardhat.config.e2e.template.ts`
 - `e2e-test/push-pull-deploy.cli.e2e.test.ts`
 - Deployment script duplicates (if applicable)
 
 **Files modified per app:**
 
 - `package.json` (add CLI dependency + `ethoko` script)
-- `e2e-test/setup.ts` (add compilation)
-- `e2e-test/push-pull-deploy.e2e.test.ts` (remove compilation test, update tag)
+- `e2e-test/push-pull-deploy.*.e2e.test.ts` (use helpers + per-test tags)
 
 ---
 
@@ -1144,7 +1133,7 @@ describe("[App] Push/pull/deploy - CLI", async () => {
 
 **Steps:**
 
-**1. Add CLI dependency + create `ethoko.json`** (same as simple apps)
+**1. Add CLI dependency + E2E config templates** (same as simple apps)
 
 **2. Update `e2e-test/setup.ts`** - NO compilation (Foundry compiles per suite):
 
@@ -1156,7 +1145,7 @@ export async function setup(): Promise<void> {
 }
 ```
 
-**3. Update `e2e-test/foundry-describe.ts`** - Add `ethokoRunner` parameter:
+**3. Update `e2e-test/foundry-describe.ts`** - Use helper-based config + per-test tag:
 
 ```typescript
 import { beforeAll, describe, test } from "vitest";
@@ -1173,28 +1162,23 @@ export function foundryDescribe(
 ) {
   const ethokoCmd =
     ethokoRunner === "hardhat"
-      ? "npx hardhat --config ./hardhat.config.e2e.ts ethoko"
-      : "pnpm ethoko";
+      ? `pnpm hardhat --config ${hardhatConfigPath} ethoko`
+      : `pnpm ethoko --config ${cliConfigPath}`;
 
   describe(`${title} - ${ethokoRunner === "hardhat" ? "Hardhat Plugin" : "CLI"}`, () => {
     beforeAll(async () => {
-      // Setup deployment script
-      const deploymentScriptContent = await fs.readFile(
-        "deploy/00-deploy-counter-2026-02-04.ts",
-        "utf-8",
-      );
-      const updatedScriptContent = deploymentScriptContent.replaceAll(
-        "2026-02-04",
-        tag,
-      );
-      const tmpDeploymentScript = `deploy/00-deploy-counter-${tag}.ts`;
-      await fs.writeFile(tmpDeploymentScript, updatedScriptContent);
-
-      // Compile once for this suite
-      await asyncExec(buildCommand);
+      const configCleanup = await config.setup();
+      const cliCleanup = await cliConfigSetup.setup();
+      const hardhatCleanup = await hardhatConfigSetup.setup();
+      const deployCleanup = await deployScriptSetup.setup();
+      const buildCleanup = await buildSetup.setup();
 
       return async () => {
-        await fs.rm(tmpDeploymentScript);
+        await buildCleanup();
+        await deployCleanup();
+        await hardhatCleanup();
+        await cliCleanup();
+        await configCleanup();
       };
     });
 
@@ -1270,7 +1254,7 @@ Repeat for:
 
 **Files created:**
 
-- `ethoko.json`
+- `e2e-test/helpers/templates/ethoko.config.e2e.template.json`
 - `e2e-test/push-pull-deploy.with-build-info.with-tests.cli.e2e.test.ts`
 - `e2e-test/push-pull-deploy.with-build-info.without-tests.cli.e2e.test.ts`
 - `e2e-test/push-pull-deploy.without-build-info.with-tests.cli.e2e.test.ts`
@@ -1279,11 +1263,8 @@ Repeat for:
 **Files modified:**
 
 - `package.json` (add CLI dependency + `ethoko` script)
-- `e2e-test/foundry-describe.ts`
-- `e2e-test/push-pull-deploy.with-build-info.with-tests.e2e.test.ts`
-- `e2e-test/push-pull-deploy.with-build-info.without-tests.e2e.test.ts`
-- `e2e-test/push-pull-deploy.without-build-info.with-tests.e2e.test.ts`
-- `e2e-test/push-pull-deploy.without-build-info.without-tests.e2e.test.ts`
+- `e2e-test/helpers/*.ts`
+- `e2e-test/push-pull-deploy.*.e2e.test.ts`
 
 ---
 
@@ -1338,6 +1319,7 @@ pnpm test:e2e:apps
 **Results:**
 
 - ✅ `pnpm test:e2e:apps` (all 12 app test suites passed)
+- ⚠️ Re-run recommended after the latest E2E refactor
 
 ---
 
