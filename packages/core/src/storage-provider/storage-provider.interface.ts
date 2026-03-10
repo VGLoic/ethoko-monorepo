@@ -35,7 +35,7 @@ export interface StorageProvider {
     project: string,
     inputArtifact: EthokoInputArtifact,
     outputArtifact: EthokoOutputArtifact,
-    outputContractArtifacts: EthokoContractOutputArtifact[],
+    contractOutputArtifacts: EthokoContractOutputArtifact[],
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void>;
@@ -43,12 +43,21 @@ export interface StorageProvider {
   downloadArtifactById(
     project: string,
     id: string,
-  ): Promise<{ input: Stream; output: Stream }>;
+  ): Promise<{
+    input: Stream;
+    output: Stream;
+    contractOutputArtifacts: Stream[];
+  }>;
   /** Download input/output artifact streams by tag, plus resolved ID. */
   downloadArtifactByTag(
     project: string,
     tag: string,
-  ): Promise<{ id: string; input: Stream; output: Stream }>;
+  ): Promise<{
+    id: string;
+    input: Stream;
+    output: Stream;
+    contractOutputArtifacts: Stream[];
+  }>;
   /** Download an original content file by relative path. */
   downloadOriginalContent(
     project: string,
