@@ -16,7 +16,7 @@ type ContractBytecode = {
 };
 export type ExportContractArtifactResult = {
   tag: string | null;
-  _format: "ethoko-contract-artifact-v0";
+  _format: "exported-ethoko-contract-artifact-v0";
   id: string;
   project: string;
   abi: unknown[];
@@ -188,7 +188,7 @@ function buildContractArtifact(
 ): ExportContractArtifactResult {
   return {
     tag,
-    _format: "ethoko-contract-artifact-v0",
+    _format: "exported-ethoko-contract-artifact-v0",
     id: contractArtifact.id,
     project,
     abi: contractArtifact.output.contract.abi,
