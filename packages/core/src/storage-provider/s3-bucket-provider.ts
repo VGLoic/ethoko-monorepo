@@ -360,7 +360,11 @@ export class S3BucketProvider implements StorageProvider {
   ): Promise<{
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }> {
     const client = await this.getClient();
     const inputCommand = new GetObjectCommand({
@@ -391,7 +395,11 @@ export class S3BucketProvider implements StorageProvider {
           id,
           sourceName,
           contractName,
-        ),
+        ).then((stream) => ({
+          sourceName,
+          contract: contractName,
+          stream,
+        })),
       ),
     );
     return {
@@ -408,7 +416,11 @@ export class S3BucketProvider implements StorageProvider {
     id: string;
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }> {
     const client = await this.getClient();
     const getObjectCommand = new GetObjectCommand({

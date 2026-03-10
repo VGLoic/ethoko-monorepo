@@ -46,7 +46,11 @@ export interface StorageProvider {
   ): Promise<{
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }>;
   /** Download input/output artifact streams by tag, plus resolved ID. */
   downloadArtifactByTag(
@@ -56,7 +60,11 @@ export interface StorageProvider {
     id: string;
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }>;
   /** Download an original content file by relative path. */
   downloadOriginalContent(

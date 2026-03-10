@@ -171,7 +171,11 @@ export class LocalStorageProvider implements StorageProvider {
   ): Promise<{
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }> {
     const contractOutputArtifacts = await this.listContractOutputArtifacts(
       project,
@@ -180,8 +184,10 @@ export class LocalStorageProvider implements StorageProvider {
     return {
       input: createReadStream(this.inputFilePath(project, id)),
       output: createReadStream(this.outputFilePath(project, id)),
-      contractOutputArtifacts: contractOutputArtifacts.map((artifact) =>
-        createReadStream(
+      contractOutputArtifacts: contractOutputArtifacts.map((artifact) => ({
+        sourceName: artifact.sourceName,
+        contract: artifact.contractName,
+        stream: createReadStream(
           this.contractOutputFilePath(
             project,
             id,
@@ -189,7 +195,7 @@ export class LocalStorageProvider implements StorageProvider {
             artifact.contractName,
           ),
         ),
-      ),
+      })),
     };
   }
 
@@ -200,7 +206,11 @@ export class LocalStorageProvider implements StorageProvider {
     id: string;
     input: Stream;
     output: Stream;
-    contractOutputArtifacts: Stream[];
+    contractOutputArtifacts: {
+      sourceName: string;
+      contract: string;
+      stream: Stream;
+    }[];
   }> {
     const tagFilePath = this.tagFilePath(project, tag);
     const manifestContent = await fs.readFile(tagFilePath, "utf-8");
