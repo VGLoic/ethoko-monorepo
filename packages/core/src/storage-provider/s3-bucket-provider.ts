@@ -48,7 +48,6 @@ export class S3BucketProvider implements StorageProvider {
   /**
    * S3 storage layout (prefix under rootPath)
    * - {project}/ids/{id}/input.json
-   * - {project}/ids/{id}/output.json
    * - {project}/ids/{id}/original/** (original compilation content)
    * - {project}/tags/{tag}.json (manifest: { id })
    */

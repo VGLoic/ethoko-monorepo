@@ -123,7 +123,7 @@ export function project<TProject extends Project>(project: TProject) {
      * const v1_3_1Utils = project("my-project").tag("v1.3.1");
      * const availableContracts = v1_3_1Utils.getAvailableContracts();
      * const inputCompilationArtifact = await v1_3_1Utils.getInputCompilationArtifact();
-     * const outputCompilationArtifact = await v1_3_1Utils.getOutputCompilationArtifact();
+     * const contractOutputCompilationArtifact = await v1_3_1Utils.getContractOutputCompilationArtifact("src/IncrementOracle.sol:IncrementOracle");
      * const incrementOracleArtifact = await v1_3_1Utils.getContractArtifact("src/IncrementOracle.sol:IncrementOracle");
      * ```
      */
