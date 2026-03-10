@@ -187,6 +187,7 @@ export async function pull(
           downloadResult.value.id,
           downloadResult.value.input,
           downloadResult.value.output,
+          downloadResult.value.contractOutputArtifacts,
         ),
         { debug: opts.debug },
       );
@@ -239,6 +240,7 @@ export async function pull(
           id,
           downloadResult.value.input,
           downloadResult.value.output,
+          downloadResult.value.contractOutputArtifacts,
         ),
         { debug: opts.debug },
       );

@@ -48,7 +48,7 @@ export interface StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }>;
@@ -62,7 +62,7 @@ export interface StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }>;

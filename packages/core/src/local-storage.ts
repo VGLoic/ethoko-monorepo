@@ -1,4 +1,5 @@
 import fs from "fs/promises";
+import path from "path";
 import { Stream } from "stream";
 import {
   EthokoInputArtifact,
@@ -123,18 +124,30 @@ export class LocalStorage {
    * @param id The artifact ID.
    * @param inputArtifact The input artifact content.
    * @param outputArtifact The output artifact content.
+   * @param contractOutputArtifacts The contract output artifacts content.
    */
   public async createArtifactById(
     project: string,
     id: string,
     inputArtifact: Stream,
     outputArtifact: Stream,
+    contractOutputArtifacts: {
+      sourceName: string;
+      contractName: string;
+      stream: Stream;
+    }[],
   ): Promise<void> {
     const idDir = `${this.rootPath}/${project}/ids/${id}`;
     await fs.mkdir(idDir, { recursive: true });
     await Promise.all([
       fs.writeFile(`${idDir}/input.json`, inputArtifact),
       fs.writeFile(`${idDir}/output.json`, outputArtifact),
+      ...contractOutputArtifacts.map(({ sourceName, contractName, stream }) => {
+        const contractPath = `${idDir}/outputs/${sourceName}/${contractName}.json`;
+        return fs
+          .mkdir(path.dirname(contractPath), { recursive: true })
+          .then(() => fs.writeFile(contractPath, stream));
+      }),
     ]);
   }
 
@@ -145,6 +158,7 @@ export class LocalStorage {
    * @param id The artifact ID.
    * @param inputArtifact The input artifact content.
    * @param outputArtifact The output artifact content.
+   * @param contractOutputArtifacts The contract output artifacts content.
    */
   public async createArtifactByTag(
     project: string,
@@ -152,8 +166,19 @@ export class LocalStorage {
     id: string,
     inputArtifact: Stream,
     outputArtifact: Stream,
+    contractOutputArtifacts: {
+      sourceName: string;
+      contractName: string;
+      stream: Stream;
+    }[],
   ): Promise<void> {
-    await this.createArtifactById(project, id, inputArtifact, outputArtifact);
+    await this.createArtifactById(
+      project,
+      id,
+      inputArtifact,
+      outputArtifact,
+      contractOutputArtifacts,
+    );
     const manifest: TagManifest = { id };
     await fs.writeFile(
       `${this.rootPath}/${project}/tags/${tag}.json`,

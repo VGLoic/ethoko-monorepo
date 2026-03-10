@@ -173,7 +173,7 @@ export class LocalStorageProvider implements StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }> {
@@ -186,7 +186,7 @@ export class LocalStorageProvider implements StorageProvider {
       output: createReadStream(this.outputFilePath(project, id)),
       contractOutputArtifacts: contractOutputArtifacts.map((artifact) => ({
         sourceName: artifact.sourceName,
-        contract: artifact.contractName,
+        contractName: artifact.contractName,
         stream: createReadStream(
           this.contractOutputFilePath(
             project,
@@ -208,7 +208,7 @@ export class LocalStorageProvider implements StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }> {

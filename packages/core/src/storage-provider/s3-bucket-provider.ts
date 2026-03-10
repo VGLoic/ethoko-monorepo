@@ -362,7 +362,7 @@ export class S3BucketProvider implements StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }> {
@@ -397,7 +397,7 @@ export class S3BucketProvider implements StorageProvider {
           contractName,
         ).then((stream) => ({
           sourceName,
-          contract: contractName,
+          contractName,
           stream,
         })),
       ),
@@ -418,7 +418,7 @@ export class S3BucketProvider implements StorageProvider {
     output: Stream;
     contractOutputArtifacts: {
       sourceName: string;
-      contract: string;
+      contractName: string;
       stream: Stream;
     }[];
   }> {
