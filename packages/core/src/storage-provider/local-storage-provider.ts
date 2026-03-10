@@ -5,6 +5,7 @@ import { Stream } from "stream";
 import { styleText } from "node:util";
 import { LOG_COLORS } from "@/cli-ui/utils";
 import {
+  EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoOutputArtifact,
   TagManifest,
@@ -86,14 +87,27 @@ export class LocalStorageProvider implements StorageProvider {
     project: string,
     inputArtifact: EthokoInputArtifact,
     outputArtifact: EthokoOutputArtifact,
+    outputContractArtifacts: EthokoContractOutputArtifact[],
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void> {
     await this.ensureProjectSetup(project);
 
-    const idDir = this.idDirPath(project, inputArtifact.id);
-    await fs.mkdir(idDir, { recursive: true });
+    await fs.mkdir(this.idDirPath(project, inputArtifact.id), {
+      recursive: true,
+    });
     await Promise.all([
+      ...outputContractArtifacts.map((artifact) => {
+        const contractPath = this.contractOutputFilePath(
+          project,
+          inputArtifact.id,
+          artifact.sourceName,
+          artifact.contract,
+        );
+        return fs
+          .mkdir(path.dirname(contractPath), { recursive: true })
+          .then(() => fs.writeFile(contractPath, JSON.stringify(artifact)));
+      }),
       fs.writeFile(
         this.inputFilePath(project, inputArtifact.id),
         JSON.stringify(inputArtifact),
@@ -200,6 +214,23 @@ export class LocalStorageProvider implements StorageProvider {
 
   private outputFilePath(project: string, id: string): string {
     return path.join(this.idDirPath(project, id), "output.json");
+  }
+
+  private contractOutputsPath(project: string, id: string): string {
+    return path.join(this.idDirPath(project, id), "outputs");
+  }
+
+  private contractOutputFilePath(
+    project: string,
+    id: string,
+    sourceName: string,
+    contract: string,
+  ): string {
+    return path.join(
+      this.contractOutputsPath(project, id),
+      sourceName,
+      `${contract}.json`,
+    );
   }
 
   private sanitizePath(filePath: string): string {

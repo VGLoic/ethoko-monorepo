@@ -205,6 +205,7 @@ export async function push(
       project,
       ethokoArtifactParsingResult.value.inputArtifact,
       ethokoArtifactParsingResult.value.outputArtifact,
+      ethokoArtifactParsingResult.value.outputContractArtifacts,
       tag,
       ethokoArtifactParsingResult.value.originalContentPaths,
     ),

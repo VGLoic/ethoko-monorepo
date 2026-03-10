@@ -11,6 +11,7 @@ import { NodeJsClient } from "@smithy/types";
 import { styleText } from "node:util";
 import { LOG_COLORS } from "@/cli-ui/utils";
 import {
+  EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoOutputArtifact,
   TagManifest,
@@ -287,13 +288,25 @@ export class S3BucketProvider implements StorageProvider {
     project: string,
     inputArtifact: EthokoInputArtifact,
     outputArtifact: EthokoOutputArtifact,
+    outputContractArtifacts: EthokoContractOutputArtifact[],
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void> {
     const client = await this.getClient();
     const inputKey = `${this.rootPath}/${project}/ids/${inputArtifact.id}/input.json`;
     const outputKey = `${this.rootPath}/${project}/ids/${inputArtifact.id}/output.json`;
+    const contractUploads = outputContractArtifacts.map((contractArtifact) => {
+      const contractKey = `${this.rootPath}/${project}/ids/${inputArtifact.id}/outputs/${contractArtifact.sourceName}/${contractArtifact.contract}.json`;
+      return client.send(
+        new PutObjectCommand({
+          Bucket: this.config.bucketName,
+          Key: contractKey,
+          Body: JSON.stringify(contractArtifact),
+        }),
+      );
+    });
     await Promise.all([
+      ...contractUploads,
       client.send(
         new PutObjectCommand({
           Bucket: this.config.bucketName,

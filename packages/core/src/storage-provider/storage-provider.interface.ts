@@ -1,5 +1,6 @@
 import { Stream } from "stream";
 import {
+  EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoOutputArtifact,
 } from "../utils/ethoko-artifacts-schemas/v0";
@@ -34,6 +35,7 @@ export interface StorageProvider {
     project: string,
     inputArtifact: EthokoInputArtifact,
     outputArtifact: EthokoOutputArtifact,
+    outputContractArtifacts: EthokoContractOutputArtifact[],
     tag: string | undefined,
     originalContentPaths: string[],
   ): Promise<void>;
