@@ -188,7 +188,7 @@ export class LocalStorage {
   ): Promise<void> {
     const idDir = `${this.rootPath}/${project}/ids/${id}`;
     await fs.mkdir(idDir, { recursive: true });
-    await Promise.all([
+    const promises = [
       fs.writeFile(`${idDir}/input.json`, artifacts.input),
       ...artifacts.outputs.map(({ sourceName, contractName, stream }) => {
         const contractPath = `${idDir}/outputs/${sourceName}/${contractName}.json`;
@@ -196,13 +196,30 @@ export class LocalStorage {
           .mkdir(path.dirname(contractPath), { recursive: true })
           .then(() => fs.writeFile(contractPath, stream));
       }),
-    ]);
+    ];
     if (tag) {
       const manifest: TagManifest = { id };
-      await fs.writeFile(
-        `${this.rootPath}/${project}/tags/${tag}.json`,
-        JSON.stringify(manifest),
+      promises.push(
+        fs.writeFile(
+          `${this.rootPath}/${project}/tags/${tag}.json`,
+          JSON.stringify(manifest),
+        ),
       );
+    }
+    const settlements = await Promise.allSettled(promises);
+
+    const firstRejection = settlements.find(
+      (settlement): settlement is PromiseRejectedResult =>
+        settlement.status === "rejected",
+    );
+    if (firstRejection) {
+      await fs.rm(idDir, { recursive: true, force: true });
+      if (tag) {
+        await fs.rm(`${this.rootPath}/${project}/tags/${tag}.json`, {
+          force: true,
+        });
+      }
+      throw firstRejection.reason;
     }
   }
 
