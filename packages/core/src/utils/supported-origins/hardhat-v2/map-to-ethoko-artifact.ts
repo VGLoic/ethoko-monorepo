@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import { HardhatV2CompilerOutputSchema } from "./schemas";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import {
+  EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoOutputArtifact,
 } from "@/utils/ethoko-artifacts-schemas/v0";
@@ -12,6 +13,7 @@ export async function mapHardhatV2ArtifactToEthokoArtifact(
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputArtifact: EthokoOutputArtifact;
+  outputContractArtifacts: EthokoContractOutputArtifact[];
   originalContentPaths: string[];
 }> {
   const jsonContent = await fs
@@ -56,6 +58,7 @@ export async function mapHardhatV2ArtifactToEthokoArtifact(
   return {
     inputArtifact,
     outputArtifact,
+    outputContractArtifacts: [],
     originalContentPaths: [buildInfoPath],
   };
 }

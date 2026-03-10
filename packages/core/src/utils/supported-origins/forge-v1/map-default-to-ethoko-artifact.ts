@@ -2,6 +2,7 @@ import fs from "fs/promises";
 import path from "path";
 import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
 import {
+  EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoInputArtifactSchema,
   EthokoOutputArtifact,
@@ -48,6 +49,7 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputArtifact: EthokoOutputArtifact;
+  outputContractArtifacts: EthokoContractOutputArtifact[];
   originalContentPaths: string[];
 }> {
   const jsonContent = await fs
@@ -266,6 +268,8 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
   return {
     inputArtifact: inputArtifactResult.data,
     outputArtifact: outputArtifactResult.data,
+    // REMIND ME: implement
+    outputContractArtifacts: [],
     originalContentPaths: additionalArtifactsPaths.concat(buildInfoPath),
   };
 }
