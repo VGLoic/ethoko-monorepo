@@ -1761,13 +1761,13 @@ release:
 
 **Tasks:**
 
-1. Create `install.sh` in repo root
-2. Implement platform detection (OS + arch)
-3. Query GitHub API for latest CLI release
-4. Download correct binary from GitHub Releases
-5. Install to `~/.ethoko/bin/` (or `$ETHOKO_INSTALL_DIR`)
-6. Add to PATH (update shell profile)
-7. Verify installation
+1. ✅ Create `install.sh` in repo root
+2. ✅ Implement platform detection (OS + arch)
+3. ✅ Query GitHub API for latest CLI release
+4. ✅ Download correct binary from GitHub Releases
+5. ✅ Install to `~/.ethoko/bin/` (or `$ETHOKO_INSTALL_DIR`)
+6. ✅ Add to PATH (update shell profile)
+7. ✅ Verify installation
 
 **Install Script Implementation:**
 
@@ -1835,49 +1835,26 @@ main() {
 
   local download_url="https://github.com/$REPO/releases/download/cli-v$version/$binary_name$ext"
 
-  echo "📥 Downloading Ethoko CLI..."
   mkdir -p "$BIN_DIR"
-  local temp_file="$BIN_DIR/ethoko.download"
+  local tmp_file
+  tmp_file=$(mktemp)
 
-  if command -v curl &> /dev/null; then
-    curl -fsSL "$download_url" -o "$temp_file"
-  elif command -v wget &> /dev/null; then
-    wget -q "$download_url" -O "$temp_file"
-  else
-    echo "Error: Neither curl nor wget found"
-    exit 1
+  echo "⬇️  Downloading $download_url"
+  curl -L "$download_url" -o "$tmp_file"
+
+  local target_name="ethoko"
+  if [[ "$platform" == windows* ]]; then
+    target_name="ethoko.exe"
   fi
 
-  mv "$temp_file" "$BIN_DIR/ethoko$ext"
-  chmod +x "$BIN_DIR/ethoko$ext"
+  mv "$tmp_file" "$BIN_DIR/$target_name"
+  chmod +x "$BIN_DIR/$target_name"
 
-  echo "✅ Ethoko CLI installed to $BIN_DIR/ethoko$ext"
+  ensure_path
 
-  # Add to PATH
-  local shell_profile
-  case "$SHELL" in
-    */bash) shell_profile="$HOME/.bashrc" ;;
-    */zsh)  shell_profile="$HOME/.zshrc" ;;
-    */fish) shell_profile="$HOME/.config/fish/config.fish" ;;
-    *)      shell_profile="" ;;
-  esac
-
-  if [ -n "$shell_profile" ]; then
-    if ! grep -q "$BIN_DIR" "$shell_profile" 2>/dev/null; then
-      echo "" >> "$shell_profile"
-      echo "# Ethoko CLI" >> "$shell_profile"
-      echo "export PATH=\"\$PATH:$BIN_DIR\"" >> "$shell_profile"
-      echo "📝 Added $BIN_DIR to PATH in $shell_profile"
-      echo "   Run: source $shell_profile"
-    else
-      echo "ℹ️  $BIN_DIR already in PATH"
-    fi
-  fi
-
-  echo ""
-  echo "🎉 Installation complete!"
-  echo "   Run: ethoko --version"
-  echo "   Or:  $BIN_DIR/ethoko --version"
+  echo "✅ Ethoko installed to $BIN_DIR/$target_name"
+  echo "➡️  Restart your shell or run: export PATH=\"${BIN_DIR}:\$PATH\""
+  "$BIN_DIR/$target_name" --version || true
 }
 
 main
