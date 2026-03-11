@@ -22,25 +22,25 @@ async function main() {
   }
   const etherscanClient = new EtherscanVerificationClient(ETHERSCAN_API_KEY);
 
-  // const externalMathArtifact = await project("verified-forge-counter")
-  //   .tag("2026-02-02")
-  //   .getContractArtifact("src/ExternalMath.sol:ExternalMath");
-  // await etherscanClient.verifyContract({
-  //   address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
-  //   constructorArguments: "", // No constructor arguments for this contract
-  //   licenseType: "UNLICENSED",
-  //   artifact: externalMathArtifact,
-  // });
+  const externalMathArtifact = await project("verified-forge-counter")
+    .tag("2026-02-02")
+    .getContractArtifact("src/ExternalMath.sol:ExternalMath");
+  await etherscanClient.verifyContract({
+    address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
+    constructorArguments: "", // No constructor arguments for this contract
+    licenseType: "UNLICENSED",
+    artifact: externalMathArtifact,
+  });
 
-  // const oracleArtifact = await project("verified-forge-counter")
-  //   .tag("2026-02-02")
-  //   .getContractArtifact("src/Oracle.sol:Oracle");
-  // await etherscanClient.verifyContract({
-  //   address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
-  //   constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
-  //   licenseType: "UNLICENSED",
-  //   artifact: oracleArtifact,
-  // });
+  const oracleArtifact = await project("verified-forge-counter")
+    .tag("2026-02-02")
+    .getContractArtifact("src/Oracle.sol:Oracle");
+  await etherscanClient.verifyContract({
+    address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
+    constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
+    licenseType: "UNLICENSED",
+    artifact: oracleArtifact,
+  });
 
   const counterArtifact = await project("verified-forge-counter")
     .tag("2026-02-02")
