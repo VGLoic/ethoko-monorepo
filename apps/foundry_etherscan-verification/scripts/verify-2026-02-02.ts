@@ -22,25 +22,25 @@ async function main() {
   }
   const etherscanClient = new EtherscanVerificationClient(ETHERSCAN_API_KEY);
 
-  const externalMathArtifact = await project("verified-forge-counter")
-    .tag("2026-02-02")
-    .getContractArtifact("src/ExternalMath.sol:ExternalMath");
-  await etherscanClient.verifyContract({
-    address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
-    constructorArguments: "", // No constructor arguments for this contract
-    licenseType: "UNLICENSED",
-    artifact: externalMathArtifact,
-  });
+  // const externalMathArtifact = await project("verified-forge-counter")
+  //   .tag("2026-02-02")
+  //   .getContractArtifact("src/ExternalMath.sol:ExternalMath");
+  // await etherscanClient.verifyContract({
+  //   address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
+  //   constructorArguments: "", // No constructor arguments for this contract
+  //   licenseType: "UNLICENSED",
+  //   artifact: externalMathArtifact,
+  // });
 
-  const oracleArtifact = await project("verified-forge-counter")
-    .tag("2026-02-02")
-    .getContractArtifact("src/Oracle.sol:Oracle");
-  await etherscanClient.verifyContract({
-    address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
-    constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
-    licenseType: "UNLICENSED",
-    artifact: oracleArtifact,
-  });
+  // const oracleArtifact = await project("verified-forge-counter")
+  //   .tag("2026-02-02")
+  //   .getContractArtifact("src/Oracle.sol:Oracle");
+  // await etherscanClient.verifyContract({
+  //   address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
+  //   constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
+  //   licenseType: "UNLICENSED",
+  //   artifact: oracleArtifact,
+  // });
 
   const counterArtifact = await project("verified-forge-counter")
     .tag("2026-02-02")
@@ -75,7 +75,7 @@ class EtherscanVerificationClient {
      * Etherscan API expects a few things, the few lines of code below reconstruct the expected input format.
      * This is from my understanding, happy to receive corrections if I'm wrong:
      * - the sources contain only the `content` field. Etherscan does not accept the `urls` and `license` fields that are present in the original input artifact, so we remove them,
-     * - the `settings` field does not need to be complete, I added the remappings as we use them. Actually, using the full `settings` from the `metadata` was not working as it has extra fields.
+     * - the `settings` field does match the one from the metadata, I picked the fields that I needed
      */
     const sources: Record<string, { content: string }> = {};
     for (const [key, source] of Object.entries(
@@ -92,10 +92,15 @@ class EtherscanVerificationClient {
     const reconstructedInput = {
       language: payload.artifact.expandedMetadata.language,
       settings: {
+        optimizer: payload.artifact.expandedMetadata.settings.optimizer,
+        evmVersion: payload.artifact.expandedMetadata.settings.evmVersion,
+        metadata: payload.artifact.expandedMetadata.settings.metadata,
         remappings: payload.artifact.expandedMetadata.settings.remappings,
       },
       sources,
     };
+
+    // See Etherscan API docs: https://docs.etherscan.io/api-reference/endpoint/verifysourcecode
     const queryParams = new URLSearchParams({
       apikey: this.apiKey,
       chainId: "11155111", // Sepolia chain ID
