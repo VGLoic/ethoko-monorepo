@@ -78,7 +78,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-           submodules: "recursive"
+          submodules: "recursive"
       - uses: pnpm/action-setup@v4
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -90,12 +90,21 @@ jobs:
       # For obscure reasons, the CLI needs to be explictly built and reinstalled
       # Otherwise, the observed behavior is that the apps are not finding the Ethoko CLI binary
       # This behavior has been observed in `uniswap-v4-core` and the `hardhat-v2` apps
-      - run: pnpm build --filter=@ethoko/cli
+      - run: pnpm build --filter=@ethoko/cli-beacon
       - run: pnpm install
       - run: pnpm test:e2e:apps
   release:
     name: Release
-    needs: [build, check-format, check-types, lint, test, test-e2e-core, test-e2e-apps]
+    needs:
+      [
+        build,
+        check-format,
+        check-types,
+        lint,
+        test,
+        test-e2e-core,
+        test-e2e-apps,
+      ]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -114,16 +123,51 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Detect CLI beacon publish
+        id: cli_published
+        run: |
+          if [ "${{ steps.changesets.outputs.published }}" != "true" ]; then
+            echo "published=false" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+          CLI_VERSION=$(echo '${{ steps.changesets.outputs.publishedPackages }}' | jq -r '.[] | select(.name == "@ethoko/cli-beacon") | .version')
+          if [ -n "$CLI_VERSION" ] && [ "$CLI_VERSION" != "null" ]; then
+            echo "published=true" >> $GITHUB_OUTPUT
+            echo "version=$CLI_VERSION" >> $GITHUB_OUTPUT
+          else
+            echo "published=false" >> $GITHUB_OUTPUT
+          fi
+      - name: Build CLI binaries
+        if: steps.cli_published.outputs.published == 'true'
+        run: pnpm --filter @ethoko/cli-beacon build:binary
+      - name: Publish CLI wrapper and platform packages
+        if: steps.cli_published.outputs.published == 'true'
+        run: pnpm --filter @ethoko/cli-beacon exec bun scripts/publish-cli.ts
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Upload CLI binaries to GitHub Release
+        if: steps.cli_published.outputs.published == 'true'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "cli-v${{ steps.cli_published.outputs.version }}"
+          name: "CLI v${{ steps.cli_published.outputs.version }}"
+          files: |
+            packages/cli-beacon/binaries/ethoko-linux-x64
+            packages/cli-beacon/binaries/ethoko-linux-arm64
+            packages/cli-beacon/binaries/ethoko-darwin-x64
+            packages/cli-beacon/binaries/ethoko-darwin-arm64
+            packages/cli-beacon/binaries/ethoko-windows-x64.exe
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Trigger E2E tests in VGLoic/v4-core-ethoko-test repository
         if: steps.changesets.outputs.published == 'true'
         run: |
-              repo_owner="VGLoic"
-              repo_name="v4-core-ethoko-test"
-              event_type="trigger-e2e-tests"
-              curl -X POST \
-                -H "Accept: application/vnd.github+json" \
-                -H "Authorization: Bearer ${{ secrets.PAT_UNI_FORK_TEST }}" \
-                -H "X-GitHub-Api-Version: 2022-11-28" \
-                https://api.github.com/repos/${repo_owner}/${repo_name}/dispatches \
-                -d '{"event_type":"'"${event_type}"'","client_payload":{"unit":false,"integration":true}}'
-
+          repo_owner="VGLoic"
+          repo_name="v4-core-ethoko-test"
+          event_type="trigger-e2e-tests"
+          curl -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.PAT_UNI_FORK_TEST }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/${repo_owner}/${repo_name}/dispatches \
+            -d '{"event_type":"'"${event_type}"'","client_payload":{"unit":false,"integration":true}}'

@@ -62,6 +62,20 @@ jobs:
           cache: "pnpm"
       - run: pnpm install
       - run: pnpm test
+  build-cli-binary:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: "pnpm"
+      - run: pnpm install
+      - run: pnpm build --filter=@ethoko/cli-beacon
+      - run: pnpm --filter @ethoko/cli-beacon build:binary
+      # Smoke test to ensure the CLI binary was built correctly
+      - run: ./packages/cli-beacon/binaries/ethoko-linux-x64 --version
   test-e2e-core:
     runs-on: ubuntu-latest
     steps:
@@ -78,7 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
-            submodules: "recursive"
+          submodules: "recursive"
       - uses: pnpm/action-setup@v4
       - name: Install Foundry
         uses: foundry-rs/foundry-toolchain@v1
@@ -90,6 +104,6 @@ jobs:
       # For obscure reasons, the CLI needs to be explictly built and reinstalled
       # Otherwise, the observed behavior is that the apps are not finding the Ethoko CLI binary
       # This behavior has been observed in `uniswap-v4-core` and the `hardhat-v2` apps
-      - run: pnpm build --filter=@ethoko/cli
+      - run: pnpm build --filter=@ethoko/cli-beacon
       - run: pnpm install
       - run: pnpm test:e2e:apps

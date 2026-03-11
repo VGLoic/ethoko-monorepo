@@ -17,7 +17,7 @@
     "verify-2026-02-02": "tsx ./scripts/verify-2026-02-02.ts"
   },
   "devDependencies": {
-    "@ethoko/cli": "workspace:*",
+    "@ethoko/cli-beacon": "workspace:*",
     "@ethoko/eslint-config": "workspace:*",
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.0",
