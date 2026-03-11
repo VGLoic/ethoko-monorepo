@@ -1,7 +1,9 @@
-import { EthokoContractOutputArtifact } from "@/utils/ethoko-artifacts-schemas/v0";
 import { LocalStorage } from "../local-storage";
-import { toAsyncResult } from "../utils/result";
+import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
+import { ContractMetadataSchema } from "@/utils/solc-artifacts-schemas/v0.8.33/contract-metadata-json";
+import { warn } from "@/cli-ui";
+import z from "zod";
 
 type ContractBytecode = {
   functionDebugData?: unknown;
@@ -47,6 +49,7 @@ export type ExportContractArtifactResult = {
     } | null;
     methodIdentifiers?: Record<string, string>;
   };
+  expandedMetadata: z.infer<typeof ContractMetadataSchema>;
 };
 
 export async function exportContractArtifact(
@@ -158,39 +161,61 @@ export async function exportContractArtifact(
     );
   }
 
-  const contractArtifact = buildContractArtifact(
-    contractArtifactResult.value,
-    artifact.project,
-    artifact.search.type === "tag" ? artifact.search.tag : null,
-  );
-  return contractArtifact;
-}
+  const contractArtifact = contractArtifactResult.value;
 
-function deriveDisplayArtifactName(
-  project: string,
-  search: { type: "tag"; tag: string } | { type: "id"; id: string },
-): string {
-  if (search.type === "tag") {
-    return `${project}:${search.tag}`;
+  const metadataParsingResult = toResult(() => {
+    const raw = JSON.parse(contractArtifact.output.contract.metadata);
+    return ContractMetadataSchema.parse(raw);
+  });
+  if (!metadataParsingResult.success) {
+    throw new CliError(
+      `Failed to parse the contract metadata for contract ${targetContract.sourceName}:${targetContract.contractName} for artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}, the metadata field is expected to be a JSON string in the format output by solc. Run with debug mode for more info.`,
+    );
   }
-  return `${project}:${search.id}`;
-}
 
-function prefixWith0x(s: string): `0x${string}` {
-  if (s.startsWith("0x")) return s as `0x${string}`;
-  return `0x${s}`;
-}
+  const sourcesWithMissingContent = Object.entries(
+    metadataParsingResult.value.sources,
+  )
+    .filter(([, source]) => !source.content)
+    .map(([sourcePath]) => sourcePath);
 
-function buildContractArtifact(
-  contractArtifact: EthokoContractOutputArtifact,
-  project: string,
-  tag: string | null,
-): ExportContractArtifactResult {
+  if (sourcesWithMissingContent.length > 0) {
+    const inputArtifactResult = await toAsyncResult(
+      localStorage.retrieveInputArtifact(artifact.project, artifactId),
+      { debug: opts.debug },
+    );
+    if (!inputArtifactResult.success) {
+      throw new CliError(
+        `Failed to retrieve the artifact input for artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}, which is required to resolve the contract metadata sources content. Please ensure the artifact input exists locally. Run with debug mode for more info.`,
+      );
+    }
+    const inputArtifact = inputArtifactResult.value;
+
+    for (const sourcePath of sourcesWithMissingContent) {
+      const inputSource = inputArtifact.input.sources[sourcePath];
+      if (!inputSource || !("content" in inputSource) || !inputSource.content) {
+        if (opts.debug) {
+          warn(
+            `Source ${sourcePath} is missing content in the contract metadata and could not be found in the artifact input sources for artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}. This source will have empty content in the exported artifact.`,
+          );
+        }
+      } else {
+        if (!metadataParsingResult.value.sources[sourcePath]) {
+          throw new CliError(
+            `Source ${sourcePath} is missing in the contract metadata sources and could not be found in the artifact input sources for artifact ${deriveDisplayArtifactName(artifact.project, artifact.search)}. This source is required to be present in the metadata sources to resolve missing content, please ensure the artifact input is correct. Run with debug mode for more info.`,
+          );
+        }
+        metadataParsingResult.value.sources[sourcePath].content =
+          inputSource.content;
+      }
+    }
+  }
+
   return {
-    tag,
+    tag: artifact.search.type === "tag" ? artifact.search.tag : null,
     _format: "exported-ethoko-contract-artifact-v0",
     id: contractArtifact.id,
-    project,
+    project: artifact.project,
     abi: contractArtifact.output.contract.abi,
     metadata: contractArtifact.output.contract.metadata || "",
     bytecode: prefixWith0x(
@@ -214,5 +239,21 @@ function buildContractArtifact(
     devdoc: contractArtifact.output.contract.devdoc,
     storageLayout: contractArtifact.output.contract.storageLayout,
     evm: contractArtifact.output.contract.evm,
+    expandedMetadata: metadataParsingResult.value,
   };
+}
+
+function deriveDisplayArtifactName(
+  project: string,
+  search: { type: "tag"; tag: string } | { type: "id"; id: string },
+): string {
+  if (search.type === "tag") {
+    return `${project}:${search.tag}`;
+  }
+  return `${project}:${search.id}`;
+}
+
+function prefixWith0x(s: string): `0x${string}` {
+  if (s.startsWith("0x")) return s as `0x${string}`;
+  return `0x${s}`;
 }
