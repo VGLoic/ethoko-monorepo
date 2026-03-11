@@ -106,6 +106,8 @@ import SepoliaDeployedAddresses from "./../ignition/deployments/chain-11155111/d
 import { EthokoBuildInfoInput, project } from "./../.ethoko-typings/index.js";
 import "dotenv/config";
 
+const DEPLOYER_ADDRESS = "0x25371B936fD45e67F00dfEa1cd6A3e77105DD0FA";
+
 async function main() {
   console.log("\nStarting Etherscan verification for release 2026-02-02...\n");
 
@@ -124,75 +126,39 @@ async function main() {
   }
   const etherscanClient = new EtherscanVerificationClient(ETHERSCAN_API_KEY);
 
-  const inputCompilationArtifact = await project("verified-forge-counter")
+  const etherscanClient = new EtherscanVerificationClient(ETHERSCAN_API_KEY);
+
+  const externalMathArtifact = await project("verified-forge-counter")
     .tag("2026-02-02")
-    .getInputCompilationArtifact();
-
-  const verificationPayload = {
-    compilerVersion: inputCompilationArtifact.solcLongVersion,
-    optimizationUsed:
-      inputCompilationArtifact.input.settings?.optimizer?.enabled ?? false,
-    optimizationRuns:
-      inputCompilationArtifact.input.settings?.optimizer?.runs ?? 0,
-    evmVersion: inputCompilationArtifact.input.settings?.evmVersion ?? "london",
-    licenseType: "UNLICENSED" as const,
-  };
-
-  const patchedSourceCodeInput = patchInputSources(
-    inputCompilationArtifact.input,
-  );
-  const stringifiedSourceCodeInput = JSON.stringify(
-    patchedSourceCodeInput,
-    null,
-    2,
-  );
-
+    .getContractArtifact("src/ExternalMath.sol:ExternalMath");
   await etherscanClient.verifyContract({
-    sourceCode: stringifiedSourceCodeInput,
     address: SepoliaDeployedAddresses["release_2026_02_02#ExternalMath"],
-    fullyQualifiedContractName: "src/ExternalMath.sol:ExternalMath",
     constructorArguments: "", // No constructor arguments for this contract
-    ...verificationPayload,
+    licenseType: "UNLICENSED",
+    artifact: externalMathArtifact,
   });
 
+  const oracleArtifact = await project("verified-forge-counter")
+    .tag("2026-02-02")
+    .getContractArtifact("src/Oracle.sol:Oracle");
   await etherscanClient.verifyContract({
-    sourceCode: stringifiedSourceCodeInput,
     address: SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
-    fullyQualifiedContractName: "src/Oracle.sol:Oracle",
-    constructorArguments: "", // No constructor arguments for this contract
-    ...verificationPayload,
+    constructorArguments: abiEncodeAddress(DEPLOYER_ADDRESS),
+    licenseType: "UNLICENSED",
+    artifact: oracleArtifact,
   });
 
+  const counterArtifact = await project("verified-forge-counter")
+    .tag("2026-02-02")
+    .getContractArtifact("src/Counter.sol:Counter");
   await etherscanClient.verifyContract({
-    sourceCode: stringifiedSourceCodeInput,
     address: SepoliaDeployedAddresses["release_2026_02_02#Counter"],
-    fullyQualifiedContractName: "src/Counter.sol:Counter",
     constructorArguments: abiEncodeAddress(
       SepoliaDeployedAddresses["release_2026_02_02#Oracle"],
     ), // Address of the Oracle contract as constructor argument
-    ...verificationPayload,
+    licenseType: "UNLICENSED",
+    artifact: counterArtifact,
   });
-}
-
-// Etherscan expects sources in a specific format, containing only the `content` field for each source
-function patchInputSources(
-  input: EthokoBuildInfoInput["input"],
-): EthokoBuildInfoInput["input"] {
-  const updatedSources: Record<string, { content: string }> = {};
-  for (const [key, source] of Object.entries(input.sources)) {
-    const content = source.content;
-    if (!content) {
-      throw new Error(
-        `Unexpected source format for ${key}: missing 'content' field`,
-      );
-    }
-    // Remove `urls` and `license` fields if they exist, and keep only the `content`
-    updatedSources[key] = { content };
-  }
-  return {
-    ...input,
-    sources: updatedSources,
-  };
 }
 
 function abiEncodeAddress(address: string): string {
@@ -205,33 +171,61 @@ class EtherscanVerificationClient {
 
   async verifyContract(payload: {
     address: string;
-    sourceCode: string;
-    fullyQualifiedContractName: string;
-    compilerVersion: string;
-    optimizationUsed: boolean;
-    optimizationRuns: number;
-    // Encoding of constructor arguments
     constructorArguments: string;
-    evmVersion: string;
-    licenseType: "MIT" | "UNLICENSED";
-  }) {
+    licenseType: "UNLICENSED" | "MIT";
+    artifact: EthokoContractArtifact;
+  }): Promise<void> {
+    const fullyQualifiedName = `${payload.artifact.sourceName}:${payload.artifact.contractName}`;
+
+    /**
+     * Etherscan API expects a few things, the few lines of code below reconstruct the expected input format.
+     * This is from my understanding, happy to receive corrections if I'm wrong:
+     * - the sources contain only the `content` field. Etherscan does not accept the `urls` and `license` fields that are present in the original input artifact, so we remove them,
+     * - the `settings` field does not need to be complete, I added the remappings as we use them. Actually, using the full `settings` from the `metadata` was not working as it has extra fields.
+     */
+    const sources: Record<string, { content: string }> = {};
+    for (const [key, source] of Object.entries(
+      payload.artifact.expandedMetadata.sources,
+    )) {
+      const content = source.content;
+      if (!content) {
+        throw new Error(
+          `Unexpected source format for ${key}: missing 'content' field`,
+        );
+      }
+      sources[key] = { content };
+    }
+    const reconstructedInput = {
+      language: payload.artifact.expandedMetadata.language,
+      settings: {
+        remappings: payload.artifact.expandedMetadata.settings.remappings,
+      },
+      sources,
+    };
     const queryParams = new URLSearchParams({
       apikey: this.apiKey,
       chainId: "11155111", // Sepolia chain ID
       module: "contract",
       action: "verifysourcecode",
       contractaddress: payload.address,
-      sourceCode: payload.sourceCode,
+      sourceCode: JSON.stringify(reconstructedInput),
       codeformat: "solidity-standard-json-input",
-      contractname: payload.fullyQualifiedContractName,
-      compilerversion: appendCompilerVersion(payload.compilerVersion),
-      optimizationUsed: payload.optimizationUsed ? "1" : "0",
-      runs: payload.optimizationRuns.toString(),
+      contractname: fullyQualifiedName,
+      compilerversion: appendCompilerVersion(
+        payload.artifact.expandedMetadata.compiler.version,
+      ),
+      optimizationUsed: payload.artifact.expandedMetadata.settings.optimizer
+        ?.enabled
+        ? "1"
+        : "0",
+      runs: (
+        payload.artifact.expandedMetadata.settings.optimizer?.runs ?? 0
+      ).toString(),
       constructorArguments: payload.constructorArguments,
-      evmVersion: payload.evmVersion,
+      evmVersion:
+        payload.artifact.expandedMetadata.settings.evmVersion ?? "london",
       licenseType: payload.licenseType === "MIT" ? "3" : "2", // MIT License or UNLICENSED
     });
-
     const response = await fetch(
       `https://api.etherscan.io/v2/api?${queryParams.toString()}`,
       {
@@ -239,31 +233,28 @@ class EtherscanVerificationClient {
       },
     );
 
-    const data = await response.json();
-    if (
-      typeof data === "object" &&
-      data !== null &&
-      "status" in data &&
-      data.status === "0"
-    ) {
-      if (
-        "result" in data &&
-        data.result === "Contract source code already verified"
-      ) {
-        console.log(
-          `Contract ${payload.fullyQualifiedContractName} already verified\n`,
-        );
+    const rawResponse = await response.text();
+    try {
+      const data = JSON.parse(rawResponse);
+      if ("status" in data && data.status === "0") {
+        if (
+          "result" in data &&
+          data.result === "Contract source code already verified"
+        ) {
+          console.log(`Contract ${fullyQualifiedName} already verified\n`);
+        } else {
+          console.error(`Verification failed for ${fullyQualifiedName}:`, data);
+        }
       } else {
-        console.error(
-          `Verification failed for ${payload.fullyQualifiedContractName}:`,
+        console.log(
+          `Verification submitted for ${fullyQualifiedName}:\n`,
           data,
         );
       }
-    } else {
-      console.log(
-        `Verification submitted for ${payload.fullyQualifiedContractName}:\n`,
-        data,
-      );
+    } catch (error) {
+      console.error("Failed to parse Etherscan response as JSON:", error);
+      console.error("Raw response from Etherscan:", rawResponse);
+      return;
     }
   }
 }
