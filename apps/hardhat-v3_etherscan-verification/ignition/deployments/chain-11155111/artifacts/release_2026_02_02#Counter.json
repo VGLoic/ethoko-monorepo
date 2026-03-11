@@ -1,5 +1,6 @@
 {
-  "_format": "ethoko-contract-artifact-v0",
+  "tag": "2026-02-02",
+  "_format": "exported-ethoko-contract-artifact-v0",
   "id": "dc5dd49bddb9",
   "project": "verified-counter",
   "abi": [
@@ -1434,5 +1435,176 @@
       "oracle()": "7dc0d1d0",
       "x()": "0c55699c"
     }
+  },
+  "expandedMetadata": {
+    "compiler": {
+      "version": "0.8.28+commit.7893614a"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "contract Oracle",
+              "name": "_oracle",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "constructor"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "by",
+              "type": "uint256"
+            }
+          ],
+          "name": "Increment",
+          "type": "event"
+        },
+        {
+          "anonymous": false,
+          "inputs": [
+            {
+              "indexed": false,
+              "internalType": "uint256",
+              "name": "by",
+              "type": "uint256"
+            }
+          ],
+          "name": "Multiply",
+          "type": "event"
+        },
+        {
+          "inputs": [],
+          "name": "inc",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "mul",
+          "outputs": [],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "oracle",
+          "outputs": [
+            {
+              "internalType": "contract Oracle",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        },
+        {
+          "inputs": [],
+          "name": "x",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "view",
+          "type": "function"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "compilationTarget": {
+        "project/contracts/Counter.sol": "Counter"
+      },
+      "evmVersion": "cancun",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        "project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.6.1/"
+      ]
+    },
+    "sources": {
+      "npm/@openzeppelin/contracts@5.6.1/access/Ownable.sol": {
+        "keccak256": "0xff6d0bb2e285473e5311d9d3caacb525ae3538a80758c10649a4d61029b017bb",
+        "license": "MIT",
+        "urls": [
+          "bzz-raw://8ed324d3920bb545059d66ab97d43e43ee85fd3bd52e03e401f020afb0b120f6",
+          "dweb:/ipfs/QmfEckWLmZkDDcoWrkEvMWhms66xwTLff9DDhegYpvHo1a"
+        ],
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)\n\npragma solidity ^0.8.20;\n\nimport {Context} from \"../utils/Context.sol\";\n\n/**\n * @dev Contract module which provides a basic access control mechanism, where\n * there is an account (an owner) that can be granted exclusive access to\n * specific functions.\n *\n * The initial owner is set to the address provided by the deployer. This can\n * later be changed with {transferOwnership}.\n *\n * This module is used through inheritance. It will make available the modifier\n * `onlyOwner`, which can be applied to your functions to restrict their use to\n * the owner.\n */\nabstract contract Ownable is Context {\n    address private _owner;\n\n    /**\n     * @dev The caller account is not authorized to perform an operation.\n     */\n    error OwnableUnauthorizedAccount(address account);\n\n    /**\n     * @dev The owner is not a valid owner account. (eg. `address(0)`)\n     */\n    error OwnableInvalidOwner(address owner);\n\n    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);\n\n    /**\n     * @dev Initializes the contract setting the address provided by the deployer as the initial owner.\n     */\n    constructor(address initialOwner) {\n        if (initialOwner == address(0)) {\n            revert OwnableInvalidOwner(address(0));\n        }\n        _transferOwnership(initialOwner);\n    }\n\n    /**\n     * @dev Throws if called by any account other than the owner.\n     */\n    modifier onlyOwner() {\n        _checkOwner();\n        _;\n    }\n\n    /**\n     * @dev Returns the address of the current owner.\n     */\n    function owner() public view virtual returns (address) {\n        return _owner;\n    }\n\n    /**\n     * @dev Throws if the sender is not the owner.\n     */\n    function _checkOwner() internal view virtual {\n        if (owner() != _msgSender()) {\n            revert OwnableUnauthorizedAccount(_msgSender());\n        }\n    }\n\n    /**\n     * @dev Leaves the contract without owner. It will not be possible to call\n     * `onlyOwner` functions. Can only be called by the current owner.\n     *\n     * NOTE: Renouncing ownership will leave the contract without an owner,\n     * thereby disabling any functionality that is only available to the owner.\n     */\n    function renounceOwnership() public virtual onlyOwner {\n        _transferOwnership(address(0));\n    }\n\n    /**\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\n     * Can only be called by the current owner.\n     */\n    function transferOwnership(address newOwner) public virtual onlyOwner {\n        if (newOwner == address(0)) {\n            revert OwnableInvalidOwner(address(0));\n        }\n        _transferOwnership(newOwner);\n    }\n\n    /**\n     * @dev Transfers ownership of the contract to a new account (`newOwner`).\n     * Internal function without access restriction.\n     */\n    function _transferOwnership(address newOwner) internal virtual {\n        address oldOwner = _owner;\n        _owner = newOwner;\n        emit OwnershipTransferred(oldOwner, newOwner);\n    }\n}\n"
+      },
+      "npm/@openzeppelin/contracts@5.6.1/utils/Context.sol": {
+        "keccak256": "0x493033a8d1b176a037b2cc6a04dad01a5c157722049bbecf632ca876224dd4b2",
+        "license": "MIT",
+        "urls": [
+          "bzz-raw://6a708e8a5bdb1011c2c381c9a5cfd8a9a956d7d0a9dc1bd8bcdaf52f76ef2f12",
+          "dweb:/ipfs/Qmax9WHBnVsZP46ZxEMNRQpLQnrdE4dK8LehML1Py8FowF"
+        ],
+        "content": "// SPDX-License-Identifier: MIT\n// OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)\n\npragma solidity ^0.8.20;\n\n/**\n * @dev Provides information about the current execution context, including the\n * sender of the transaction and its data. While these are generally available\n * via msg.sender and msg.data, they should not be accessed in such a direct\n * manner, since when dealing with meta-transactions the account sending and\n * paying for execution may not be the actual sender (as far as an application\n * is concerned).\n *\n * This contract is only required for intermediate, library-like contracts.\n */\nabstract contract Context {\n    function _msgSender() internal view virtual returns (address) {\n        return msg.sender;\n    }\n\n    function _msgData() internal view virtual returns (bytes calldata) {\n        return msg.data;\n    }\n\n    function _contextSuffixLength() internal view virtual returns (uint256) {\n        return 0;\n    }\n}\n"
+      },
+      "project/contracts/Counter.sol": {
+        "keccak256": "0xb6667c066098924e36b8f6022766e7d09ae4397383c620ad25c1f91cbc2b8034",
+        "license": "UNLICENSED",
+        "urls": [
+          "bzz-raw://faa4413201ee96d397c1d6f483c750800c189447bdd12c85e1fe807e279014a1",
+          "dweb:/ipfs/QmZ8xRUkXPLkQGHacdPbttjJ8dAaFx4c3jm6U5jBHke2dY"
+        ],
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nimport {InternalMath} from \"./InternalMath.sol\";\nimport {ExternalMath} from \"./ExternalMath.sol\";\nimport {Oracle} from \"./Oracle.sol\";\n\ncontract Counter {\n    using InternalMath for uint;\n    using ExternalMath for uint;\n\n    uint public x;\n    Oracle public oracle;\n\n    event Increment(uint by);\n    event Multiply(uint by);\n\n    constructor(Oracle _oracle) {\n        oracle = _oracle;\n    }\n\n    function inc() public {\n        uint by = oracle.by();\n        x = x.add(by);\n        emit Increment(by);\n    }\n\n    function mul() public {\n        uint by = oracle.by();\n        x = x.mul(by);\n        emit Multiply(by);\n    }\n}\n"
+      },
+      "project/contracts/ExternalMath.sol": {
+        "keccak256": "0x9546f57c88044caf108b188fc6502189dabd61eb251d0844938efb3d114f28cb",
+        "license": "UNLICENSED",
+        "urls": [
+          "bzz-raw://2dc01e8730aa3cbe4adf8ea455b4df1868d8c2f1c7dc4be86da01d15390c0e63",
+          "dweb:/ipfs/QmPW1bytD16y2quguLDMk8y4AWb3L9pnmmyuZY4dTbueWv"
+        ],
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nlibrary ExternalMath {\n    function mul(uint a, uint b) external pure returns (uint) {\n        return a * b;\n    }\n}\n"
+      },
+      "project/contracts/InternalMath.sol": {
+        "keccak256": "0xbe6a3308b302e3f014a1f09bda7e0a3373c37c1c7ea639d142945d1ff3f1f121",
+        "license": "UNLICENSED",
+        "urls": [
+          "bzz-raw://114644c1db0c3c758963e6ed5fecf9baf8f1c8322fa36176af33bd293bafd500",
+          "dweb:/ipfs/QmRPYifWrFW2FqNpZvszLxhCYWtZicBC13NtrpBqmWi57v"
+        ],
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nlibrary InternalMath {\n    function add(uint a, uint b) internal pure returns (uint) {\n        return a + b;\n    }\n}\n"
+      },
+      "project/contracts/Oracle.sol": {
+        "keccak256": "0x2119bffd001e416b0b6cb510e5e6c42790b4d3b1855311cd0b3c81a7b25ad10d",
+        "license": "UNLICENSED",
+        "urls": [
+          "bzz-raw://187e7e643d55df3f8a29f78e4041f055a0afe0a0507f02c0565f44301492472d",
+          "dweb:/ipfs/QmYvBYy3weABq9HYSMmTTQj1u9nKtanZoCVjNWBXEv5eMk"
+        ],
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nimport {Ownable} from \"@openzeppelin/contracts/access/Ownable.sol\";\n\ncontract Oracle is Ownable {\n    uint public by;\n\n    constructor(address initialOwner) Ownable(initialOwner) {}\n\n    event Updated(uint by);\n\n    function set(uint _by) public onlyOwner {\n        by = _by;\n        emit Updated(_by);\n    }\n}\n"
+      }
+    },
+    "version": 1
   }
 }
