@@ -16,7 +16,7 @@
     "reset-example": "./ethoko-scripts/reset-example.sh"
   },
   "devDependencies": {
-    "@ethoko/cli": "workspace:*",
+    "@ethoko/cli-beacon": "workspace:*",
     "@ethoko/eslint-config": "workspace:*",
     "@nomicfoundation/hardhat-ignition": "^3.0.7",
     "@nomicfoundation/hardhat-network-helpers": "^3.0.0",

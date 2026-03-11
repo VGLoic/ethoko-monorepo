@@ -72,10 +72,10 @@ jobs:
           node-version-file: .nvmrc
           cache: "pnpm"
       - run: pnpm install
-      - run: pnpm build --filter=@ethoko/cli
-      - run: pnpm --filter @ethoko/cli build:binary
+      - run: pnpm build --filter=@ethoko/cli-beacon
+      - run: pnpm --filter @ethoko/cli-beacon build:binary
       # Smoke test to ensure the CLI binary was built correctly
-      - run: ./packages/cli/binaries/ethoko-linux-x64 --version
+      - run: ./packages/cli-beacon/binaries/ethoko-linux-x64 --version
   test-e2e-core:
     runs-on: ubuntu-latest
     steps:
@@ -104,6 +104,6 @@ jobs:
       # For obscure reasons, the CLI needs to be explictly built and reinstalled
       # Otherwise, the observed behavior is that the apps are not finding the Ethoko CLI binary
       # This behavior has been observed in `uniswap-v4-core` and the `hardhat-v2` apps
-      - run: pnpm build --filter=@ethoko/cli
+      - run: pnpm build --filter=-beacon
       - run: pnpm install
       - run: pnpm test:e2e:apps

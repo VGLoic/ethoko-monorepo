@@ -1,4 +1,4 @@
-# @ethoko/cli
+# @ethoko/cli-beacon
 
 Standalone CLI for Ethoko artifact management.
 
