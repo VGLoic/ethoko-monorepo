@@ -1,5 +1,6 @@
 {
-  "_format": "ethoko-contract-artifact-v0",
+  "tag": "2026-02-02",
+  "_format": "exported-ethoko-contract-artifact-v0",
   "id": "a4f25cfb7766",
   "project": "verified-forge-counter",
   "abi": [
@@ -59,5 +60,77 @@
     "methodIdentifiers": {
       "mul(uint256,uint256)": "c8a4ac9c"
     }
+  },
+  "expandedMetadata": {
+    "compiler": {
+      "version": "0.8.33+commit.64118f21"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "a",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "b",
+              "type": "uint256"
+            }
+          ],
+          "name": "mul",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "compilationTarget": {
+        "src/ExternalMath.sol": "ExternalMath"
+      },
+      "evmVersion": "osaka",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs",
+        "useLiteralContent": true
+      },
+      "optimizer": {
+        "enabled": false,
+        "runs": 200
+      },
+      "remappings": [
+        ":@openzeppelin/contracts/=lib/openzeppelin-contracts/contracts/",
+        ":forge-std/=lib/forge-std/src/",
+        ":openzeppelin-contracts/=lib/openzeppelin-contracts/"
+      ]
+    },
+    "sources": {
+      "src/ExternalMath.sol": {
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nlibrary ExternalMath {\n    function mul(uint256 a, uint256 b) external pure returns (uint256) {\n        return a * b;\n    }\n}\n",
+        "keccak256": "0x3d58226f1727ea4543ee0b378206de62d9bff711f044e0955f40aa0d18e803eb",
+        "license": "UNLICENSED"
+      }
+    },
+    "version": 1
   }
 }

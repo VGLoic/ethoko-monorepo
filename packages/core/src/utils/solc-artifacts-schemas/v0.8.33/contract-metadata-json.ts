@@ -1,6 +1,6 @@
 import z from "zod";
 import { AbiItemSchema } from "./output-json";
-import { InputSourceSchema, SettingsSchema } from "./input-json";
+import { SettingsSchema, SolSourceSchema } from "./input-json";
 
 /**
  * This is the schema for the JSON structure of the "metadata" field of the contract output as output by the Solidity compiler (solc).
@@ -16,7 +16,7 @@ export const ContractMetadataSchema = z.object({
     version: z.string(),
   }),
   // Required: Source code language, basically selects a "sub-version" of the specification
-  language: z.enum(["Solidity", "Yul", "SolidityAST", "EVMAssembly"]),
+  language: z.literal("Solidity"),
   // Required: Generated information about the contract.
   output: z.object({
     // Required: ABI definition of the contract. See "Contract ABI Specification"
@@ -48,7 +48,7 @@ export const ContractMetadataSchema = z.object({
     libraries: z.record(z.string(), z.string()).optional(),
   }),
   // Required: Compilation source files/source units, keys are file paths
-  sources: z.record(z.string(), InputSourceSchema),
+  sources: z.record(z.string(), SolSourceSchema),
   // Required: The version of the metadata format
   version: z.number(),
 });

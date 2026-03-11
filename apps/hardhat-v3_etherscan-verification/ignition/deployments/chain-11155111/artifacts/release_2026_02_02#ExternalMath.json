@@ -1,5 +1,6 @@
 {
-  "_format": "ethoko-contract-artifact-v0",
+  "tag": "2026-02-02",
+  "_format": "exported-ethoko-contract-artifact-v0",
   "id": "dc5dd49bddb9",
   "project": "verified-counter",
   "abi": [
@@ -813,5 +814,78 @@
     "methodIdentifiers": {
       "mul(uint256,uint256)": "c8a4ac9c"
     }
+  },
+  "expandedMetadata": {
+    "compiler": {
+      "version": "0.8.28+commit.7893614a"
+    },
+    "language": "Solidity",
+    "output": {
+      "abi": [
+        {
+          "inputs": [
+            {
+              "internalType": "uint256",
+              "name": "a",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "b",
+              "type": "uint256"
+            }
+          ],
+          "name": "mul",
+          "outputs": [
+            {
+              "internalType": "uint256",
+              "name": "",
+              "type": "uint256"
+            }
+          ],
+          "stateMutability": "pure",
+          "type": "function"
+        }
+      ],
+      "devdoc": {
+        "kind": "dev",
+        "methods": {},
+        "version": 1
+      },
+      "userdoc": {
+        "kind": "user",
+        "methods": {},
+        "version": 1
+      }
+    },
+    "settings": {
+      "compilationTarget": {
+        "project/contracts/ExternalMath.sol": "ExternalMath"
+      },
+      "evmVersion": "cancun",
+      "libraries": {},
+      "metadata": {
+        "bytecodeHash": "ipfs"
+      },
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "remappings": [
+        "project/:@openzeppelin/contracts/=npm/@openzeppelin/contracts@5.6.1/"
+      ]
+    },
+    "sources": {
+      "project/contracts/ExternalMath.sol": {
+        "keccak256": "0x9546f57c88044caf108b188fc6502189dabd61eb251d0844938efb3d114f28cb",
+        "license": "UNLICENSED",
+        "urls": [
+          "bzz-raw://2dc01e8730aa3cbe4adf8ea455b4df1868d8c2f1c7dc4be86da01d15390c0e63",
+          "dweb:/ipfs/QmPW1bytD16y2quguLDMk8y4AWb3L9pnmmyuZY4dTbueWv"
+        ],
+        "content": "// SPDX-License-Identifier: UNLICENSED\npragma solidity ^0.8.28;\n\nlibrary ExternalMath {\n    function mul(uint a, uint b) external pure returns (uint) {\n        return a * b;\n    }\n}\n"
+      }
+    },
+    "version": 1
   }
 }

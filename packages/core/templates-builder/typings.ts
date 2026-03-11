@@ -211,10 +211,51 @@ async function getArtifact(
     throw contractArtifactResult.error;
   }
 
+  const metadataParsingResult = toResult(
+    () =>
+      JSON.parse(
+        contractArtifactResult.value.output.contract.metadata,
+      ) as ContractMetadata,
+  );
+  if (!metadataParsingResult.success) {
+    throw new Error(
+      `Failed to parse metadata for contract ${contractKey} in project "${project}:${tag}": ${metadataParsingResult.error}`,
+    );
+  }
+  const expandedMetadata = metadataParsingResult.value;
+
+  const sourcesWithMissingContent = Object.entries(
+    metadataParsingResult.value.sources,
+  )
+    .filter(([, source]) => !source.content)
+    .map(([sourcePath]) => sourcePath);
+
+  if (sourcesWithMissingContent.length > 0) {
+    const inputArtifactResult = await toAsyncResult(
+      getInputCompilationArtifact(project, tag),
+    );
+    if (!inputArtifactResult.success) {
+      throw inputArtifactResult.error;
+    }
+    const inputArtifact = inputArtifactResult.value;
+
+    for (const sourcePath of sourcesWithMissingContent) {
+      const inputSource = inputArtifact.input.sources[sourcePath];
+      if (inputSource && inputSource.content) {
+        if (!expandedMetadata.sources[sourcePath]) {
+          // Unreachable in practice
+          continue;
+        }
+        expandedMetadata.sources[sourcePath].content = inputSource.content;
+      }
+    }
+  }
+
   return contractOutputArtifactToExportedArtifact(
     project,
     tag,
     contractArtifactResult.value,
+    expandedMetadata,
   );
 }
 
@@ -229,10 +270,43 @@ function getArtifactSync(
     contractKey,
   );
 
+  const metadataParsingResult = toResult(
+    () =>
+      JSON.parse(contractArtifact.output.contract.metadata) as ContractMetadata,
+  );
+  if (!metadataParsingResult.success) {
+    throw new Error(
+      `Failed to parse metadata for contract ${contractKey} in project "${project}:${tag}": ${metadataParsingResult.error}`,
+    );
+  }
+  const expandedMetadata = metadataParsingResult.value;
+
+  const sourcesWithMissingContent = Object.entries(
+    metadataParsingResult.value.sources,
+  )
+    .filter(([, source]) => !source.content)
+    .map(([sourcePath]) => sourcePath);
+
+  if (sourcesWithMissingContent.length > 0) {
+    const inputArtifact = getInputCompilationArtifactSync(project, tag);
+
+    for (const sourcePath of sourcesWithMissingContent) {
+      const inputSource = inputArtifact.input.sources[sourcePath];
+      if (inputSource && inputSource.content) {
+        if (!expandedMetadata.sources[sourcePath]) {
+          // Unreachable in practice
+          continue;
+        }
+        expandedMetadata.sources[sourcePath].content = inputSource.content;
+      }
+    }
+  }
+
   return contractOutputArtifactToExportedArtifact(
     project,
     tag,
     contractArtifact,
+    expandedMetadata,
   );
 }
 
@@ -240,6 +314,7 @@ function contractOutputArtifactToExportedArtifact(
   project: string,
   tag: string,
   contractArtifact: EthokoOutputContractArtifact,
+  expandedMetadata: ContractMetadata,
 ): EthokoContractArtifact {
   return {
     tag,
@@ -269,6 +344,7 @@ function contractOutputArtifactToExportedArtifact(
     devdoc: contractArtifact.output.contract.devdoc,
     storageLayout: contractArtifact.output.contract.storageLayout,
     evm: contractArtifact.output.contract.evm,
+    expandedMetadata,
   };
 }
 
@@ -480,6 +556,17 @@ function toAsyncResult<T, TError = Error>(
     });
 }
 
+function toResult<T>(
+  fn: () => T,
+): { success: true; value: T } | { success: false; error: Error } {
+  try {
+    const value = fn();
+    return { success: true, value };
+  } catch (error) {
+    return { success: false, error: error as Error };
+  }
+}
+
 // #############################################################
 // ##################### Compilation types #####################
 // #############################################################
@@ -620,9 +707,39 @@ interface LinkReferences {
   };
 }
 
-// ##############################################
-// ################# Built type #################
-// ##############################################
+interface ContractMetadata {
+  compiler: {
+    keccak256?: string;
+    version: string;
+  };
+  language: string;
+  output: {
+    abi: unknown[];
+    devdoc?: unknown;
+    userdoc?: unknown;
+  };
+  settings: {
+    remappings?: string[];
+    optimizer?: OptimizerSettings;
+    evmVersion?: string;
+    eofVersion?: number;
+    viaIr?: boolean;
+    metadata?: unknown;
+    modelChecker?: unknown;
+    libraries?: Record<string, string>;
+    compilationTarget?: Record<string, string>;
+  };
+  sources: Record<
+    string,
+    {
+      license?: string;
+      keccak256?: string;
+      urls?: string[];
+      content?: string;
+    }
+  >;
+  version: number;
+}
 
 /**
  * This interface is derived from the compilation output.
@@ -708,4 +825,10 @@ export interface EthokoContractArtifact<
       readonly [methodSignature: string]: string;
     };
   };
+  /**
+   * Expanded metadata, parsed from the "metadata" field of the contract output.
+   * If the `content` field of the sources in the metadata is missing, it will try to fill it with the content from the input compilation artifact if it can find a match based on the source name.
+   * However, if it cannot find a match, the `content` field will be left as is (potentially undefined).
+   */
+  expandedMetadata: ContractMetadata;
 }

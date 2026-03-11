@@ -5,7 +5,7 @@ import z from "zod";
 
 const Keccak256DigestSchema = z.string().regex(/^0x[0-9a-fA-F]{64}$/);
 
-const SolSourceSchema = z.object({
+export const SolSourceSchema = z.object({
   // [Added by me]
   license: z.string().optional(),
   // Optional: keccak256 hash of the source file
