@@ -292,7 +292,14 @@ Example ethoko.json:
 }`);
   }
 
-  const configRaw = await fs.readFile(resolvedPath, "utf-8");
+  let configRaw: string;
+  try {
+    configRaw = await fs.readFile(resolvedPath, "utf-8");
+  } catch (err) {
+    throw new Error(
+      `Failed to read ethoko.json at ${resolvedPath}. Please ensure the file exists and is readable.`,
+    );
+  }
   let parsedJson: unknown;
   try {
     parsedJson = JSON.parse(configRaw);
@@ -310,8 +317,6 @@ Example ethoko.json:
     ${z.prettifyError(parsingResult.error)}`,
     );
   }
-
-  console.log("CONFIF: ", parsingResult.data);
 
   return { ...parsingResult.data, configPath: resolvedPath };
 }
