@@ -1,6 +1,7 @@
 import { deployScript } from "../rocketh/deploy.js";
-import { project } from "../.ethoko-typings";
-import * as RockethTypes from "rocketh/types";
+import { project } from "../.ethoko-typings/index.js";
+import type { ABI as CounterAbi } from "../.ethoko-typings/abis/curious-counter/2026-02-02/project/contracts/Counter.sol/Counter.d.js";
+import type * as RockethTypes from "rocketh/types";
 
 /**
  * This deployment script deploys the Counter contract targeting a specific release.
@@ -33,7 +34,7 @@ export default deployScript(
 
     const counterArtifact = await projectUtils
       .tag(TARGET_RELEASE_TAG)
-      .getContractArtifact("project/contracts/Counter.sol:Counter");
+      .getContractArtifact<CounterAbi>("project/contracts/Counter.sol:Counter");
 
     await deploy(`Counter@${TARGET_RELEASE_TAG}`, {
       account: deployer,

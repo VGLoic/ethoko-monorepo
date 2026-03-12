@@ -33,15 +33,6 @@ type AvailableContractsForTagAsArray<TProject, TTag> =
 export type AvailableContractForTag<TProject, TTag> =
   AvailableContractsForTagAsArray<TProject, TTag>[number];
 
-export type AbiForContract<TProject, TContract> =
-  TProject extends AccurateProject
-    ? TContract extends Contract<TProject>
-      ? Projects[TProject]["abis"][TContract] extends readonly unknown[]
-        ? Projects[TProject]["abis"][TContract]
-        : readonly unknown[]
-      : readonly unknown[]
-    : readonly unknown[];
-
 export function project<TProject extends Project>(project: TProject) {
   return {
     /**
@@ -82,27 +73,23 @@ export function project<TProject extends Project>(project: TProject) {
      */
     contract<TContract extends Contract<TProject>>(contractKey: TContract) {
       return {
-        getArtifact(
+        getArtifact<TAbi extends unknown[] = unknown[]>(
           tag: AvailableTagForContract<TProject, TContract>,
-        ): Promise<
-          EthokoContractArtifact<AbiForContract<TProject, TContract>>
-        > {
+        ): Promise<EthokoContractArtifact<TAbi>> {
           return getArtifact(
             project,
             tag as string,
             contractKey as string,
-          ) as Promise<
-            EthokoContractArtifact<AbiForContract<TProject, TContract>>
-          >;
+          ) as Promise<EthokoContractArtifact<TAbi>>;
         },
-        getArtifactSync(
+        getArtifactSync<TAbi extends unknown[] = unknown[]>(
           tag: AvailableTagForContract<TProject, TContract>,
-        ): EthokoContractArtifact<AbiForContract<TProject, TContract>> {
+        ): EthokoContractArtifact<TAbi> {
           return getArtifactSync(
             project,
             tag as string,
             contractKey as string,
-          ) as EthokoContractArtifact<AbiForContract<TProject, TContract>>;
+          ) as EthokoContractArtifact<TAbi>;
         },
         getAvailableTags(): AvailableTagForContractAsArray<
           TProject,
@@ -131,35 +118,23 @@ export function project<TProject extends Project>(project: TProject) {
      */
     tag<TTag extends Tag<TProject>>(tag: TTag) {
       return {
-        getContractArtifact(
+        getContractArtifact<TAbi extends unknown[] = unknown[]>(
           contractKey: AvailableContractForTag<TProject, TTag>,
-        ): Promise<
-          EthokoContractArtifact<
-            AbiForContract<TProject, AvailableContractForTag<TProject, TTag>>
-          >
-        > {
+        ): Promise<EthokoContractArtifact<TAbi>> {
           return getArtifact(
             project,
             tag as string,
             contractKey as string,
-          ) as Promise<
-            EthokoContractArtifact<
-              AbiForContract<TProject, AvailableContractForTag<TProject, TTag>>
-            >
-          >;
+          ) as Promise<EthokoContractArtifact<TAbi>>;
         },
-        getContractArtifactSync(
+        getContractArtifactSync<TAbi extends unknown[] = unknown[]>(
           contractKey: AvailableContractForTag<TProject, TTag>,
-        ): EthokoContractArtifact<
-          AbiForContract<TProject, AvailableContractForTag<TProject, TTag>>
-        > {
+        ): EthokoContractArtifact<TAbi> {
           return getArtifactSync(
             project,
             tag as string,
             contractKey as string,
-          ) as EthokoContractArtifact<
-            AbiForContract<TProject, AvailableContractForTag<TProject, TTag>>
-          >;
+          ) as EthokoContractArtifact<TAbi>;
         },
         getAvailableContracts(): AvailableContractsForTagAsArray<
           TProject,
@@ -201,11 +176,11 @@ export function project<TProject extends Project>(project: TProject) {
   };
 }
 
-async function getArtifact(
+async function getArtifact<TAbi extends unknown[] = unknown[]>(
   project: string,
   tag: string,
   contractKey: string,
-): Promise<EthokoContractArtifact> {
+): Promise<EthokoContractArtifact<TAbi>> {
   const contractArtifactResult = await toAsyncResult(
     getContractOutputCompilationArtifact(project, tag, contractKey),
   );
@@ -261,11 +236,11 @@ async function getArtifact(
   );
 }
 
-function getArtifactSync(
+function getArtifactSync<TAbi extends unknown[] = unknown[]>(
   project: string,
   tag: string,
   contractKey: string,
-): EthokoContractArtifact {
+): EthokoContractArtifact<TAbi> {
   const contractArtifact = getContractOutputCompilationArtifactSync(
     project,
     tag,
@@ -312,18 +287,20 @@ function getArtifactSync(
   );
 }
 
-function contractOutputArtifactToExportedArtifact(
+function contractOutputArtifactToExportedArtifact<
+  TAbi extends unknown[] = unknown[],
+>(
   project: string,
   tag: string,
   contractArtifact: EthokoOutputContractArtifact,
   expandedMetadata: ContractMetadata,
-): EthokoContractArtifact {
+): EthokoContractArtifact<TAbi> {
   return {
     tag,
     _format: "exported-ethoko-contract-artifact-v0",
     id: contractArtifact.id,
     project,
-    abi: contractArtifact.output.contract.abi,
+    abi: contractArtifact.output.contract.abi as TAbi,
     metadata: contractArtifact.output.contract.metadata || "",
     bytecode: prefixWith0x(
       contractArtifact.output.contract.evm.bytecode.object,

@@ -14,17 +14,5 @@ export const PROJECTS = {
         "src/IncrementOracle.sol:IncrementOracle",
       ],
     },
-    abis: {
-      "src/Counter.sol:Counter": [
-        {
-          type: "function",
-          name: "increment",
-          inputs: [],
-          outputs: [],
-          stateMutability: "nonpayable",
-        },
-      ],
-      "src/IncrementOracle.sol:IncrementOracle": [],
-    },
   },
 } as const;
