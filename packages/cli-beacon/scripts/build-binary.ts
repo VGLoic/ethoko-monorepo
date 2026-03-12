@@ -1,4 +1,4 @@
-import { mkdirSync } from "node:fs";
+import { mkdirSync, readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -11,6 +11,9 @@ const platforms = [
 ] as const;
 
 const scriptsDir = dirname(fileURLToPath(import.meta.url));
+const packageJson = JSON.parse(
+  readFileSync(new URL("../package.json", import.meta.url), "utf8"),
+) as { version: string };
 const outDir = join(scriptsDir, "../binaries");
 mkdirSync(outDir, { recursive: true });
 
@@ -24,6 +27,9 @@ for (const platform of platforms) {
     compile: {
       target: platform.target,
       outfile: outFile,
+    },
+    define: {
+      __ETHOKO_VERSION__: JSON.stringify(packageJson.version),
     },
   });
 
