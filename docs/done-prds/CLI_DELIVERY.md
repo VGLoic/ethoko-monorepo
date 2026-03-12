@@ -1888,18 +1888,18 @@ ethoko --version
 
 **Tasks:**
 
-1. Write `packages/cli-beacon/README.md`
-   - Installation instructions: `npm install -g @ethoko/cli` (binary) and `npm install -g @ethoko/cli-beacon` (Node.js)
-   - Explain the two-package model briefly for contributors
-   - Configuration guide
-   - Command reference
-   - Examples
-2. Update root `README.md`
-   - Add CLI installation section
-   - Link to CLI package README
-3. Improve error messages
-   - Review all error cases for clarity
-   - Ensure actionable error messages
+1. ✅ Write `packages/cli-beacon/README.md`
+   - ✅ Installation instructions: `npm install -g @ethoko/cli` (binary) and `npm install -g @ethoko/cli-beacon` (Node.js)
+   - ✅ Explain the two-package model briefly for contributors
+   - ✅ Configuration guide
+   - ✅ Command reference
+   - ✅ Examples
+2. ✅ Update root `README.md`
+   - ✅ Add CLI installation section
+   - ✅ Link to CLI package README
+3. ✅ Improve error messages
+   - ✅ Review all error cases for clarity
+   - ✅ Ensure actionable error messages
 
 **CLI README Structure:**
 
@@ -1985,15 +1985,15 @@ pnpm --filter @ethoko/cli-beacon check-types
 
 ### Timeline Summary
 
-| Phase                                 | Duration        | Cumulative  |
-| ------------------------------------- | --------------- | ----------- |
-| Phase 1: CLI Structure (✅ Completed) | 4-6 hours       | 4-6 hours   |
-| Phase 2: Binary Compilation (✅ Done) | 2-3 hours       | 6-9 hours   |
-| Phase 3: Beacon Pattern + Publish     | 2-3 hours       | 8-12 hours  |
-| Phase 4: GitHub Actions (CI)          | 2-3 hours       | 10-15 hours |
-| Phase 5: Install Script (curl)        | 2 hours         | 12-17 hours |
-| Phase 6: Documentation                | 1-1.5 hours     | 13-18 hours |
-| **Total**                             | **13-18 hours** |             |
+| Phase                                  | Duration        | Cumulative  |
+| -------------------------------------- | --------------- | ----------- |
+| Phase 1: CLI Structure (✅ Completed)  | 4-6 hours       | 4-6 hours   |
+| Phase 2: Binary Compilation (✅ Done)  | 2-3 hours       | 6-9 hours   |
+| Phase 3: Beacon Pattern + Publish (✅) | 2-3 hours       | 8-12 hours  |
+| Phase 4: GitHub Actions (CI) (✅ Done) | 2-3 hours       | 10-15 hours |
+| Phase 5: Install Script (curl) (✅)    | 2 hours         | 12-17 hours |
+| Phase 6: Documentation (✅ Completed)  | 1-1.5 hours     | 13-18 hours |
+| **Total**                              | **13-18 hours** |             |
 
 ---
 
@@ -2492,16 +2492,16 @@ const ConfigSchema = z.object({
 
 **Pre-Implementation Testing:**
 
-- [ ] `@ethoko/core` has no Hardhat dependencies
-- [ ] All 8 CLI client functions are pure (no HRE dependency)
+- [x] `@ethoko/core` has no Hardhat dependencies
+- [x] All 8 CLI client functions are pure (no HRE dependency)
 
 **Phase 1 Testing:**
 
-- [ ] Config loads from JSON file
-- [ ] Config validation catches invalid configs
-- [ ] Storage provider factory creates correct instances
-- [ ] All 8 commands parse arguments correctly
-- [ ] Commands call correct `@ethoko/core` functions
+- [x] Config loads from JSON file
+- [x] Config validation catches invalid configs
+- [x] Storage provider factory creates correct instances
+- [x] All 8 commands parse arguments correctly
+- [x] Commands call correct `@ethoko/core` functions
 
 **Phase 2 Testing:**
 
@@ -2512,53 +2512,44 @@ const ConfigSchema = z.object({
 
 **Phase 3 Testing:**
 
-- [ ] Source package renamed to `@ethoko/cli-beacon`
-- [ ] All workspace references updated (`apps/*/package.json`)
-- [ ] Pending changeset updated to `@ethoko/cli-beacon`
-- [ ] `publish-cli.ts` generates correct wrapper `package.json`
-- [ ] `publish-cli.ts` generates correct platform `package.json` (os/cpu fields)
-- [ ] Wrapper script uses `require.resolve` (no `node_modules` walking)
-- [ ] Wrapper errors with actionable message when binary not found (no fallback)
-- [ ] `--dry-run` mode generates packages without publishing
-- [ ] Generated `@ethoko/cli/bin/ethoko` resolves and spawns binary correctly
+- [x] Source package renamed to `@ethoko/cli-beacon`
+- [x] All workspace references updated (`apps/*/package.json`)
+- [x] Pending changeset updated to `@ethoko/cli-beacon`
+- [x] `publish-cli.ts` generates correct wrapper `package.json`
+- [x] `publish-cli.ts` generates correct platform `package.json` (os/cpu fields)
+- [x] Wrapper script uses `require.resolve` (no `node_modules` walking)
+- [x] Wrapper errors with actionable message when binary not found (no fallback)
+- [x] `--dry-run` mode generates packages without publishing
+- [x] Generated `@ethoko/cli/bin/ethoko` resolves and spawns binary correctly
 
 **Phase 4 Testing:**
 
-- [ ] GitHub Actions detects `@ethoko/cli-beacon` in published packages
-- [ ] Bun installs in CI
-- [ ] All binaries build in CI
-- [ ] `publish-cli.ts` publishes `@ethoko/cli` + 5 platform packages
-- [ ] GitHub Release created with `cli-v{version}` tag
-- [ ] All 5 binaries uploaded to GitHub Release
-- [ ] No errors in CI logs
-- [ ] End-to-end: `npm install -g @ethoko/cli` resolves binary and runs
+- [x] GitHub Actions detects `@ethoko/cli-beacon` in published packages
+- [x] Bun installs in CI
+- [x] All binaries build in CI
+- [x] `publish-cli.ts` publishes `@ethoko/cli` + 5 platform packages
+- [x] GitHub Release created with `cli-v{version}` tag
+- [x] All 5 binaries uploaded to GitHub Release
+- [x] No errors in CI logs
+- [x] End-to-end: `npm install -g @ethoko/cli` resolves binary and runs
 
 **Phase 5 Testing:**
 
-- [ ] Install script detects platform correctly
-- [ ] Install script downloads correct binary
-- [ ] Install script sets executable permissions
-- [ ] Install script adds to PATH
-- [ ] Installed binary works
+- [x] Install script detects platform correctly
+- [x] Install script downloads correct binary
+- [x] Install script sets executable permissions
+- [x] Install script adds to PATH
+- [x] Installed binary works
 
 **Phase 6 Testing:**
 
-- [ ] Documentation is accurate
-- [ ] Examples work as documented
-- [ ] Error messages are clear and actionable
+- [x] Documentation is accurate
+- [x] Examples work as documented
+- [x] Error messages are clear and actionable
 
 **Integration Testing:**
 
-- [ ] Test with Foundry project
-- [ ] Test with Hardhat v2 project
-- [ ] Test with Hardhat v3 project
-- [ ] Test with LocalStack (S3)
-- [ ] Test with real AWS S3
-- [ ] Test on Linux x64
-- [ ] Test on Linux arm64 (GitHub Actions runner)
-- [ ] Test on macOS Intel
-- [ ] Test on macOS Apple Silicon
-- [ ] Test on Windows (WSL)
+Integration testing is scheduled for a later iteration.
 
 ---
 
@@ -2566,10 +2557,10 @@ const ConfigSchema = z.object({
 
 **Pre-Release:**
 
-- [ ] All tests passing
-- [ ] Documentation complete
-- [ ] CHANGELOG updated
-- [ ] Version bumped
+- [x] All tests passing
+- [x] Documentation complete
+- [x] CHANGELOG updated
+- [x] Version bumped
 
 **Create Changeset:**
 
@@ -2581,21 +2572,21 @@ pnpm changeset add
 
 **Merge Version PR:**
 
-- [ ] Changesets bot creates PR (bumps `@ethoko/cli-beacon`)
-- [ ] Review version bump
-- [ ] Merge PR → triggers release
+- [x] Changesets bot creates PR (bumps `@ethoko/cli-beacon`)
+- [x] Review version bump
+- [x] Merge PR → triggers release
 
 **Post-Release:**
 
-- [ ] Verify `@ethoko/cli-beacon` published to npm (by Changesets)
-- [ ] Verify `@ethoko/cli` published to npm (by `publish-cli.ts`)
-- [ ] Verify 5 platform packages published to npm
-- [ ] Verify GitHub Release created with `cli-v{version}` tag
-- [ ] Verify binaries uploaded to GitHub Release
-- [ ] Test npm install: `npm install -g @ethoko/cli@latest`
-- [ ] Test wrapper resolves binary: `ethoko --version`
-- [ ] Test curl install
-- [ ] Announce release
+- [x] Verify `@ethoko/cli-beacon` published to npm (by Changesets)
+- [x] Verify `@ethoko/cli` published to npm (by `publish-cli.ts`)
+- [x] Verify 5 platform packages published to npm
+- [x] Verify GitHub Release created with `cli-v{version}` tag
+- [x] Verify binaries uploaded to GitHub Release
+- [x] Test npm install: `npm install -g @ethoko/cli@latest`
+- [x] Test wrapper resolves binary: `ethoko --version`
+- [x] Test curl install
+- [x] Announce release
 
 ---
 
@@ -2640,11 +2631,6 @@ pnpm changeset add
 **Document Status:** Draft  
 **Next Review Date:** 2026-03-11
 
-**Approvals:**
-
-- [ ] Engineering Lead
-- [ ] Product Manager
-- [ ] Technical Lead
 
 ---
 
