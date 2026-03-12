@@ -9,6 +9,8 @@ import { registerPullCommand } from "./commands/pull.js";
 import { registerPushCommand } from "./commands/push.js";
 import { registerRestoreCommand } from "./commands/restore.js";
 import { registerTypingsCommand } from "./commands/typings.js";
+import { registerUninstallCommand } from "./commands/uninstall.js";
+import { registerUpgradeCommand } from "./commands/upgrade.js";
 import { VERSION } from "./version.js";
 
 const program = new Command();
@@ -29,5 +31,7 @@ registerArtifactsCommand(program, getConfig);
 registerTypingsCommand(program, getConfig);
 registerExportCommand(program, getConfig);
 registerRestoreCommand(program, getConfig);
+registerUpgradeCommand(program);
+registerUninstallCommand(program);
 
 program.parse(process.argv);
