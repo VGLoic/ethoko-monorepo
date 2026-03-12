@@ -2492,16 +2492,16 @@ const ConfigSchema = z.object({
 
 **Pre-Implementation Testing:**
 
-- [ ] `@ethoko/core` has no Hardhat dependencies
-- [ ] All 8 CLI client functions are pure (no HRE dependency)
+- [x] `@ethoko/core` has no Hardhat dependencies
+- [x] All 8 CLI client functions are pure (no HRE dependency)
 
 **Phase 1 Testing:**
 
-- [ ] Config loads from JSON file
-- [ ] Config validation catches invalid configs
-- [ ] Storage provider factory creates correct instances
-- [ ] All 8 commands parse arguments correctly
-- [ ] Commands call correct `@ethoko/core` functions
+- [x] Config loads from JSON file
+- [x] Config validation catches invalid configs
+- [x] Storage provider factory creates correct instances
+- [x] All 8 commands parse arguments correctly
+- [x] Commands call correct `@ethoko/core` functions
 
 **Phase 2 Testing:**
 
@@ -2512,15 +2512,15 @@ const ConfigSchema = z.object({
 
 **Phase 3 Testing:**
 
-- [ ] Source package renamed to `@ethoko/cli-beacon`
-- [ ] All workspace references updated (`apps/*/package.json`)
-- [ ] Pending changeset updated to `@ethoko/cli-beacon`
-- [ ] `publish-cli.ts` generates correct wrapper `package.json`
-- [ ] `publish-cli.ts` generates correct platform `package.json` (os/cpu fields)
-- [ ] Wrapper script uses `require.resolve` (no `node_modules` walking)
-- [ ] Wrapper errors with actionable message when binary not found (no fallback)
-- [ ] `--dry-run` mode generates packages without publishing
-- [ ] Generated `@ethoko/cli/bin/ethoko` resolves and spawns binary correctly
+- [x] Source package renamed to `@ethoko/cli-beacon`
+- [x] All workspace references updated (`apps/*/package.json`)
+- [x] Pending changeset updated to `@ethoko/cli-beacon`
+- [x] `publish-cli.ts` generates correct wrapper `package.json`
+- [x] `publish-cli.ts` generates correct platform `package.json` (os/cpu fields)
+- [x] Wrapper script uses `require.resolve` (no `node_modules` walking)
+- [x] Wrapper errors with actionable message when binary not found (no fallback)
+- [x] `--dry-run` mode generates packages without publishing
+- [x] Generated `@ethoko/cli/bin/ethoko` resolves and spawns binary correctly
 
 **Phase 4 Testing:**
 
@@ -2631,11 +2631,6 @@ pnpm changeset add
 **Document Status:** Draft  
 **Next Review Date:** 2026-03-11
 
-**Approvals:**
-
-- [ ] Engineering Lead
-- [ ] Product Manager
-- [ ] Technical Lead
 
 ---
 
