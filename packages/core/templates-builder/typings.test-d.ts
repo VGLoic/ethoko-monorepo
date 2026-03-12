@@ -22,3 +22,21 @@ test("ExportContractArtifactResult matches EthokoContractArtifact in typings", (
     {} as unknown as ExportContractArtifactResult,
   );
 });
+
+test("EthokoContractArtifact ABI can be narrowed", () => {
+  const artifact = {} as EthokoTypings.EthokoContractArtifact<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >;
+  assertType<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >(artifact.abi);
+  assertType<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >(
+    {} as EthokoTypings.AbiForContract<
+      "doubtful-counter",
+      "v1.0.1",
+      "src/Counter.sol:Counter"
+    >,
+  );
+});

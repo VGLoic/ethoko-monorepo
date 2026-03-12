@@ -71,10 +71,7 @@ const deployCounter: DeployFunction = async function (
     `IncrementOracle@${TARGET_RELEASE}`,
     {
       contract: {
-        // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
-        abi: incrementOracleArtifact.abi as RemoveReadonly<
-          typeof incrementOracleArtifact.abi
-        >,
+        abi: incrementOracleArtifact.abi,
         bytecode: incrementOracleArtifact.evm.bytecode.object,
         metadata: incrementOracleArtifact.metadata,
       },
@@ -88,8 +85,7 @@ const deployCounter: DeployFunction = async function (
   );
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
-      abi: counterArtifact.abi as RemoveReadonly<typeof counterArtifact.abi>,
+      abi: counterArtifact.abi,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },
@@ -99,10 +95,6 @@ const deployCounter: DeployFunction = async function (
     },
     from: deployer,
   });
-};
-
-type RemoveReadonly<T> = {
-  -readonly [P in keyof T]: T[P];
 };
 ```
 

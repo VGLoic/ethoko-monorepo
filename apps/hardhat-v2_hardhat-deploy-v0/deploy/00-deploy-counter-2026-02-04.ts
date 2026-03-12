@@ -25,10 +25,6 @@ import { project } from "../.ethoko-typings";
 
 const TARGET_RELEASE = "2026-02-04";
 
-type RemoveReadonly<T> = {
-  -readonly [P in keyof T]: T[P];
-};
-
 const deployCounter: DeployFunction = async function (
   hre: HardhatRuntimeEnvironment,
 ) {
@@ -50,8 +46,7 @@ const deployCounter: DeployFunction = async function (
   );
   await hre.deployments.deploy(`Counter@${TARGET_RELEASE}`, {
     contract: {
-      // The `abi` field is typed as `readonly` in the Ethoko-generated typings, but `hardhat-deploy` expects a mutable array.
-      abi: counterArtifact.abi as RemoveReadonly<typeof counterArtifact.abi>,
+      abi: counterArtifact.abi,
       bytecode: counterArtifact.evm.bytecode.object,
       metadata: counterArtifact.metadata,
     },
