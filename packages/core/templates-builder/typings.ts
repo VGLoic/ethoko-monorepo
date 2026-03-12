@@ -3,20 +3,21 @@ import fs from "node:fs/promises";
 import fsSync from "node:fs";
 import { PROJECTS, ETHOKO_PATH } from "./summary-exports.js";
 
-type AccurateProject = keyof typeof PROJECTS;
+type Projects = typeof PROJECTS;
+type AccurateProject = keyof Projects;
 export type Project = AccurateProject extends never ? string : AccurateProject;
 
 export type Contract<TProject> = TProject extends AccurateProject
-  ? keyof (typeof PROJECTS)[TProject]["contracts"]
+  ? keyof Projects[TProject]["contracts"]
   : string;
 export type Tag<TProject> = TProject extends AccurateProject
-  ? keyof (typeof PROJECTS)[TProject]["tags"]
+  ? keyof Projects[TProject]["tags"]
   : string;
 
 type AvailableTagForContractAsArray<TProject, TContract> =
   TProject extends AccurateProject
     ? TContract extends Contract<TProject>
-      ? (typeof PROJECTS)[TProject]["contracts"][TContract]
+      ? Projects[TProject]["contracts"][TContract]
       : string[]
     : string[];
 
@@ -26,19 +27,20 @@ export type AvailableTagForContract<TProject, TContract> =
 type AvailableContractsForTagAsArray<TProject, TTag> =
   TProject extends AccurateProject
     ? TTag extends Tag<TProject>
-      ? (typeof PROJECTS)[TProject]["tags"][TTag]
+      ? Projects[TProject]["tags"][TTag]
       : string[]
     : string[];
 export type AvailableContractForTag<TProject, TTag> =
   AvailableContractsForTagAsArray<TProject, TTag>[number];
 
-type AbiForContract<TProject, TContract> = TProject extends AccurateProject
-  ? TContract extends Contract<TProject>
-    ? (typeof PROJECTS)[TProject]["abis"][TContract] extends readonly unknown[]
-      ? (typeof PROJECTS)[TProject]["abis"][TContract]
+export type AbiForContract<TProject, TContract> =
+  TProject extends AccurateProject
+    ? TContract extends Contract<TProject>
+      ? Projects[TProject]["abis"][TContract] extends readonly unknown[]
+        ? Projects[TProject]["abis"][TContract]
+        : readonly unknown[]
       : readonly unknown[]
-    : readonly unknown[]
-  : readonly unknown[];
+    : readonly unknown[];
 
 export function project<TProject extends Project>(project: TProject) {
   return {

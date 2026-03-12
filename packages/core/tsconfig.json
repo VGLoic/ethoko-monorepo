@@ -7,5 +7,6 @@
       "@test/*": ["./test/*"]
     }
   },
+  "exclude": ["dist", "node_modules"],
   "include": ["src", "test", "templates-builder"]
 }
