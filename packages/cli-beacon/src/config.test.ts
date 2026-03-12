@@ -192,7 +192,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
     ],
   ] as const;
 
-  describe.for(invalidCases)("%s", ([_, configToTest, expectedError]) => {
+  describe.for(invalidCases)("%s", ([, configToTest, expectedError]) => {
     let configPath: string;
     beforeAll(async () => {
       // Create a temporary config file with the provided configToTest
@@ -271,7 +271,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
     ],
   ] as const;
 
-  describe.for(validCases)("%s", ([_, configToTest]) => {
+  describe.for(validCases)("%s", ([, configToTest]) => {
     let configPath: string;
     beforeAll(async () => {
       // Create a temporary config file with the provided configToTest

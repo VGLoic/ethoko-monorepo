@@ -295,7 +295,7 @@ Example ethoko.json:
   let configRaw: string;
   try {
     configRaw = await fs.readFile(resolvedPath, "utf-8");
-  } catch (err) {
+  } catch {
     throw new Error(
       `Failed to read ethoko.json at ${resolvedPath}. Please ensure the file exists and is readable.`,
     );
