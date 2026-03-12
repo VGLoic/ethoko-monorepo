@@ -15,17 +15,17 @@
   "include": [
     "./hardhat.config.ts",
     "./e2e-test/**/*",
-    ".ethoko-typings/*",
+    "./ignition/modules",
     "./scripts/*"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "artifacts",
-    "cache",
-    "lib",
-    "ethoko-storage",
-    ".ethoko",
-    ".ethoko-typings"
+    "./node_modules",
+    "./dist",
+    "./artifacts",
+    "./cache",
+    "./lib",
+    "./ethoko-storage",
+    "./.ethoko",
+    "./.ethoko-typings"
   ]
 }

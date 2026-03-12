@@ -77,7 +77,7 @@ export default deployScript(
     await deploy(`Counter@${TARGET_RELEASE}`, {
       account: deployer,
       artifact: {
-        abi: counterArtifact.abi,
+        abi: scopeAbi(counterArtifact.abi),
         bytecode: counterArtifact.bytecode,
         metadata: counterArtifact.metadata,
         // | | | | | | | | | | | | | |
@@ -99,6 +99,14 @@ export default deployScript(
   },
   { tags: ["Counter", "Counter_deploy", TARGET_RELEASE] },
 );
+
+// Scoping method in order to handle the case of empty typings have been generated, e.g. in CI
+function scopeAbi<T>(
+  abi: T,
+): T extends RockethTypes.Abi ? T : RockethTypes.Abi {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return abi as any;
+}
 ```
 
 The deployment script can be executed using the Hardhat-Deploy plugin:

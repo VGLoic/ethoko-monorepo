@@ -30,4 +30,13 @@ test("EthokoContractArtifact ABI can be narrowed", () => {
   assertType<
     readonly [{ readonly type: "function"; readonly name: "increment" }]
   >(artifact.abi);
+  assertType<
+    readonly [{ readonly type: "function"; readonly name: "increment" }]
+  >(
+    {} as EthokoTypings.AbiForContract<
+      "doubtful-counter",
+      "v1.0.1",
+      "src/Counter.sol:Counter"
+    >,
+  );
 });

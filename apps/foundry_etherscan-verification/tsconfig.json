@@ -12,15 +12,20 @@
     "types": ["node"],
     "resolveJsonModule": true
   },
-  "include": ["./hardhat.config.ts", "./e2e-test/**/*", "./scripts/*"],
+  "include": [
+    "./hardhat.config.ts",
+    "./e2e-test/**/*",
+    "./scripts/*",
+    "./ignition/modules"
+  ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "artifacts",
-    "cache",
-    "lib",
-    "ethoko-storage",
-    ".ethoko",
-    ".ethoko-typings"
+    "./node_modules",
+    "./dist",
+    "./artifacts",
+    "./cache",
+    "./lib",
+    "./ethoko-storage",
+    "./.ethoko",
+    "./.ethoko-typings"
   ]
 }

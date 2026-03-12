@@ -15,12 +15,12 @@
     "./deploy/**/*"
   ],
   "exclude": [
-    "node_modules",
-    "dist",
-    "artifacts",
-    "cache",
-    "lib",
-    ".ethoko",
-    ".ethoko-typings"
+    "./node_modules",
+    "./dist",
+    "./artifacts",
+    "./cache",
+    "./lib",
+    "./.ethoko",
+    "./.ethoko-typings"
   ]
 }

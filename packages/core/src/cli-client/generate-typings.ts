@@ -6,8 +6,14 @@ import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 
 /**
- * Based from the Ethoko releases folder content, generate a `summary-exports.ts`, a `summary.json` and a `index.ts` files in the Ethoko typings folder.
- * This file contains the PROJECTS object that maps the project name to the contracts and tags.
+ * Based from the Ethoko releases folder content, generate in the Ethoko typings folder
+ * - `summary-exports.ts`: contains the summary of the projects, tags and contracts as a `constant` typescript object,
+ * - `summary.json`: contains the same summary but in a JSON format,
+ * - `index.ts`: contains all the utils to be imported by the end-developer, it is generated purely from a template file,
+ * - `abis/{project}/{tag}/{sourceName}/{contract}.d.ts`: contains the ABI typings for each contract, organized by project, tag and contract,
+ * - `abis.d.ts`: contains a map to all the ABI typings files.
+ *
+ * Example of the content of the generated `summary-exports.ts` file:
  * ```ts
  * export const ETHOKO_PATH = "<the configured Ethoko path>"
  * export const PROJECTS = {
@@ -29,11 +35,14 @@ import { CliError } from "./error";
  *    }
  * } as const;
  * ```
+ * ```
  *
- * It consists of the following steps:
+ * The function consists of the following steps:
  * 1. Set up the local storage and the typings folder
  * 2. Read the projects, tags and contracts from the local storage and generate a summary object
- * 3. If no projects are found, generate empty summaries and typings files. Otherwise, generate the content of the `summary-exports.ts` file and write all the typings files to the typings folder.
+ * 3. If no projects are found, generate empty summaries and typings files.
+ *    Otherwise, generate the content of the `summary-exports.ts` file and write all the typings files to the typings folder.
+ *
  * @throws CliError if there is an error while reading local storage or writing typings files.
  */
 export async function generateArtifactsSummariesAndTypings(
@@ -90,14 +99,19 @@ export async function generateArtifactsSummariesAndTypings(
     return;
   }
 
-  // project -> contract -> tag
   const summary: Record<
     string,
     {
+      // project -> contract -> tags
       tagsPerContract: Record<string, string[]>;
+      // project -> tag -> contracts
       contractsPerTag: Record<string, string[]>;
-      abisPerContract: Record<string, unknown[]>;
     }
+  > = {};
+  // project -> tag -> contract -> abi
+  const abisPerContractPerTag: Record<
+    string,
+    Record<string, Record<string, unknown[]>>
   > = {};
 
   for (const project of projects) {
@@ -111,10 +125,16 @@ export async function generateArtifactsSummariesAndTypings(
     }
     const tagsPerContract: Record<string, string[]> = {};
     const contractsPerTag: Record<string, string[]> = {};
-    const abisPerContract: Record<string, unknown[]> = {};
+    const projectAbisPerContractPerTag: Record<
+      string,
+      Record<string, unknown[]>
+    > = {};
     for (const { tag } of tagsResult.value) {
       if (!contractsPerTag[tag]) {
         contractsPerTag[tag] = [];
+      }
+      if (!projectAbisPerContractPerTag[tag]) {
+        projectAbisPerContractPerTag[tag] = {};
       }
       const artifactIdResult = await toAsyncResult(
         localStorage.retrieveArtifactId(project, tag),
@@ -158,24 +178,106 @@ export async function generateArtifactsSummariesAndTypings(
           tagsPerContract[contractKey] = [];
         }
         tagsPerContract[contractKey].push(tag);
-        if (!abisPerContract[contractKey]) {
-          abisPerContract[contractKey] =
+        if (!projectAbisPerContractPerTag[tag][contractKey]) {
+          projectAbisPerContractPerTag[tag][contractKey] =
             artifactResult.value.output.contract.abi;
         }
       }
     }
-    summary[project] = { tagsPerContract, contractsPerTag, abisPerContract };
+    summary[project] = {
+      tagsPerContract,
+      contractsPerTag,
+    };
+    abisPerContractPerTag[project] = projectAbisPerContractPerTag;
   }
-  // Generate the `generate/summary-exports.ts` content
+
+  const generatedSummaryResult = await toAsyncResult(
+    writeGeneratedSummaries(summary, localStorage.rootPath, ethokoTypingsPath),
+    { debug: opts.debug },
+  );
+  if (!generatedSummaryResult.success) {
+    throw new CliError(
+      "Unexpected error while generating the typings content. Run with debug mode for more info",
+    );
+  }
+  const writeAbisResult = await toAsyncResult(
+    writeAbiTypings(abisPerContractPerTag, ethokoTypingsPath),
+    { debug: opts.debug },
+  );
+  if (!writeAbisResult.success) {
+    throw new CliError(
+      "Unexpected error while writing the ABI typings files. Run with debug mode for more info",
+    );
+  }
+}
+
+async function writeAbiTypings(
+  abisPerContractPerTag: Record<
+    string,
+    Record<string, Record<string, unknown[]>>
+  >,
+  ethokoTypingsPath: string,
+): Promise<void> {
+  // Write all the `abis/${project}/${tag}/${sourceName}/${contractName}.d.ts` files
+  for (const project in abisPerContractPerTag) {
+    const projectAbisPerContractPerTag = abisPerContractPerTag[project];
+    for (const tag in projectAbisPerContractPerTag) {
+      const contractAbis = projectAbisPerContractPerTag[tag];
+      for (const contractKey in contractAbis) {
+        const [sourceName, contractName] = contractKey.split(":");
+        const contractFolderPath = `${ethokoTypingsPath}/abis/${project}/${tag}/${sourceName}`;
+        await fs.mkdir(contractFolderPath, { recursive: true });
+        const contractAbi = contractAbis[contractKey];
+        const contactTypingsContent = `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.
+export type ABI = ${JSON.stringify(contractAbi, null, 4)};
+        `;
+        await fs.writeFile(
+          `${contractFolderPath}/${contractName}.d.ts`,
+          contactTypingsContent,
+        );
+      }
+    }
+  }
+  // Write the `abis.d.ts` file
+  let abisDtsContent = `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.\n\n`;
+  abisDtsContent += `export interface ABIs {\n`;
+  for (const project in abisPerContractPerTag) {
+    const projectAbisPerContractPerTag = abisPerContractPerTag[project];
+    abisDtsContent += `  "${project}": {\n`;
+    for (const tag in projectAbisPerContractPerTag) {
+      const contractAbis = projectAbisPerContractPerTag[tag];
+      abisDtsContent += `    "${tag}": {\n`;
+      for (const contractKey in contractAbis) {
+        const [sourceName, contractName] = contractKey.split(":");
+        abisDtsContent += `      "${sourceName}:${contractName}": import("./abis/${project}/${tag}/${sourceName}/${contractName}.d.js").ABI,\n`;
+      }
+      abisDtsContent += `    };\n`;
+    }
+    abisDtsContent += `  };\n`;
+  }
+  abisDtsContent += `}\n`;
+
+  await fs.writeFile(`${ethokoTypingsPath}/abis.d.ts`, abisDtsContent);
+}
+
+async function writeGeneratedSummaries(
+  summary: Record<
+    string,
+    {
+      tagsPerContract: Record<string, string[]>;
+      contractsPerTag: Record<string, string[]>;
+    }
+  >,
+  ethokoPath: string,
+  ethokoTypingsPath: string,
+): Promise<void> {
   let generatedSummary = `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.\n\n`;
-  generatedSummary += `export const ETHOKO_PATH="${localStorage.rootPath}";\n\n`;
+  generatedSummary += `export const ETHOKO_PATH="${ethokoPath}";\n\n`;
   generatedSummary += `export const PROJECTS = {\n`;
   for (const project in summary) {
     const projectSummary = summary[project];
     if (!projectSummary) {
-      throw new CliError(
-        `Unexpected missing summary for project "${project}". Run with debug mode for more info`,
-      );
+      throw Error(`Unexpected missing summary for project "${project}"`);
     }
     generatedSummary += `  "${project}": {\n`;
     generatedSummary += `    contracts: {\n`;
@@ -192,60 +294,10 @@ export async function generateArtifactsSummariesAndTypings(
       )},\n`;
     }
     generatedSummary += `    },\n`;
-    generatedSummary += `    abis: {\n`;
-    for (const contract in projectSummary.abisPerContract) {
-      generatedSummary += `      "${contract}": ${JSON.stringify(
-        projectSummary.abisPerContract[contract],
-      )} as const,\n`;
-    }
-    generatedSummary += `    },\n`;
     generatedSummary += `  },\n`;
   }
   generatedSummary += `} as const;\n`;
 
-  const writeSummariesResult = await toAsyncResult(
-    writeSummaries(
-      ethokoTypingsPath,
-      localStorage.rootPath,
-      generatedSummary,
-      summary,
-    ),
-    { debug: opts.debug },
-  );
-  if (!writeSummariesResult.success) {
-    throw new CliError(
-      "Unexpected error while writing typings files. Run with debug mode for more info",
-    );
-  }
-}
-
-function generateEmptyReleasesSummaryTsContent(ethokoDirectory: string) {
-  return `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.
-  export const ETHOKO_PATH="${ethokoDirectory}";
-  
-  export const PROJECTS = {} as const;
-  `;
-}
-function generateEmptyReleasesSummaryJsonContent(ethokoPath: string) {
-  return {
-    ethokoPath,
-    projects: {},
-  };
-}
-
-async function writeSummaries(
-  ethokoTypingsPath: string,
-  ethokoPath: string,
-  generatedSummary: string,
-  summary: Record<
-    string,
-    {
-      tagsPerContract: Record<string, string[]>;
-      contractsPerTag: Record<string, string[]>;
-      abisPerContract: Record<string, unknown[]>;
-    }
-  >,
-): Promise<void> {
   await fs.writeFile(
     `${ethokoTypingsPath}/summary-exports.ts`,
     generatedSummary,
@@ -276,18 +328,27 @@ async function writeEmptySummaries(
   ethokoDirectory: string,
   ethokoTypingsPath: string,
 ): Promise<void> {
+  const emptyReleasesSummaryTsContent = `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.
+export const ETHOKO_PATH="${ethokoDirectory}";
+
+export const PROJECTS = {} as const;
+  `;
   await fs.writeFile(
     `${ethokoTypingsPath}/summary-exports.ts`,
-    generateEmptyReleasesSummaryTsContent(ethokoDirectory),
+    emptyReleasesSummaryTsContent,
   );
+  const emptyReleasesSummaryJsonContent = {
+    ethokoPath: ethokoDirectory,
+    projects: {},
+  };
   await fs.writeFile(
     `${ethokoTypingsPath}/summary.json`,
-    JSON.stringify(
-      generateEmptyReleasesSummaryJsonContent(ethokoDirectory),
-      null,
-      4,
-    ),
+    JSON.stringify(emptyReleasesSummaryJsonContent, null, 4),
   );
+  const emptyAbisContent = `// THIS IS AN AUTOGENERATED FILE. EDIT AT YOUR OWN RISKS.
+export type ABIs = object;
+  `;
+  await fs.writeFile(`${ethokoTypingsPath}/abis.d.ts`, emptyAbisContent);
 
   // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli-client/`
   const typingsTemplate = await fs.readFile(

@@ -1,5 +1,5 @@
 import { buildModule } from "@nomicfoundation/hardhat-ignition/modules";
-import { project } from "../../.ethoko-typings";
+import { project } from "../../.ethoko-typings/index.js";
 
 /**
  * This deployment script deploys the Counter contract targeting a specific release.
