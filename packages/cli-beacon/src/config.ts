@@ -13,7 +13,7 @@ const AwsStorageSchema = z
       ),
     awsProfile: z
       .string('The "awsProfile" field must be a string when "type" is "aws"')
-      .min(1)
+      .min(1, 'If provided, the "awsProfile" field must not be an empty string when "type" is "aws". Provide the name of the AWS CLI profile to use for credentials.')
       .optional(),
     awsBucketName: z
       .string('The "awsBucketName" field must be a string when "type" is "aws"')
@@ -25,7 +25,7 @@ const AwsStorageSchema = z
       .string(
         'The "awsAccessKeyId" field must be a string when "type" is "aws"',
       )
-      .min(1)
+      .min(1, 'If provided, the "awsAccessKeyId" field must not be an empty string when "type" is "aws". Provide a valid AWS access key ID.')
       .optional(),
     awsSecretAccessKey: z
       .string(
@@ -33,7 +33,7 @@ const AwsStorageSchema = z
       )
       .min(
         1,
-        'If provided, the "awsSecretAccessKey" field must not be an empty string when "type" is "aws"',
+        'If provided, the "awsSecretAccessKey" field must not be an empty string when "type" is "aws". Provide a valid AWS secret access key.',
       )
       .optional(),
     awsRoleArn: z
