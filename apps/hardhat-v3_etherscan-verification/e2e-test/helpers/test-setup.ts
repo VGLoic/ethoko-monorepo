@@ -47,12 +47,9 @@ export class CliConfigSetup {
     );
     const cliConfigContent = cliConfigTemplate
       .replace("PROJECT_NAME", PROJECT_NAME)
-      .replace(
-        "PULLED_ARTIFACTS_PATH",
-        `./../../${this.config.pulledArtifactsPath}`,
-      )
-      .replace("TYPINGS_PATH", `./../../${this.config.typingsPath}`)
-      .replace("STORAGE_PATH", `./../../${this.config.storagePath}`);
+      .replace("PULLED_ARTIFACTS_PATH", this.config.pulledArtifactsPath)
+      .replace("TYPINGS_PATH", this.config.typingsPath)
+      .replace("STORAGE_PATH", this.config.storagePath);
     await fs.writeFile(this.cliConfigPath, cliConfigContent);
 
     return async () => {
