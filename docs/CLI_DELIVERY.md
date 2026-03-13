@@ -9,7 +9,7 @@ Provide a standalone Ethoko CLI that works for Foundry and CI/CD without Hardhat
 We publish two types of npm packages with distinct roles:
 
 - `@ethoko/cli-beacon` (source package)
-  - Contains the CLI source code and uses `@ethoko/core` for all business logic.
+  - Contains the CLI source code, including command declarations and core logic.
   - Published by Changesets and can run in Node.js: `npx @ethoko/cli-beacon ...`.
   - Lives in `packages/cli-beacon/` and is used by integration tests.
 
@@ -51,4 +51,3 @@ These packages contain the compiled Bun binary and are published alongside `@eth
 ## Compatibility Guarantees
 
 - All 8 commands mirror the CLI behavior.
-- `@ethoko/core` has no Hardhat dependency, so logic is shared cleanly.

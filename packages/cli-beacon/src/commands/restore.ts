@@ -1,6 +1,10 @@
 import { Command } from "commander";
 import { z } from "zod";
-import { boxHeader, displayRestoreResult, error as cliError } from "@/ui/index.js";
+import {
+  boxHeader,
+  displayRestoreResult,
+  error as cliError,
+} from "@/ui/index.js";
 import { CliError, restore, type RestoreResult } from "@/client/index.js";
 import { LocalStorage } from "@/local-storage/local-storage.js";
 

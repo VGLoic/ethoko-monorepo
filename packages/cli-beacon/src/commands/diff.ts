@@ -1,6 +1,10 @@
 import { Command } from "commander";
 import { z } from "zod";
-import { boxHeader, displayDifferences, error as cliError } from "@/ui/index.js";
+import {
+  boxHeader,
+  displayDifferences,
+  error as cliError,
+} from "@/ui/index.js";
 import { CliError, generateDiffWithTargetRelease } from "@/client/index.js";
 import { LocalStorage } from "@/local-storage/local-storage.js";
 

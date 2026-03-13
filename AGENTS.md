@@ -7,8 +7,7 @@ Guidelines for AI coding agents working in the Ethoko monorepo.
 Ethoko is a warehouse for smart-contract compilation artifacts. It enables teams to version, store, and share smart-contract compilation artifacts, decoupling compilation from deployment.
 **Monorepo Structure:**
 
-- `packages/core`: Core functionalities of the Ethoko CLI (main package)
-- `packages/cli-beacon`: Standalone CLI for Ethoko artifact management
+- `packages/cli-beacon`: Standalone CLI for Ethoko artifact management (main package)
 - `packages/eslint-config`: Shared ESLint configurations
 - `packages/typescript-config`: Shared TypeScript configurations
 - `apps/*`: Integration examples with different frameworks (e.g., Foundry and Hardhat)
@@ -34,7 +33,7 @@ pnpm format             # Format all packages
 pnpm check-types        # Typecheck all packages
 
 # Package-specific (from package directory)
-cd packages/core
+cd packages/cli-beacon
 pnpm build              # Build using tsup
 pnpm lint               # ESLint with max 0 warnings
 pnpm test:e2e           # Run E2E tests (uses Vitest)
@@ -46,9 +45,9 @@ pnpm vitest run test/e2e/push-pull.e2e.test.ts
 pnpm vitest run -t "test name pattern"
 ```
 
-**Test Framework:** Vitest with global setup, 60s timeout, located in `test/**/*.e2e.test.ts` for `packages/core` and `e2e-test/*.e2e.test.ts` for integration apps `apps/`.
+**Test Framework:** Vitest with global setup, 60s timeout, located in `test/**/*.e2e.test.ts` for `packages/cli-beacon` and `e2e-test/*.e2e.test.ts` for integration apps `apps/`.
 
-### E2E Test Pattern for `@ethoko/core`
+### E2E Test Pattern for `@ethoko/cli-beacon`
 
 E2E tests use a fixture-based pattern with Vitest's `test.extend()` for automatic setup/cleanup:
 
@@ -108,7 +107,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 2. **`pnpm check-types`** - Typecheck all packages
 3. **`pnpm lint`** - Lint all packages (max 0 warnings)
 4. **`pnpm format`** - Format all packages
-5. **`pnpm test:e2e:core`** - Run all E2E tests for `@ethoko/core`
+5. **`pnpm test:e2e:core`** - Run all E2E tests for `@ethoko/cli-beacon`
 6. **`pnpm test:e2e:apps`** - Run all E2E tests for integration apps
 
 ### Failure Handling
@@ -248,7 +247,7 @@ type Result<T> =
 
 **Use custom error classes for CLI methods:**
 
-All CLI methods (packages/core/src/cli-client/\*) MUST throw `CliError` class instance.
+All CLI methods (packages/cli-beacon/src/client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {
@@ -259,7 +258,7 @@ export class CliError extends Error {
 ```
 
 ```typescript
-// cli-client method example
+// client method example
 const ensureResult = await toAsyncResult(
   localStorage.ensureProjectSetup(project),
   { debug: opts.debug },
@@ -274,7 +273,7 @@ if (!ensureResult.success) {
 
 **Use standard `Error` for internal methods:**
 
-Internal methods can diretly throw `Error` instances, no further wrapping is needed for now.
+Internal methods can directly throw `Error` instances, no further wrapping is needed for now.
 
 **Use result wrappers for async operations:**
 
@@ -346,16 +345,20 @@ Note: Use `console.error()` for task output (not `console.log()`) to ensure prop
 ## File Organization
 
 ```
-packages/core/
+packages/cli-beacon/
 ├── src/                               # Source backing package exports
-│   ├── cli-client/                    # CLI client entrypoints (push/pull/diff/typings)
-│   ├── cli-ui/                        # CLI UI primitives (spinners, output helpers)
+│   ├── client/                        # CLI core functionality (pull/push/search implementations)
+│   ├── commands/                      # CLI command definitions and handlers (consumes client methods)
+│   ├── config/                        # CLI configuration management
+│   ├── ethoko-artifacts/              # Ethoko artifact definitions
+│   ├── local-storage/                 # Local artifact storage read/write logic
+│   ├── solc-artifacts/                # Solc artifact definitions
 │   ├── storage-provider/              # Storage provider interfaces and implementations
-│   ├── utils/                         # Utility functions and helpers
-│   │   ├── supported-origins/         # Logic for mapping supported artifact formats to Ethoko format
-│   │   ├── ethoko-artifacts-schemas/  # Zod schemas for Ethoko artifact formats
-│   │   └── solc-artifact-schemas/     # Zod schemas for standard solc artifact formats
-│   └── local-storage.ts               # Local artifact storage read/write utilities
+│   ├── supported-origins/             # Supported origins for artifacts with mapping logic (e.g., Hardhat, Foundry)
+│   ├── ui/                            # CLI UI primitives (spinners, output helpers)
+│   └── utils/                         # Utility functions and helpers
+├── templates-builder/                 # Template for generated typescript typings (through `typings` command)
+├── test/                              # End to end tests for `client` methods (Vitest)
 ├── package.json                       # Package metadata and exports map
 └── README.md                          # Public API overview and usage
 ```

@@ -3,7 +3,10 @@ import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
 import { boxHeader, error as cliError, LOG_COLORS } from "@/ui/index.js";
-import { CliError, generateArtifactsSummariesAndTypings } from "@/client/index.js";
+import {
+  CliError,
+  generateArtifactsSummariesAndTypings,
+} from "@/client/index.js";
 import { LocalStorage } from "@/local-storage/local-storage.js";
 
 import type { EthokoCliConfig } from "../config/config.js";

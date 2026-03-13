@@ -315,7 +315,7 @@ async function writeGeneratedSummaries(
     ),
   );
 
-  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli-client/`
+  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli/`
   const typingsTemplate = await fs.readFile(
     path.join(new URL(import.meta.url).pathname, "..", "typings.txt"),
     "utf-8",
@@ -350,7 +350,7 @@ export type ABIs = object;
   `;
   await fs.writeFile(`${ethokoTypingsPath}/abis.d.ts`, emptyAbisContent);
 
-  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli-client/`
+  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli/`
   const typingsTemplate = await fs.readFile(
     path.join(new URL(import.meta.url).pathname, "..", "typings.txt"),
     "utf-8",

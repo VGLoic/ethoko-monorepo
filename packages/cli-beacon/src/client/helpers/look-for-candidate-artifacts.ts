@@ -9,7 +9,7 @@ import {
   inferOriginalArtifactFormat,
   InferredArtifact,
 } from "@/supported-origins/infer-original-artifact-format";
-import { OriginalBuildInfoPaths } from "@/utils/supported-origins/map-original-artifact-to-ethoko-artifact";
+import { OriginalBuildInfoPaths } from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
 
 type CandidateBuildInfoOption = {
   display: string;
