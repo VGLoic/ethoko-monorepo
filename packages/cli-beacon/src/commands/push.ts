@@ -3,8 +3,8 @@ import { z } from "zod";
 import { boxHeader, error as cliError, displayPushResult } from "@/ui/index.js";
 import { CliError, push } from "@/client/index.js";
 
-import type { EthokoCliConfig } from "../config.js";
-import { createStorageProvider } from "../utils/storage-provider.js";
+import type { EthokoCliConfig } from "../config/config.js";
+import { createStorageProvider } from "./utils/storage-provider.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 

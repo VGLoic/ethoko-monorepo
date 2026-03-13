@@ -2,8 +2,8 @@ import path from "path";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
-} from "@/utils/ethoko-artifacts-schemas/v0";
-import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
+} from "@/ethoko-artifacts/v0";
+import { deriveEthokoArtifactId } from "@/ethoko-artifacts/derive-ethoko-artifact-id";
 import {
   readInputArtifact,
   readOutputArtifact,

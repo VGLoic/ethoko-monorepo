@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage";
+import { LocalStorage } from "../local-storage/local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 

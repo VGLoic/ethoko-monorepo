@@ -7,9 +7,9 @@ import {
   error as cliError,
 } from "@/ui/index.js";
 import { CliError, listPulledArtifacts } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage";
+import { LocalStorage } from "@/local-storage/local-storage.js";
 
-import type { EthokoCliConfig } from "../config.js";
+import type { EthokoCliConfig } from "../config/config.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 

@@ -8,7 +8,7 @@ import {
   EthokoInputArtifactSchema,
   type TagManifest,
   TagManifestSchema,
-} from "./utils/ethoko-artifacts-schemas/v0";
+} from "../ethoko-artifacts/v0";
 import { Dirent } from "fs";
 
 /**

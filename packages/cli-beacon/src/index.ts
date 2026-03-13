@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { loadConfig } from "./config.js";
+import { loadConfig } from "./config/config.js";
 import { registerArtifactsCommand } from "./commands/artifacts.js";
 import { registerDiffCommand } from "./commands/diff.js";
 import { registerExportCommand } from "./commands/export.js";

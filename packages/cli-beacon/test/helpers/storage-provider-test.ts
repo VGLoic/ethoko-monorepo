@@ -5,7 +5,7 @@ import {
   TestS3StorageProviderFactory,
 } from "./storage-provider-factory";
 import { StorageProvider } from "@/storage-provider/storage-provider.interface";
-import { LocalStorage } from "@/local-storage";
+import { LocalStorage } from "@/local-storage/local-storage";
 import { createTestLocalStorage } from "./local-storage-factory";
 
 /**

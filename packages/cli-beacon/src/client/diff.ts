@@ -1,18 +1,18 @@
 import { createHash } from "node:crypto";
 
 import { createSpinner } from "../ui/utils";
-import { LocalStorage } from "../local-storage";
+import { LocalStorage } from "../local-storage/local-storage";
 import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 import {
   lookForCandidateArtifacts,
   promptUserSelection,
 } from "./helpers/look-for-candidate-artifacts";
-import { EthokoContractOutputArtifact } from "@/utils/ethoko-artifacts-schemas/v0";
+import { EthokoContractOutputArtifact } from "@/ethoko-artifacts/v0";
 import {
   mapOriginalArtifactToEthokoArtifact,
   OriginalBuildInfoPaths,
-} from "@/utils/supported-origins/map-original-artifact-to-ethoko-artifact";
+} from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
 
 function buildInfoPathToSuccessText(paths: OriginalBuildInfoPaths): string {
   if (paths.format === "hardhat-v3") {

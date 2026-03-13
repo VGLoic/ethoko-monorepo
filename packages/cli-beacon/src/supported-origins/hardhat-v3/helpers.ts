@@ -4,9 +4,9 @@ import {
   HardhatV3CompilerContractOutputSchema,
   HardhatV3CompilerInputPieceSchema,
   HardhatV3CompilerOutputPieceSchema,
-} from "@/utils/supported-origins/hardhat-v3/schemas";
+} from "@/supported-origins/hardhat-v3/schemas";
 import z from "zod";
-import { lookForContractArtifactPath } from "@/utils/look-for-contract-artifact-path";
+import { lookForContractArtifactPath } from "@/supported-origins/utils/look-for-contract-artifact-path";
 import { toAsyncResult } from "@/utils/result";
 
 export function readInputArtifact(

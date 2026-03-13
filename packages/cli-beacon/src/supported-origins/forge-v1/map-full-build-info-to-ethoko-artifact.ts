@@ -1,10 +1,10 @@
 import fs from "fs/promises";
 import path from "path";
-import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
+import { deriveEthokoArtifactId } from "@/ethoko-artifacts/derive-ethoko-artifact-id";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
-} from "@/utils/ethoko-artifacts-schemas/v0";
+} from "@/ethoko-artifacts/v0";
 import { ForgeCompilerOutputWithBuildInfoOptionSchema } from "./schemas";
 import { lookForForgeContractArtifactPath } from "./look-for-forge-contract-artifact-paths";
 

@@ -1,6 +1,6 @@
 import { LocalStorageProvider, S3BucketProvider } from "@/storage-provider";
 
-import type { EthokoCliConfig } from "../config.js";
+import type { EthokoCliConfig } from "../../config/config.js";
 
 export function createStorageProvider(config: EthokoCliConfig) {
   if (config.storage.type === "aws") {

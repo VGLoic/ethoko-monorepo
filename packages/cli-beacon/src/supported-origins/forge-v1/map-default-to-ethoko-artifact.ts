@@ -1,18 +1,18 @@
 import fs from "fs/promises";
 import path from "path";
-import { deriveEthokoArtifactId } from "@/utils/derive-ethoko-artifact-id";
+import { deriveEthokoArtifactId } from "@/ethoko-artifacts/derive-ethoko-artifact-id";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
   EthokoInputArtifactSchema,
-} from "@/utils/ethoko-artifacts-schemas/v0";
+} from "@/ethoko-artifacts/v0";
 import { ForgeCompilerDefaultOutputSchema } from "./schemas";
 import z from "zod";
 import {
   SettingsSchema,
   SolcJsonInputSchema,
-} from "@/utils/solc-artifacts-schemas/v0.8.33/input-json";
-import { SolcContractSchema } from "@/utils/solc-artifacts-schemas/v0.8.33/output-json";
+} from "@/solc-artifacts/v0.8.33/input-json";
+import { SolcContractSchema } from "@/solc-artifacts/v0.8.33/output-json";
 import { lookForForgeContractArtifactPath } from "./look-for-forge-contract-artifact-paths";
 
 type SolcContractOutput = z.infer<typeof SolcContractSchema>;

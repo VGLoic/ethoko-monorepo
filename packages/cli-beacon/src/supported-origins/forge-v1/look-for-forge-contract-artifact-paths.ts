@@ -1,8 +1,8 @@
 import fs from "fs/promises";
 import { toAsyncResult } from "@/utils/result";
-import { ForgeCompilerContractOutputSchema } from "@/utils/supported-origins/forge-v1/schemas";
+import { ForgeCompilerContractOutputSchema } from "@/supported-origins/forge-v1/schemas";
 import z from "zod";
-import { lookForContractArtifactPath } from "@/utils/look-for-contract-artifact-path";
+import { lookForContractArtifactPath } from "@/supported-origins/utils/look-for-contract-artifact-path";
 
 export async function* lookForForgeContractArtifactPath(
   rootArtifactsFolderPath: string,

@@ -9,7 +9,7 @@ import {
 import {
   mapOriginalArtifactToEthokoArtifact,
   OriginalBuildInfoPaths,
-} from "@/utils/supported-origins/map-original-artifact-to-ethoko-artifact";
+} from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
 
 function buildInfoPathToSuccessText(paths: OriginalBuildInfoPaths): string {
   if (paths.format === "hardhat-v3") {

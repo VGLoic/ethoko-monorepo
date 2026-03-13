@@ -8,7 +8,7 @@ import { CliError } from "../error";
 import {
   inferOriginalArtifactFormat,
   InferredArtifact,
-} from "@/utils/supported-origins/infer-original-artifact-format";
+} from "@/supported-origins/infer-original-artifact-format";
 import { OriginalBuildInfoPaths } from "@/utils/supported-origins/map-original-artifact-to-ethoko-artifact";
 
 type CandidateBuildInfoOption = {

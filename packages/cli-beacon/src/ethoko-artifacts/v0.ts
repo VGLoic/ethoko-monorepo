@@ -1,9 +1,9 @@
 import z from "zod";
-import { SolcJsonInputSchema } from "../solc-artifacts-schemas/v0.8.33/input-json";
+import { SolcJsonInputSchema } from "../solc-artifacts/v0.8.33/input-json";
 import {
   OutputSourceSchema,
   SolcContractSchema,
-} from "../solc-artifacts-schemas/v0.8.33/output-json";
+} from "../solc-artifacts/v0.8.33/output-json";
 import { FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT } from "../supported-origins/forge-v1/schemas";
 import { HARDHAT_V2_COMPILER_OUTPUT_FORMAT } from "../supported-origins/hardhat-v2/schemas";
 import {

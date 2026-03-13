@@ -14,7 +14,7 @@ import {
 import {
   detectInstallMethod,
   type InstallMethod,
-} from "../utils/installation.js";
+} from "./utils/installation.js";
 
 const UNINSTALL_INSTRUCTIONS: Record<Exclude<InstallMethod, "curl">, string> = {
   "npm-global": "npm uninstall -g @ethoko/cli",

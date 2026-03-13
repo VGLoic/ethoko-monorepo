@@ -11,7 +11,7 @@ import {
   downloadBinary,
   getLatestVersion,
   type InstallMethod,
-} from "../utils/installation.js";
+} from "./utils/installation.js";
 
 const UPGRADE_INSTRUCTIONS: Record<Exclude<InstallMethod, "curl">, string> = {
   "npm-global": "npm install -g @ethoko/cli@latest",

@@ -1,9 +1,9 @@
 import z from "zod";
-import { SolcJsonInputSchema } from "../../solc-artifacts-schemas/v0.8.33/input-json";
+import { SolcJsonInputSchema } from "@/solc-artifacts/v0.8.33/input-json";
 import {
   AbiItemSchema,
   SolcJsonOutputSchema,
-} from "../../solc-artifacts-schemas/v0.8.33/output-json";
+} from "@/solc-artifacts/v0.8.33/output-json";
 
 /**
  * # Supported formats

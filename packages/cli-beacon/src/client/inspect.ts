@@ -1,7 +1,7 @@
-import { LocalStorage } from "../local-storage";
-import { toAsyncResult } from "../utils/result";
+import { LocalStorage } from "../local-storage/local-storage";
+import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
-import type { EthokoInputArtifact } from "../utils/ethoko-artifacts-schemas/v0";
+import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
 
 export type InspectResult = {
   project: string;

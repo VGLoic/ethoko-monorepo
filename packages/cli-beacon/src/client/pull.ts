@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage";
+import { LocalStorage } from "../local-storage/local-storage";
 import { StorageProvider } from "../storage-provider";
 import { createSpinner } from "@/ui/utils";
 import { toAsyncResult } from "../utils/result";

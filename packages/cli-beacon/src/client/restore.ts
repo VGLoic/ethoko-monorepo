@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createSpinner } from "@/ui/utils";
-import { LocalStorage } from "@/local-storage";
+import { LocalStorage } from "@/local-storage/local-storage";
 import { StorageProvider } from "@/storage-provider";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";

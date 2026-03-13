@@ -1,7 +1,7 @@
 import {
   EthokoInputArtifact,
   EthokoContractOutputArtifact,
-} from "../ethoko-artifacts-schemas/v0";
+} from "../ethoko-artifacts/v0";
 import { mapForgeV1DefaultArtifactToEthokoArtifact } from "./forge-v1/map-default-to-ethoko-artifact";
 import { mapForgeV1FullBuildInfoToEthokoArtifact } from "./forge-v1/map-full-build-info-to-ethoko-artifact";
 import { mapHardhatV2ArtifactToEthokoArtifact } from "./hardhat-v2/map-to-ethoko-artifact";
