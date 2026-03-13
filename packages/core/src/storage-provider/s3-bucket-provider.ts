@@ -22,16 +22,22 @@ import fs from "fs/promises";
 type S3BucketProviderConfig = {
   bucketName: string;
   bucketRegion: string;
-  credentials?: {
-    accessKeyId: string;
-    secretAccessKey: string;
-    role?: {
-      roleArn: string;
-      externalId?: string;
-      sessionName?: string;
-      durationSeconds?: number;
-    };
-  };
+  credentials?:
+    | {
+        type: "static";
+        accessKeyId: string;
+        secretAccessKey: string;
+        role?: {
+          roleArn: string;
+          externalId?: string;
+          sessionName?: string;
+          durationSeconds?: number;
+        };
+      }
+    | {
+        type: "profile";
+        profile: string; // AWS CLI profile name to load credentials from
+      };
   endpoint?: string;
   forcePathStyle?: boolean;
   debug?: boolean;
@@ -83,6 +89,24 @@ export class S3BucketProvider implements StorageProvider {
       return this.client;
     }
 
+    if (credentialsConfig.type === "profile") {
+      if (this.config.debug) {
+        console.error(
+          styleText(
+            LOG_COLORS.log,
+            `AWS credentials profile "${credentialsConfig.profile}" provided in config, loading credentials from profile`,
+          ),
+        );
+      }
+      this.client = new S3Client({
+        region: this.config.bucketRegion,
+        endpoint: this.config.endpoint,
+        forcePathStyle: this.config.forcePathStyle,
+        profile: credentialsConfig.profile,
+      });
+      return this.client;
+    }
+
     if (!credentialsConfig.role) {
       if (this.config.debug) {
         console.error(
@@ -128,7 +152,10 @@ export class S3BucketProvider implements StorageProvider {
 
   private async getRoleCredentials(): Promise<RoleCredentials> {
     const credentialsConfig = this.config.credentials;
-    const role = credentialsConfig?.role;
+    if (!credentialsConfig || credentialsConfig.type !== "static") {
+      throw new Error("Role credentials configuration is missing or invalid");
+    }
+    const role = credentialsConfig.role;
     if (!role) {
       throw new Error("Role configuration is missing");
     }
