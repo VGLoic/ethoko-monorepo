@@ -3,15 +3,15 @@ import { styleText } from "node:util";
 
 import { Command } from "commander";
 import { z } from "zod";
-import { boxHeader, error as cliError, LOG_COLORS } from "@ethoko/core/cli-ui";
+import { boxHeader, error as cliError, LOG_COLORS } from "@/ui/index.js";
 import {
   CliError,
   exportContractArtifact,
   type ExportContractArtifactResult,
-} from "@ethoko/core/cli-client";
-import { LocalStorage } from "@ethoko/core/local-storage";
+} from "@/client/index.js";
+import { LocalStorage } from "@/local-storage/local-storage.js";
 
-import type { EthokoCliConfig } from "../config.js";
+import type { EthokoCliConfig } from "../config/config.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 

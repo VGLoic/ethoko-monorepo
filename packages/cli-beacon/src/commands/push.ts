@@ -1,14 +1,10 @@
 import { Command } from "commander";
 import { z } from "zod";
-import {
-  boxHeader,
-  error as cliError,
-  displayPushResult,
-} from "@ethoko/core/cli-ui";
-import { CliError, push } from "@ethoko/core/cli-client";
+import { boxHeader, error as cliError, displayPushResult } from "@/ui/index.js";
+import { CliError, push } from "@/client/index.js";
 
-import type { EthokoCliConfig } from "../config.js";
-import { createStorageProvider } from "../utils/storage-provider.js";
+import type { EthokoCliConfig } from "../config/config.js";
+import { createStorageProvider } from "./utils/storage-provider.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 

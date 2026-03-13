@@ -4,14 +4,14 @@ import {
   error as cliError,
   info as cliInfo,
   success as cliSuccess,
-} from "@ethoko/core/cli-ui";
+} from "@/ui/index.js";
 
 import {
   detectInstallMethod,
   downloadBinary,
   getLatestVersion,
   type InstallMethod,
-} from "../utils/installation.js";
+} from "./utils/installation.js";
 
 const UPGRADE_INSTRUCTIONS: Record<Exclude<InstallMethod, "curl">, string> = {
   "npm-global": "npm install -g @ethoko/cli@latest",

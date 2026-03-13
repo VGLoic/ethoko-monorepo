@@ -9,12 +9,12 @@ import {
   error as cliError,
   info as cliInfo,
   success as cliSuccess,
-} from "@ethoko/core/cli-ui";
+} from "@/ui/index.js";
 
 import {
   detectInstallMethod,
   type InstallMethod,
-} from "../utils/installation.js";
+} from "./utils/installation.js";
 
 const UNINSTALL_INSTRUCTIONS: Record<Exclude<InstallMethod, "curl">, string> = {
   "npm-global": "npm uninstall -g @ethoko/cli",

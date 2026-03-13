@@ -4,12 +4,12 @@ import {
   boxHeader,
   displayPullResults,
   error as cliError,
-} from "@ethoko/core/cli-ui";
-import { CliError, pull } from "@ethoko/core/cli-client";
-import { LocalStorage } from "@ethoko/core/local-storage";
+} from "@/ui/index.js";
+import { CliError, pull } from "@/client/index.js";
+import { LocalStorage } from "@/local-storage/local-storage.js";
 
-import type { EthokoCliConfig } from "../config.js";
-import { createStorageProvider } from "../utils/storage-provider.js";
+import type { EthokoCliConfig } from "../config/config.js";
+import { createStorageProvider } from "./utils/storage-provider.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
