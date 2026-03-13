@@ -1,5 +1,11 @@
 # @ethoko/core
 
+## 0.11.0
+
+### Minor Changes
+
+- 6f4447d: Allow AWS profile in the AWS storage configuration
+
 ## 0.10.0
 
 ### Minor Changes

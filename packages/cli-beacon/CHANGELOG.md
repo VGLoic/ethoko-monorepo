@@ -1,5 +1,16 @@
 # @ethoko/cli-beacon
 
+## 0.4.0
+
+### Minor Changes
+
+- d3a919c: Improve CLI config parsing
+
+### Patch Changes
+
+- Updated dependencies [6f4447d]
+  - @ethoko/core@0.11.0
+
 ## 0.3.0
 
 ### Minor Changes
