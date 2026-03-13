@@ -1,34 +1,29 @@
 import { beforeAll, describe } from "vitest";
 import crypto from "crypto";
-import { COMPILATION_TARGETS } from "./compilation-targets.js";
 import {
-  ConfigSetup,
   CliConfigSetup,
-  HardhatConfigSetup,
-  HardhatDeployScriptSetup,
+  ConfigSetup,
+  DeployScriptSetup,
 } from "./helpers/test-setup.js";
 import { testPushPullDeploy } from "./test-push-pull-deploy.js";
 
-describe("[Hardhat v3 - Hardhat-deploy v2] Push artifact, pull artifact, deploy - CLI - Isolated Build", () => {
+describe("[Foundry - Etherscan Verification] - Default compilation without test - Push artifact, pull artifact, deploy - CLI", () => {
   const testId = crypto.randomBytes(16).toString("hex");
   const tag = testId;
 
   const config = new ConfigSetup(testId);
   const cliConfigSetup = new CliConfigSetup(config);
-  const hardhatConfigSetup = new HardhatConfigSetup(config);
-  const deploymentScriptSetup = new HardhatDeployScriptSetup(config);
+  const deployScriptSetup = new DeployScriptSetup(config);
 
   const ethokoCommand = `pnpm ethoko --config ${cliConfigSetup.cliConfigPath}`;
 
   beforeAll(async () => {
     const configCleanup = await config.setup();
     const cliCleanup = await cliConfigSetup.setup();
-    const hardhatCleanup = await hardhatConfigSetup.setup();
-    const deploymentScriptCleanup = await deploymentScriptSetup.setup();
+    const deployScriptCleanup = await deployScriptSetup.setup();
 
     return async () => {
-      await deploymentScriptCleanup();
-      await hardhatCleanup();
+      await deployScriptCleanup();
       await cliCleanup();
       await configCleanup();
     };
@@ -37,7 +32,7 @@ describe("[Hardhat v3 - Hardhat-deploy v2] Push artifact, pull artifact, deploy 
   testPushPullDeploy({
     ethokoCommand,
     tag,
-    hardhatConfigPath: hardhatConfigSetup.hardhatConfigPath,
-    outputArtifactsPath: COMPILATION_TARGETS.ISOLATED_BUILD.outputPath,
+    ignitionDeployPath: deployScriptSetup.ignitionDeployPath,
+    hardhatConfigPath: deployScriptSetup.hardhatConfigPath,
   });
 });

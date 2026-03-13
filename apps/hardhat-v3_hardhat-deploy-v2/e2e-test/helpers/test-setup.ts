@@ -58,9 +58,9 @@ export class CliConfigSetup {
   }
 }
 
-export class HardhatConfigSetup {
-  public hardhatConfigPath: string;
+export class DeployScriptSetup {
   private config: ConfigSetup;
+  public hardhatConfigPath: string;
 
   constructor(config: ConfigSetup) {
     this.config = config;
@@ -78,35 +78,21 @@ export class HardhatConfigSetup {
       .replace("PULLED_ARTIFACTS_PATH", pulledArtifactsPath)
       .replace("TYPINGS_PATH", this.config.typingsPath)
       .replace("STORAGE_PATH", `${this.config.storagePath}`);
-    await fs.writeFile(this.hardhatConfigPath, hardhatConfigContent);
-
-    return async () => {
-      await fs.rm(this.hardhatConfigPath, { force: true });
-    };
-  }
-}
-
-export class HardhatDeployScriptSetup {
-  private config: ConfigSetup;
-
-  constructor(config: ConfigSetup) {
-    this.config = config;
-  }
-
-  async setup(): Promise<() => Promise<void>> {
-    const deploymentScriptContent = await fs.readFile(
-      "deploy/deploy_counter-2026-02-02.ts",
-      "utf-8",
-    );
-    const updatedScriptContent = deploymentScriptContent
+      const deploymentScriptContent = await fs.readFile(
+        "deploy/deploy_counter-2026-02-02.ts",
+        "utf-8",
+      );
+      const updatedScriptContent = deploymentScriptContent
       .replaceAll("2026-02-02", this.config.testId)
       .replaceAll(".ethoko-typings", this.config.typingsPath);
-
-    const deploymentScriptPath = `deploy/deploy_counter-${this.config.testId}.ts`;
-    await fs.writeFile(deploymentScriptPath, updatedScriptContent);
+      
+      const deploymentScriptPath = `deploy/deploy_counter-${this.config.testId}.ts`;
+      await fs.writeFile(deploymentScriptPath, updatedScriptContent);
+      await fs.writeFile(this.hardhatConfigPath, hardhatConfigContent);
 
     return async () => {
       await fs.rm(deploymentScriptPath, { force: true });
+      await fs.rm(this.hardhatConfigPath, { force: true });
     };
   }
 }

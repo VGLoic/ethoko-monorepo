@@ -3,29 +3,29 @@ import crypto from "crypto";
 import { COMPILATION_TARGETS } from "./compilation-targets.js";
 import {
   ConfigSetup,
-  HardhatConfigSetup,
-  HardhatDeployScriptSetup,
+  CliConfigSetup,
+  DeployScriptSetup,
 } from "./helpers/test-setup.js";
 import { testPushPullDeploy } from "./test-push-pull-deploy.js";
 
-describe("[Hardhat v2 - Hardhat-deploy v0 - external lib] Push artifact, pull artifact, deploy - Hardhat Plugin", () => {
+describe("[Hardhat v2 - Hardhat-deploy v0 - external lib] Push artifact, pull artifact, deploy - CLI", () => {
   const testId = crypto.randomBytes(16).toString("hex");
   const tag = testId;
 
   const config = new ConfigSetup(testId);
-  const hardhatConfigSetup = new HardhatConfigSetup(config);
-  const deploymentScriptSetup = new HardhatDeployScriptSetup(config);
+  const cliConfigSetup = new CliConfigSetup(config);
+  const deploymentScriptSetup = new DeployScriptSetup(config);
 
-  const ethokoCommand = `pnpm hardhat ethoko --config ${hardhatConfigSetup.hardhatConfigPath}`;
+  const ethokoCommand = `pnpm ethoko --config ${cliConfigSetup.cliConfigPath}`;
 
   beforeAll(async () => {
     const configCleanup = await config.setup();
-    const hardhatCleanup = await hardhatConfigSetup.setup();
+    const cliCleanup = await cliConfigSetup.setup();
     const deploymentScriptCleanup = await deploymentScriptSetup.setup();
 
     return async () => {
       await deploymentScriptCleanup();
-      await hardhatCleanup();
+      await cliCleanup();
       await configCleanup();
     };
   });
@@ -33,7 +33,7 @@ describe("[Hardhat v2 - Hardhat-deploy v0 - external lib] Push artifact, pull ar
   testPushPullDeploy({
     ethokoCommand,
     tag,
-    hardhatConfigPath: hardhatConfigSetup.hardhatConfigPath,
+    hardhatConfigPath: deploymentScriptSetup.hardhatConfigPath,
     outputArtifactsPath: COMPILATION_TARGETS.DEFAULT.outputPath,
     deploymentScriptFolderPath:
       deploymentScriptSetup.deploymentScriptFolderPath,

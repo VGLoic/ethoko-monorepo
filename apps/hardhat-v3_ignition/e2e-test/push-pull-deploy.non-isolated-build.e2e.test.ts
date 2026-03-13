@@ -1,31 +1,31 @@
 import { beforeAll, describe } from "vitest";
 import crypto from "crypto";
 import {
+  CliConfigSetup,
   ConfigSetup,
-  HardhatConfigSetup,
-  IgnitionDeployScriptSetup,
+  DeployScriptSetup,
 } from "./helpers/test-setup.js";
 import { testPushPullDeploy } from "./test-push-pull-deploy.js";
 import { COMPILATION_TARGETS } from "./compilation-targets.js";
 
-describe("[Hardhat v3 - Etherscan Verification] Push artifact, pull artifact, deploy - Hardhat Plugin - Isolated Build", () => {
+describe("[Hardhat v3 - Hardhat Ignition] Push artifact, pull artifact, deploy - CLI - Non Isolated Build", () => {
   const testId = crypto.randomBytes(16).toString("hex");
   const tag = testId;
 
   const config = new ConfigSetup(testId);
-  const hardhatConfigSetup = new HardhatConfigSetup(config);
-  const ignitionDeployScriptSetup = new IgnitionDeployScriptSetup(config);
+  const cliConfigSetup = new CliConfigSetup(config);
+  const ignitionDeployScriptSetup = new DeployScriptSetup(config);
 
-  const ethokoCommand = `pnpm hardhat ethoko --config ${hardhatConfigSetup.hardhatConfigPath}`;
+  const ethokoCommand = `pnpm ethoko --config ${cliConfigSetup.cliConfigPath}`;
 
   beforeAll(async () => {
     const configCleanup = await config.setup();
-    const hardhatCleanup = await hardhatConfigSetup.setup();
+    const cliCleanup = await cliConfigSetup.setup();
     const ignitionDeployCleanup = await ignitionDeployScriptSetup.setup();
 
     return async () => {
       await ignitionDeployCleanup();
-      await hardhatCleanup();
+      await cliCleanup();
       await configCleanup();
     };
   });
@@ -33,8 +33,8 @@ describe("[Hardhat v3 - Etherscan Verification] Push artifact, pull artifact, de
   testPushPullDeploy({
     ethokoCommand,
     tag,
-    outputArtifactsPath: COMPILATION_TARGETS.ISOLATED_BUILD.outputPath,
+    outputArtifactsPath: COMPILATION_TARGETS.NON_ISOLATED_BUILD.outputPath,
     ignitionDeployPath: ignitionDeployScriptSetup.ignitionDeployPath,
-    hardhatConfigPath: hardhatConfigSetup.hardhatConfigPath,
+    hardhatConfigPath: ignitionDeployScriptSetup.hardhatConfigPath,
   });
 });
