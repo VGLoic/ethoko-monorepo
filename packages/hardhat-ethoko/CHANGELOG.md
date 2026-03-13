@@ -1,5 +1,12 @@
 # hardhat-ethoko
 
+## 0.5.2
+
+### Patch Changes
+
+- Updated dependencies [6f4447d]
+  - @ethoko/core@0.11.0
+
 ## 0.5.1
 
 ### Patch Changes
