@@ -11,6 +11,6 @@ export class GlobalFolder {
   }
 
   public static async teardown() {
-    await fs.rm(E2E_FOLDER_PATH, { recursive: true, force: true });
+    await fs.rm(this.path, { recursive: true, force: true });
   }
 }
