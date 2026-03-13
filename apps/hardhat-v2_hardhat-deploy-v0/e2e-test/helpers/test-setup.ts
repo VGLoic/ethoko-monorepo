@@ -58,12 +58,14 @@ export class CliConfigSetup {
   }
 }
 
-export class HardhatConfigSetup {
-  public hardhatConfigPath: string;
+export class DeployScriptSetup {
   private config: ConfigSetup;
+  public deploymentScriptFolderPath: string;
+  public hardhatConfigPath: string;
 
   constructor(config: ConfigSetup) {
     this.config = config;
+    this.deploymentScriptFolderPath = `${this.config.testPath}/deploy`;
     this.hardhatConfigPath = `${config.testPath}/hardhat.config.e2e.ts`;
   }
 
@@ -78,37 +80,23 @@ export class HardhatConfigSetup {
       .replace("PULLED_ARTIFACTS_PATH", pulledArtifactsPath)
       .replace("TYPINGS_PATH", this.config.typingsPath)
       .replace("STORAGE_PATH", `${this.config.storagePath}`);
-    await fs.writeFile(this.hardhatConfigPath, hardhatConfigContent);
-
-    return async () => {
-      await fs.rm(this.hardhatConfigPath, { force: true });
-    };
-  }
-}
-
-export class HardhatDeployScriptSetup {
-  private config: ConfigSetup;
-  public deploymentScriptFolderPath: string;
-
-  constructor(config: ConfigSetup) {
-    this.config = config;
-    this.deploymentScriptFolderPath = `${this.config.testPath}/deploy`;
-  }
-
-  async setup(): Promise<() => Promise<void>> {
-    await fs.mkdir(this.deploymentScriptFolderPath, { recursive: true });
-    const deploymentScriptContent = await fs.readFile(
-      "deploy/00-deploy-counter-2026-02-04.ts",
-      "utf-8",
-    );
-    const updatedScriptContent = deploymentScriptContent
+      
+      await fs.mkdir(this.deploymentScriptFolderPath, { recursive: true });
+      const deploymentScriptContent = await fs.readFile(
+        "deploy/00-deploy-counter-2026-02-04.ts",
+        "utf-8",
+      );
+      const updatedScriptContent = deploymentScriptContent
       .replace(/2026-02-04/g, this.config.testId)
       .replace(".ethoko-typings", this.config.typingsPath);
+      
+      const deploymentScriptPath = `${this.deploymentScriptFolderPath}/00-deploy-counter.ts`;
 
-    const deploymentScriptPath = `${this.deploymentScriptFolderPath}/00-deploy-counter.ts`;
+      await fs.writeFile(this.hardhatConfigPath, hardhatConfigContent);
     await fs.writeFile(deploymentScriptPath, updatedScriptContent);
 
     return async () => {
+      await fs.rm(this.hardhatConfigPath, { force: true });
       await fs.rm(this.deploymentScriptFolderPath, {
         force: true,
         recursive: true,
