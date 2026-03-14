@@ -1,6 +1,8 @@
 import fs from "fs/promises";
-import path from "path";
-
+// Note: we load the template content directly here
+// The ideal would be to work only with the path but it does not work right now with tsup (and NPM package) AND Bun (and binaries)
+// There is a plan to migrate everything to Bun in the future, and rely on Bun's file loading capabilities, but in the meantime we need to support both environments
+import typingsTemplate from "../../templates/typings.txt"
 import { LocalStorage } from "../local-storage/local-storage";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
@@ -315,12 +317,6 @@ async function writeGeneratedSummaries(
     ),
   );
 
-  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli/`
-  const typingsTemplate = await fs.readFile(
-    path.join(new URL(import.meta.url).pathname, "..", "typings.txt"),
-    "utf-8",
-  );
-
   await fs.writeFile(`${ethokoTypingsPath}/index.ts`, typingsTemplate);
 }
 
@@ -349,12 +345,6 @@ export const PROJECTS = {} as const;
 export type ABIs = object;
   `;
   await fs.writeFile(`${ethokoTypingsPath}/abis.d.ts`, emptyAbisContent);
-
-  // The path contains a `..` because the `typings.txt` file is mapped to the `dist/typings.txt` file while the CLI client methods are under `dist/cli/`
-  const typingsTemplate = await fs.readFile(
-    path.join(new URL(import.meta.url).pathname, "..", "typings.txt"),
-    "utf-8",
-  );
 
   await fs.writeFile(`${ethokoTypingsPath}/index.ts`, typingsTemplate);
 }
