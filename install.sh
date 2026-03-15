@@ -51,15 +51,24 @@ get_latest_version() {
 
 ensure_path() {
   local path_line="export PATH=\"${BIN_DIR}:\$PATH\""
+  local modified_profiles=()
+  
   for profile in "$HOME/.bashrc" "$HOME/.zshrc"; do
     if [ -f "$profile" ]; then
       if ! grep -q "$BIN_DIR" "$profile"; then
         echo "$path_line" >> "$profile"
+        modified_profiles+=("$profile")
+        echo "✓ Added to PATH in $profile"
       fi
     else
       echo "$path_line" >> "$profile"
+      modified_profiles+=("$profile")
+      echo "✓ Created $profile and added to PATH"
     fi
   done
+  
+  # Return modified profiles for sourcing
+  printf "%s\n" "${modified_profiles[@]}"
 }
 
 main() {
@@ -100,11 +109,39 @@ main() {
   mv "$tmp_file" "$BIN_DIR/$target_name"
   chmod +x "$BIN_DIR/$target_name"
 
-  ensure_path
-
+  echo "🔧 Configuring PATH..."
+  local modified_profiles
+  modified_profiles=$(ensure_path)
+  
+  echo ""
   echo "✅ Ethoko installed to $BIN_DIR/$target_name"
-  echo "➡️  Restart your shell or run: export PATH=\"${BIN_DIR}:\$PATH\""
-  "$BIN_DIR/$target_name" --version || true
+  
+  # Try to activate PATH immediately
+  local activated=false
+  if [ -n "$modified_profiles" ]; then
+    echo "🔄 Attempting to activate PATH in current shell..."
+    while IFS= read -r profile; do
+      if [ -f "$profile" ]; then
+        # shellcheck disable=SC1090
+        if source "$profile" 2>/dev/null; then
+          activated=true
+        fi
+      fi
+    done <<< "$modified_profiles"
+  fi
+  
+  # Verify installation
+  if command -v ethoko >/dev/null 2>&1; then
+    echo "✓ ethoko command is now available"
+    "$BIN_DIR/$target_name" --version || true
+  else
+    echo ""
+    echo "⚠️  PATH not activated in current shell"
+    echo "➡️  Run this command to activate now:"
+    echo "    export PATH=\"${BIN_DIR}:\$PATH\""
+    echo ""
+    echo "Or restart your shell to use ethoko"
+  fi
 }
 
 main
