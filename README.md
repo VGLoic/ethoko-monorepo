@@ -143,7 +143,7 @@ Ethoko supports two types of storage backends for now:
 - `aws`: store the compilation artifacts in an AWS S3 bucket. The bucket must be created beforehand, and the AWS credentials must be configured locally for Ethoko to be able to access it.
 - `local`: store the compilation artifacts locally in the directory.
 
-Check out the full configuration reference in the [docs](docs/developers/CONFIGURATION.md).
+Check out the full [configuration reference in the docs](docs/external/CONFIGURATION.md).
 
 ### Projects, tags and IDs
 
