@@ -197,13 +197,13 @@ const AwsStorageSchema = z
     };
   });
 
-const LocalStorageSchema = z.object({
-  type: z.literal("local"),
+const FilesystemStorageSchema = z.object({
+  type: z.literal("filesystem"),
   path: z
-    .string('The "path" field must be a string when "type" is "local"')
+    .string('The "path" field must be a string when "type" is "filesystem"')
     .min(
       1,
-      'The "path" field can not be an empty string when "type" is "local". Provide a valid path or set it to "." to use the current directory or leave it empty to default to "./.ethoko-storage"',
+      'The "path" field can not be an empty string when "type" is "filesystem". Provide a valid path or set it to "." to use the current directory or leave it empty to default to "./.ethoko-storage"',
     )
     .default("./.ethoko-storage")
     .transform((p) => path.resolve(p)),
@@ -240,8 +240,8 @@ const EthokoConfigSchema = z
       .optional(),
     storage: z.discriminatedUnion(
       "type",
-      [AwsStorageSchema, LocalStorageSchema],
-      '"storage" field must be a valid storage configuration object. Start with specifying the "type" field as either "aws" or "local" and provide the corresponding configuration fields.',
+      [AwsStorageSchema, FilesystemStorageSchema],
+      '"storage" field must be a valid storage configuration object. Start with specifying the "type" field as either "aws" or "filesystem" and provide the corresponding configuration fields.',
     ),
     debug: z
       .boolean('"debug" field must be a boolean or left empty')
@@ -270,8 +270,8 @@ const EthokoConfigSchema = z
   )
   .refine(
     (data) => {
-      // In case of storage type "local", the storage path must not be a child of typings path or pulled artifacts path
-      if (data.storage.type === "local") {
+      // In case of storage type "filesystem", the storage path must not be a child of typings path or pulled artifacts path
+      if (data.storage.type === "filesystem") {
         const resolvedStoragePath = path.resolve(data.storage.path);
         const resolvedTypingsPath = path.resolve(data.typingsPath);
         const resolvedPulledArtifactsPath = path.resolve(
@@ -290,7 +290,7 @@ const EthokoConfigSchema = z
     },
     {
       message:
-        'For "local" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"',
+        'For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"',
     },
   );
 
@@ -317,7 +317,7 @@ Example ethoko.config.json:
   "typingsPath": "./.ethoko-typings",
   "compilationOutputPath": "./artifacts",
   "storage": {
-    "type": "local",
+    "type": "filesystem",
     "path": "./.ethoko-e2e/.storage"
   }
 }`);

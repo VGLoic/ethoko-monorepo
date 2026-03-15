@@ -2,7 +2,7 @@
   "project": "verified-forge-counter",
   "compilationOutputPath": "out",
   "storage": {
-    "type": "local",
+    "type": "filesystem",
     "path": ".ethoko-storage"
   }
 }

@@ -444,9 +444,9 @@ Location: Project root (searches parent directories up to filesystem root)
   pulledArtifactsPath?: string;        // Default: ".ethoko"
   typingsPath?: string;                // Default: ".ethoko-typings"
   storage: {
-    type: "local" | "aws";
+    type: "filesystem" | "aws";
     // Local storage
-    path?: string;                     // If type: "local"
+    path?: string;                     // If type: "filesystem"
     // AWS S3 storage
     awsBucketName?: string;            // If type: "aws"
     awsRegion?: string;                // If type: "aws"
@@ -1014,8 +1014,8 @@ COPY ethoko /usr/local/bin/ethoko
        typingsPath?: string;
        compilationOutputPath?: string;
        storage: {
-         type: "local" | "aws";
-         path?: string;              // local only
+         type: "filesystem" | "aws";
+         path?: string;              // filesystem only
          awsBucketName?: string;     // aws only
          awsRegion?: string;         // aws only
          awsAccessKeyId?: string;    // aws only (optional)
@@ -1136,7 +1136,7 @@ COPY ethoko /usr/local/bin/ethoko
   "typingsPath": "TYPINGS_PATH",
   "compilationOutputPath": "./artifacts",
   "storage": {
-    "type": "local",
+    "type": "filesystem",
     "path": "STORAGE_PATH"
   }
 }
@@ -1939,7 +1939,7 @@ curl -fsSL https://raw.githubusercontent.com/VGLoic/ethoko/main/install.sh | bas
    {
    "project": "my-contracts",
    "storage": {
-   "type": "local",
+   "type": "filesystem",
    "path": ".ethoko-storage"
    }
    }
@@ -2446,8 +2446,8 @@ interface EthokoConfig {
   debug?: boolean;
 }
 
-interface LocalStorageConfig {
-  type: "local";
+interface FilesystemStorageConfig {
+  type: "filesystem";
   path: string;
 }
 

@@ -21,7 +21,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
    * - the second element is the config object to test,
    * - the third element is the expected error message (or a regex to match it). See EthokoConfigSchema for more details on the validation rules.
    */
-  const defaultStorageConfig = { type: "local" };
+  const defaultStorageConfig = { type: "filesystem" };
   const invalidCases = [
     // Without storage considerations
     ['Missing "project" field', {}, /"project" field must be a string/],
@@ -82,42 +82,42 @@ describe('"loadConfig" must parse accordingly to rules', () => {
       },
       /"storage" field must be a valid storage configuration object/,
     ],
-    // Local storage specific cases
+    // Filesystem storage specific cases
     [
       '"path" field is equal to "typingsPath"',
       {
         project: "dummy",
         typingsPath: "path/to/typings",
-        storage: { type: "local", path: "path/to/typings" },
+        storage: { type: "filesystem", path: "path/to/typings" },
       },
-      /For "local" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
     ],
     [
       '"path" field is equal to "pulledArtifactsPath"',
       {
         project: "dummy",
         pulledArtifactsPath: "path/to/artifacts",
-        storage: { type: "local", path: "path/to/artifacts" },
+        storage: { type: "filesystem", path: "path/to/artifacts" },
       },
-      /For "local" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
     ],
     [
       '"path" field is a child of "typingsPath"',
       {
         project: "dummy",
         typingsPath: "path/to/typings",
-        storage: { type: "local", path: "path/to/typings/subdir" },
+        storage: { type: "filesystem", path: "path/to/typings/subdir" },
       },
-      /For "local" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
     ],
     [
       '"path" field is a child of "pulledArtifactsPath"',
       {
         project: "dummy",
         pulledArtifactsPath: "path/to/typings",
-        storage: { type: "local", path: "path/to/typings/subdir" },
+        storage: { type: "filesystem", path: "path/to/typings/subdir" },
       },
-      /For "local" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
     ],
     // AWS storage specific cases
     [
@@ -224,21 +224,21 @@ describe('"loadConfig" must parse accordingly to rules', () => {
   });
 
   const validCases = [
-    // Local storage valid cases
+    // Filesystem storage valid cases
     [
-      "Minimal valid config with local storage",
+      "Minimal valid config with filesystem storage",
       {
         project: "dummy",
-        storage: { type: "local" },
+        storage: { type: "filesystem" },
       },
     ],
     [
-      "Valid config with local storage and custom paths",
+      "Valid config with filesystem storage and custom paths",
       {
         project: "dummy",
         typingsPath: "path/to/typings",
         pulledArtifactsPath: "path/to/artifacts",
-        storage: { type: "local", path: "path/to/storage" },
+        storage: { type: "filesystem", path: "path/to/storage" },
       },
     ],
     // AWS storage valid cases
