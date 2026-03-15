@@ -12,24 +12,24 @@ import {
 } from "../ethoko-artifacts/v0";
 import { StorageProvider } from "./storage-provider.interface";
 
-type LocalStorageProviderConfig = {
+type FilesystemStorageProviderConfig = {
   path: string;
   debug?: boolean;
 };
 
 /**
- * Local filesystem storage provider.
+ * Filesystem storage provider.
  *
  * Storage layout (relative to storagePath)
  * - {project}/ids/{id}/input.json
  * - {project}/ids/{id}/original/** (original compilation content)
  * - {project}/tags/{tag}.json (manifest: { id })
  */
-export class LocalStorageProvider implements StorageProvider {
+export class FilesystemStorageProvider implements StorageProvider {
   private readonly storagePath: string;
   private readonly debug: boolean;
 
-  constructor(config: LocalStorageProviderConfig) {
+  constructor(config: FilesystemStorageProviderConfig) {
     this.storagePath = config.path;
     this.debug = config.debug ?? false;
   }

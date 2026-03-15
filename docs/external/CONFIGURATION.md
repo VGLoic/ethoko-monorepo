@@ -153,7 +153,7 @@ Default configuration example:
 
 ```ts
 storageConfiguration: {
-  type: "local",
+  type: "filesystem",
 }
 ```
 
@@ -165,5 +165,5 @@ Local filesystem configuration variables:
 
 | Name   | Description                                                        | Default value                                 |
 | ------ | ------------------------------------------------------------------ | --------------------------------------------- |
-| `type` | Storage provider type for local filesystem storage.                | Must be `"local"`                             |
-| `path` | Directory where Ethoko stores artifact versions for local storage. | `"ethoko-storage"` (within project directory) |
+| `type` | Storage provider type for local filesystem storage.                | Must be `"filesystem"`                             |
+| `path` | Directory where Ethoko stores artifact versions for filesystem storage. | `"ethoko-storage"` (within project directory) |

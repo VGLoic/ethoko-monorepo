@@ -2,7 +2,7 @@
   "project": "curious-counter",
   "compilationOutputPath": "./artifacts",
   "storage": {
-    "type": "local",
+    "type": "filesystem",
     "path": "./ethoko-storage"
   }
 }

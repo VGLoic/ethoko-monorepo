@@ -3,7 +3,7 @@
   "pulledArtifactsPath": "PULLED_ARTIFACTS_PATH",
   "typingsPath": "TYPINGS_PATH",
   "storage": {
-    "type": "local",
+    "type": "filesystem",
     "path": "STORAGE_PATH"
   }
 }

@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import os from "os";
 import path from "path";
 import {
-  LocalStorageProvider,
+  FilesystemStorageProvider,
   StorageProvider,
   S3BucketProvider,
 } from "@/storage-provider";
@@ -18,17 +18,17 @@ interface TestStorageProvider<T extends StorageProvider = StorageProvider> {
   cleanup: () => Promise<void>;
 }
 
-export class TestLocalStorageProviderFactory extends StorageProviderFactory<LocalStorageProvider> {
+export class TestFilesystemStorageProviderFactory extends StorageProviderFactory<FilesystemStorageProvider> {
   constructor(private debug: boolean = false) {
     super();
   }
 
-  async create(): Promise<TestStorageProvider<LocalStorageProvider>> {
+  async create(): Promise<TestStorageProvider<FilesystemStorageProvider>> {
     const tempDir = await fs.mkdtemp(
       path.join(os.tmpdir(), TEST_CONSTANTS.PATHS.TEMP_DIR_PREFIX),
     );
 
-    const storageProvider = new LocalStorageProvider({
+    const storageProvider = new FilesystemStorageProvider({
       path: tempDir,
       debug: this.debug,
     });
