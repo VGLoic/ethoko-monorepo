@@ -8,7 +8,7 @@ import {
   boxSummary,
 } from "@/ui/index.js";
 import { CliError, inspectArtifact, InspectResult } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage/local-storage.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 
@@ -78,11 +78,13 @@ export function registerInspectCommand(
         optsParsingResult.data.silent,
       );
 
-      const localStorage = new LocalStorage(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
 
       await inspectArtifact(
         { project: optsParsingResult.data.project, search },
-        localStorage,
+        pulledArtifactStore,
         {
           debug: optsParsingResult.data.debug,
           silent: optsParsingResult.data.silent,

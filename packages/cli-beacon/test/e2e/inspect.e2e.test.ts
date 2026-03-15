@@ -15,11 +15,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - inspect artifact by tag",
-      async ([, artifactFixture], { storageProvider, localStorage }) => {
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -37,7 +37,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -47,7 +47,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const inspectResult = await inspectArtifact(
           { project, search: { type: "tag", tag } },
-          localStorage,
+          pulledArtifactStore,
           { debug: false, silent: true },
         );
 
@@ -69,10 +69,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - inspect artifact by ID",
-      async ([, artifactFixture], { storageProvider, localStorage }) => {
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -90,7 +90,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "id", id: artifactId },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -100,7 +100,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const inspectResult = await inspectArtifact(
           { project, search: { type: "id", id: artifactId } },
-          localStorage,
+          pulledArtifactStore,
           { debug: false, silent: true },
         );
 
@@ -122,15 +122,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "inspect non-existent artifact returns error",
-      async ({ localStorage }) => {
+      async ({ pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
           inspectArtifact(
             { project, search: { type: "tag", tag: "non-existent-tag" } },
-            localStorage,
+            pulledArtifactStore,
             {
               debug: false,
               silent: true,

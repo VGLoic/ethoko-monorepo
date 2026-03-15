@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage/local-storage";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { StorageProvider } from "../storage-provider";
 import { createSpinner } from "@/ui";
 import { toAsyncResult } from "../utils/result";
@@ -25,7 +25,7 @@ export type PullResult = {
  * @param project The project name
  * @param search An optional object to specify a tag or ID to pull, if not provided all tags and IDs will be pulled
  * @param storageProvider The storage provider used to access remote artifacts
- * @param localStorage The local storage used to persist pulled artifacts
+ * @param pulledArtifactStore The pulled artifact store used to persist pulled artifacts
  * @param opts Options for the pull command
  * @param opts.force Force the pull to skip checking existing local artifacts
  * @param opts.debug Enable debug mode
@@ -37,13 +37,13 @@ export async function pull(
   project: string,
   search: { type: "tag"; tag: string } | { type: "id"; id: string } | null,
   storageProvider: StorageProvider,
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { force: boolean; debug: boolean; silent?: boolean },
 ): Promise<PullResult> {
   // Step 1: Set up local storage
   const spinner1 = createSpinner("Setting up local storage...", opts.silent);
   const ensureResult = await toAsyncResult(
-    localStorage.ensureProjectSetup(project),
+    pulledArtifactStore.ensureProjectSetup(project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -115,13 +115,13 @@ export async function pull(
   } else {
     const localListingResult = await toAsyncResult(
       Promise.all([
-        localStorage
+        pulledArtifactStore
           .listTags(project)
           .then(
             (tagMetadatas) =>
               new Set(tagMetadatas.map((metadata) => metadata.tag)),
           ),
-        localStorage
+        pulledArtifactStore
           .listIds(project)
           .then(
             (idMetadatas) =>
@@ -181,10 +181,15 @@ export async function pull(
       }
 
       const createResult = await toAsyncResult(
-        localStorage.createArtifact(project, downloadResult.value.id, tag, {
-          input: downloadResult.value.input,
-          outputs: downloadResult.value.contractOutputArtifacts,
-        }),
+        pulledArtifactStore.createArtifact(
+          project,
+          downloadResult.value.id,
+          tag,
+          {
+            input: downloadResult.value.input,
+            outputs: downloadResult.value.contractOutputArtifacts,
+          },
+        ),
         { debug: opts.debug },
       );
       if (!createResult.success) {
@@ -231,7 +236,7 @@ export async function pull(
       }
 
       const createResult = await toAsyncResult(
-        localStorage.createArtifact(project, id, null, {
+        pulledArtifactStore.createArtifact(project, id, null, {
           input: downloadResult.value.input,
           outputs: downloadResult.value.contractOutputArtifacts,
         }),

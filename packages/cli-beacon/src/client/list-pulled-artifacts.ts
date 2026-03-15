@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage/local-storage";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 
@@ -19,17 +19,17 @@ export type ArtifactItem = {
  * The method returns an array of artifact items containing the project, tag, ID, and last modified date.
  *
  * @throws CliError if there is an error fetching the data from the local storage. The error messages are meant to be user-friendly and can be directly shown to the user.
- * @param localStorage The local storage used to retrieve pulled artifacts
+ * @param pulledArtifactStore The pulled artifact store used to retrieve pulled artifacts
  * @param opts Options for the listing
  * @param opts.debug Enable debug mode
  * @param opts.silent Suppress CLI output (errors and warnings still shown)
  * @returns The list of artifacts in the local storage with their project, tag, ID, and last modified date
  */
 export async function listPulledArtifacts(
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; silent?: boolean },
 ): Promise<ListArtifactsResult> {
-  const ensureResult = await toAsyncResult(localStorage.ensureSetup(), {
+  const ensureResult = await toAsyncResult(pulledArtifactStore.ensureSetup(), {
     debug: opts.debug,
   });
   if (!ensureResult.success) {
@@ -38,9 +38,12 @@ export async function listPulledArtifacts(
     );
   }
 
-  const projectsResult = await toAsyncResult(localStorage.listProjects(), {
-    debug: opts.debug,
-  });
+  const projectsResult = await toAsyncResult(
+    pulledArtifactStore.listProjects(),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!projectsResult.success) {
     throw new CliError(
       "Error listing the projects, please run with debug mode for more info",
@@ -51,9 +54,12 @@ export async function listPulledArtifacts(
   const idsAlreadyVisited = new Set<string>();
   const projects = projectsResult.value;
   for (const project of projects) {
-    const tagsResult = await toAsyncResult(localStorage.listTags(project), {
-      debug: opts.debug,
-    });
+    const tagsResult = await toAsyncResult(
+      pulledArtifactStore.listTags(project),
+      {
+        debug: opts.debug,
+      },
+    );
     if (!tagsResult.success) {
       throw new CliError(
         `Error listing the tags for project "${project}", please force pull the project to restore it or run with debug mode for more info`,
@@ -61,7 +67,7 @@ export async function listPulledArtifacts(
     }
 
     const artifactsPromises = tagsResult.value.map((metadata) =>
-      localStorage
+      pulledArtifactStore
         .retrieveArtifactId(project, metadata.tag)
         .then((artifactId) => ({
           metadata,
@@ -88,9 +94,12 @@ export async function listPulledArtifacts(
       idsAlreadyVisited.add(artifactId);
     }
 
-    const idsResult = await toAsyncResult(localStorage.listIds(project), {
-      debug: opts.debug,
-    });
+    const idsResult = await toAsyncResult(
+      pulledArtifactStore.listIds(project),
+      {
+        debug: opts.debug,
+      },
+    );
     if (!idsResult.success) {
       throw new CliError(
         `Error listing the IDs for project "${project}", please force pull the project to restore it or run with debug mode for more info`,

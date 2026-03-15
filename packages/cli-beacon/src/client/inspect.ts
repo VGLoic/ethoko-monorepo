@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage/local-storage";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
@@ -42,11 +42,11 @@ export async function inspectArtifact(
     project: string;
     search: { type: "tag"; tag: string } | { type: "id"; id: string };
   },
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; silent?: boolean },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
-    localStorage.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifact.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -60,7 +60,10 @@ export async function inspectArtifact(
     artifactId = artifact.search.id;
   } else {
     const artifactIdResult = await toAsyncResult(
-      localStorage.retrieveArtifactId(artifact.project, artifact.search.tag),
+      pulledArtifactStore.retrieveArtifactId(
+        artifact.project,
+        artifact.search.tag,
+      ),
       { debug: opts.debug },
     );
     if (!artifactIdResult.success) {
@@ -73,8 +76,8 @@ export async function inspectArtifact(
 
   const artifactsResult = await toAsyncResult(
     Promise.all([
-      localStorage.retrieveInputArtifact(artifact.project, artifactId),
-      localStorage.listContractArtifacts(artifact.project, artifactId),
+      pulledArtifactStore.retrieveInputArtifact(artifact.project, artifactId),
+      pulledArtifactStore.listContractArtifacts(artifact.project, artifactId),
     ]),
     { debug: opts.debug },
   );

@@ -17,10 +17,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "push artifact [%s] without tag → pull by ID",
-      async ([, artifactFixture], { storageProvider, localStorage }) => {
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -47,7 +47,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "id", id: artifactId },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -58,17 +58,20 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledIds).toContain(artifactId);
         expect(pullResult.failedIds).toHaveLength(0);
 
-        const listArtifactsResult = await listPulledArtifacts(localStorage, {
-          debug: false,
-          silent: true,
-        });
+        const listArtifactsResult = await listPulledArtifacts(
+          pulledArtifactStore,
+          {
+            debug: false,
+            silent: true,
+          },
+        );
         expect(
           listArtifactsResult.some(
             (r) => r.id === artifactId && r.project === project,
           ),
         ).toBe(true);
 
-        const localArtifact = await localStorage.retrieveInputArtifact(
+        const localArtifact = await pulledArtifactStore.retrieveInputArtifact(
           project,
           artifactId,
         );
@@ -96,13 +99,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "push artifact with tag → pull by tag",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
         const artifactFixture =
           TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -128,7 +131,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -139,10 +142,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags).toContain(tag);
         expect(pullResult.failedTags).toHaveLength(0);
 
-        const listArtifactsResult = await listPulledArtifacts(localStorage, {
-          debug: false,
-          silent: true,
-        });
+        const listArtifactsResult = await listPulledArtifacts(
+          pulledArtifactStore,
+          {
+            debug: false,
+            silent: true,
+          },
+        );
         expect(
           listArtifactsResult.some(
             (r) =>
@@ -155,14 +161,14 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "pull all artifacts for a project",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(
           TEST_CONSTANTS.PROJECTS.MULTI_ARTIFACT,
         );
         const artifactFixture =
           TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const tag1 = TEST_CONSTANTS.TAGS.V1;
         const tag2 = TEST_CONSTANTS.TAGS.V2;
@@ -182,7 +188,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           null,
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           { force: false, debug: false, silent: true },
         );
 
@@ -190,10 +196,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags).toContain(tag1);
         expect(pullResult.pulledTags).toContain(tag2);
 
-        const listArtifactsResult = await listPulledArtifacts(localStorage, {
-          debug: false,
-          silent: true,
-        });
+        const listArtifactsResult = await listPulledArtifacts(
+          pulledArtifactStore,
+          {
+            debug: false,
+            silent: true,
+          },
+        );
         const pulledTags = listArtifactsResult
           .filter((r) => r.project === project)
           .map((r) => r.tag);
@@ -204,7 +213,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "force push overwrites existing tag",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(
           TEST_CONSTANTS.PROJECTS.FORCE_TEST,
         );
@@ -212,7 +221,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const artifactFixture =
           TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const id1 = await push(
           artifactFixture.folderPath,
@@ -255,13 +264,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "pull with force re-downloads existing artifacts",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
         const artifactFixture =
           TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         await push(artifactFixture.folderPath, project, tag, storageProvider, {
           force: false,
@@ -272,7 +281,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -284,7 +293,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -297,7 +306,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: true,
             debug: false,
@@ -310,17 +319,17 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "pull non-existent artifact returns error",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
           pull(
             project,
             { tag: "non-existent-tag", type: "tag" },
             storageProvider,
-            localStorage,
+            pulledArtifactStore,
             {
               force: false,
               debug: false,

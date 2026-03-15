@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import { createSpinner } from "@/ui";
-import { LocalStorage } from "@/local-storage/local-storage";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
 import { StorageProvider } from "@/storage-provider";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
@@ -21,12 +21,12 @@ export async function restore(
   },
   outputPath: string,
   storageProvider: StorageProvider,
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { force: boolean; debug: boolean; silent?: boolean },
 ): Promise<RestoreResult> {
   const spinner1 = createSpinner("Identifying artifact...", opts.silent);
   const ensureResult = await toAsyncResult(
-    localStorage.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifact.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -39,7 +39,10 @@ export async function restore(
   let artifactId: string;
   if (artifact.search.type === "tag") {
     const artifactIdResult = await toAsyncResult(
-      localStorage.retrieveArtifactId(artifact.project, artifact.search.tag),
+      pulledArtifactStore.retrieveArtifactId(
+        artifact.project,
+        artifact.search.tag,
+      ),
       { debug: opts.debug },
     );
     if (!artifactIdResult.success) {
@@ -51,7 +54,7 @@ export async function restore(
     artifactId = artifactIdResult.value;
   } else {
     const hasIdResult = await toAsyncResult(
-      localStorage.hasId(artifact.project, artifact.search.id),
+      pulledArtifactStore.hasId(artifact.project, artifact.search.id),
       { debug: opts.debug },
     );
     if (!hasIdResult.success) {

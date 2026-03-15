@@ -12,7 +12,7 @@ import {
 import { Dirent } from "fs";
 
 /**
- * Local storage implementation for storing artifacts on the local filesystem.
+ * Store implementation for pulled artifacts on the local filesystem.
  *
  * Methods favour use of ID instead of tag.
  *
@@ -21,7 +21,7 @@ import { Dirent } from "fs";
  * - {project}/ids/{id}/outputs/{sourceName}/{contractName}.json
  * - {project}/tags/{tag}.json (manifest: { id })
  */
-export class LocalStorage {
+export class PulledArtifactStore {
   public readonly rootPath: string;
 
   constructor(rootPath: string) {
@@ -29,7 +29,7 @@ export class LocalStorage {
   }
 
   /**
-   * Checks if an ID exists for a given project in the local storage.
+   * Checks if an ID exists for a given project in the store.
    * @param project The project name.
    * @param id The artifact ID.
    * @returns True if the ID exists, false otherwise.
@@ -39,7 +39,7 @@ export class LocalStorage {
   }
 
   /**
-   * Checks if a tag exists for a given project in the local storage.
+   * Checks if a tag exists for a given project in the store.
    * @param project The project name.
    * @param tag The tag name.
    * @returns True if the tag exists, false otherwise.
@@ -49,7 +49,7 @@ export class LocalStorage {
   }
 
   /**
-   * Lists all projects in the local storage.
+   * Lists all projects in the store.
    * @returns The list of project names.
    */
   public async listProjects(): Promise<string[]> {
@@ -60,7 +60,7 @@ export class LocalStorage {
   }
 
   /**
-   * Lists all IDs for a given project in the local storage.
+   * Lists all IDs for a given project in the store.
    * @param project The project name.
    * @returns The list of IDs with their last modified timestamps.
    */
@@ -90,7 +90,7 @@ export class LocalStorage {
   }
 
   /**
-   * Lists all tags for a given project in the local storage.
+   * Lists all tags for a given project in the store.
    * @param project The project name.
    * @returns The list of tags with their last modified timestamps.
    */
@@ -122,7 +122,7 @@ export class LocalStorage {
   }
 
   /**
-   * List all contract artifacts associated with a given ID for a project in the local storage.
+   * List all contract artifacts associated with a given ID for a project in the store.
    * @param project The project name.
    * @param id The artifact ID.
    * @returns The list of contract artifacts with their source names and contract names.
@@ -283,7 +283,7 @@ export class LocalStorage {
   }
 
   /**
-   * Ensures that the root path for local storage exists by creating it if necessary.
+   * Ensures that the root path for store exists by creating it if necessary.
    */
   public async ensureSetup(): Promise<void> {
     const doesRootPathExist = await this.exists(this.rootPath);

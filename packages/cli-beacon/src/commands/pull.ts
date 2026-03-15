@@ -9,7 +9,7 @@ import {
   success,
 } from "@/ui/index.js";
 import { CliError, pull, PullResult } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage/local-storage.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 import { createStorageProvider } from "./utils/storage-provider.js";
@@ -90,12 +90,14 @@ export function registerPullCommand(
         ...config,
         debug: config.debug || optsParsingResult.data.debug,
       });
-      const localStorage = new LocalStorage(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
       await pull(
         optsParsingResult.data.project,
         search,
         storageProvider,
-        localStorage,
+        pulledArtifactStore,
         {
           force: optsParsingResult.data.force,
           debug: config.debug || optsParsingResult.data.debug,

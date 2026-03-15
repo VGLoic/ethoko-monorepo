@@ -7,7 +7,7 @@ import {
   ListArtifactsResult,
   listPulledArtifacts,
 } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage/local-storage.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 
@@ -52,9 +52,11 @@ export function registerArtifactsCommand(
 
       boxHeader("Listing artifacts", parsingResult.data.silent);
 
-      const localStorage = new LocalStorage(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
 
-      await listPulledArtifacts(localStorage, {
+      await listPulledArtifacts(pulledArtifactStore, {
         debug: parsingResult.data.debug,
         silent: parsingResult.data.silent,
       })

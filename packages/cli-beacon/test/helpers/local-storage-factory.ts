@@ -1,22 +1,22 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { LocalStorage } from "@/local-storage/local-storage";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
 import { TEST_CONSTANTS } from "./test-constants";
 
-export async function createTestLocalStorage(): Promise<{
-  localStorage: LocalStorage;
+export async function createTestPulledArtifactStore(): Promise<{
+  pulledArtifactStore: PulledArtifactStore;
   cleanup: () => Promise<void>;
 }> {
   const tempDir = await fs.mkdtemp(
     path.join(os.tmpdir(), TEST_CONSTANTS.PATHS.TEMP_DIR_PREFIX),
   );
 
-  const localStorage = new LocalStorage(tempDir);
+  const pulledArtifactStore = new PulledArtifactStore(tempDir);
 
   const cleanup = async () => {
     await fs.rm(tempDir, { recursive: true, force: true });
   };
 
-  return { localStorage, cleanup };
+  return { pulledArtifactStore, cleanup };
 }

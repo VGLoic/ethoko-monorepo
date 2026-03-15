@@ -13,7 +13,7 @@ import {
   Difference,
   generateDiffWithTargetRelease,
 } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage/local-storage.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 
@@ -97,12 +97,14 @@ export function registerDiffCommand(
         paramParsingResult.data.silent,
       );
 
-      const localStorage = new LocalStorage(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
 
       await generateDiffWithTargetRelease(
         finalArtifactPath,
         { project: config.project, search },
-        localStorage,
+        pulledArtifactStore,
         {
           debug: paramParsingResult.data.debug,
           isCI: process.env.CI === "true" || process.env.CI === "1",

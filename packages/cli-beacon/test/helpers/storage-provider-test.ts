@@ -5,8 +5,8 @@ import {
   TestS3StorageProviderFactory,
 } from "./storage-provider-factory";
 import { StorageProvider } from "@/storage-provider/storage-provider.interface";
-import { LocalStorage } from "@/local-storage/local-storage";
-import { createTestLocalStorage } from "./local-storage-factory";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
+import { createTestPulledArtifactStore } from "./local-storage-factory";
 
 /**
  * Available storage provider strategies for E2E testing.
@@ -26,13 +26,13 @@ export const STORAGE_PROVIDER_STRATEGIES = [
  *
  * This extends the base `test` function with automatic setup/cleanup for:
  * - `storageProvider`: Storage backend (Filesystem or S3) for remote artifact storage
- * - `localStorage`: Local filesystem storage for pulled artifacts
+ * - `pulledArtifactStore`: Local filesystem storage for pulled artifacts
  * - `storageProviderFactory`: Factory for creating storage providers (can be scoped)
  *
  * @example Basic usage
  * ```typescript
- * storageProviderTest("my test", async ({ storageProvider, localStorage }) => {
- *   // storageProvider and localStorage are automatically set up and cleaned up
+ * storageProviderTest("my test", async ({ storageProvider, pulledArtifactStore }) => {
+ *   // storageProvider and pulledArtifactStore are automatically set up and cleaned up
  *   await push(artifactPath, project, tag, storageProvider, { ... });
  * });
  * ```
@@ -44,7 +44,7 @@ export const STORAGE_PROVIDER_STRATEGIES = [
  *   ([, storageProviderFactory]) => {
  *     storageProviderTest.scoped({ storageProviderFactory });
  *
- *     storageProviderTest("test name", async ({ storageProvider, localStorage }) => {
+ *     storageProviderTest("test name", async ({ storageProvider, pulledArtifactStore }) => {
  *       // Test runs once for Filesystem Storage, once for S3
  *     });
  *   }
@@ -58,7 +58,7 @@ export const STORAGE_PROVIDER_STRATEGIES = [
  *   ["Test Case 2", someData2],
  * ] as const)(
  *   "test: %s",
- *   async ([name, data], { storageProvider, localStorage }) => {
+ *   async ([name, data], { storageProvider, pulledArtifactStore }) => {
  *     // Test runs for each data item
  *   }
  * );
@@ -66,7 +66,7 @@ export const STORAGE_PROVIDER_STRATEGIES = [
  */
 export const storageProviderTest = test.extend<{
   storageProvider: StorageProvider;
-  localStorage: LocalStorage;
+  pulledArtifactStore: PulledArtifactStore;
   storageProviderFactory: StorageProviderFactory;
 }>({
   // The destructuring is required by vitest
@@ -81,10 +81,10 @@ export const storageProviderTest = test.extend<{
   },
   // The destructuring is required by vitest
   // eslint-disable-next-line no-empty-pattern
-  localStorage: async ({}, use) => {
-    const localStorageSetup = await createTestLocalStorage();
-    const localStorage = localStorageSetup.localStorage;
-    await use(localStorage);
-    await localStorageSetup.cleanup();
+  pulledArtifactStore: async ({}, use) => {
+    const pulledArtifactStoreSetup = await createTestPulledArtifactStore();
+    const pulledArtifactStore = pulledArtifactStoreSetup.pulledArtifactStore;
+    await use(pulledArtifactStore);
+    await pulledArtifactStoreSetup.cleanup();
   },
 });

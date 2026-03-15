@@ -1,4 +1,4 @@
-import { LocalStorage } from "../local-storage/local-storage";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 import { ContractMetadataSchema } from "@/solc-artifacts/v0.8.33/contract-metadata-json";
@@ -58,11 +58,11 @@ export async function exportContractArtifact(
     search: { type: "tag"; tag: string } | { type: "id"; id: string };
   },
   shortOrFullyQualifiedContractName: string,
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; silent?: boolean },
 ): Promise<ExportContractArtifactResult> {
   const ensureResult = await toAsyncResult(
-    localStorage.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifact.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -76,7 +76,10 @@ export async function exportContractArtifact(
     artifactId = artifact.search.id;
   } else {
     const idResult = await toAsyncResult(
-      localStorage.retrieveArtifactId(artifact.project, artifact.search.tag),
+      pulledArtifactStore.retrieveArtifactId(
+        artifact.project,
+        artifact.search.tag,
+      ),
       { debug: opts.debug },
     );
     if (!idResult.success) {
@@ -88,7 +91,7 @@ export async function exportContractArtifact(
   }
 
   const contractListResult = await toAsyncResult(
-    localStorage.listContractArtifacts(artifact.project, artifactId),
+    pulledArtifactStore.listContractArtifacts(artifact.project, artifactId),
     { debug: opts.debug },
   );
   if (!contractListResult.success) {
@@ -147,7 +150,7 @@ export async function exportContractArtifact(
   }
 
   const contractArtifactResult = await toAsyncResult(
-    localStorage.retrieveContractOutputArtifact(
+    pulledArtifactStore.retrieveContractOutputArtifact(
       artifact.project,
       artifactId,
       targetContract.sourceName,
@@ -181,7 +184,7 @@ export async function exportContractArtifact(
 
   if (sourcesWithMissingContent.length > 0) {
     const inputArtifactResult = await toAsyncResult(
-      localStorage.retrieveInputArtifact(artifact.project, artifactId),
+      pulledArtifactStore.retrieveInputArtifact(artifact.project, artifactId),
       { debug: opts.debug },
     );
     if (!inputArtifactResult.success) {
