@@ -313,7 +313,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
       const loadedConfig = await loadConfig(configPath);
       expect(loadedConfig).toBeDefined();
       expect(loadedConfig.getProjectConfig("dummy")?.project).toEqual("dummy");
-      // expect(loadedConfig.getProjectConfig("unknown")).toEqual(null); // REMIND ME
+      expect(loadedConfig.getProjectConfig("unknown")).toEqual(undefined);
     });
   });
 

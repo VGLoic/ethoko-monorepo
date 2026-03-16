@@ -120,7 +120,7 @@ export function registerPushCommand(
       );
 
       const storageProvider = createStorageProvider(
-        config.storage,
+        projectConfig.storage,
         optsParsingResult.data.debug,
       );
 

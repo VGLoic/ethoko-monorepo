@@ -104,7 +104,7 @@ export function registerPullCommand(
       }
 
       const storageProvider = createStorageProvider(
-        config.storage,
+        projectConfig.storage,
         optsParsingResult.data.debug,
       );
       const pulledArtifactStore = new PulledArtifactStore(

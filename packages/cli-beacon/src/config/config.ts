@@ -307,7 +307,7 @@ export class EthokoCliConfig {
   public compilationOutputPath?: string;
   public debug: boolean;
   public configPath: string;
-  public storage: EthokoStorageConfig;
+  public projects: ProjectConfig[];
 
   constructor(config: z.infer<typeof EthokoConfigSchema>, configPath: string) {
     this.pulledArtifactsPath = config.pulledArtifactsPath;
@@ -315,14 +315,16 @@ export class EthokoCliConfig {
     this.compilationOutputPath = config.compilationOutputPath;
     this.debug = config.debug;
     this.configPath = configPath;
-    this.storage = config.storage;
+    this.projects = [
+      {
+        project: config.project,
+        storage: config.storage,
+      },
+    ];
   }
 
   public getProjectConfig(project: string): ProjectConfig | undefined {
-    return {
-      project,
-      storage: this.storage,
-    };
+    return this.projects.find((p) => p.project === project);
   }
 }
 

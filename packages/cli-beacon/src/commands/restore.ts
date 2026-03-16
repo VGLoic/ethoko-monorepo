@@ -92,13 +92,24 @@ export function registerRestoreCommand(
         return;
       }
 
+      const projectConfig = config.getProjectConfig(
+        artifactKeyParsingResult.data.project,
+      );
+      if (!projectConfig) {
+        cliError(
+          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+
       boxHeader(
         `Restoring artifact "${artifactKeyParsingResult.data.project}:${artifactKeyParsingResult.data.search.type === "id" ? artifactKeyParsingResult.data.search.id : artifactKeyParsingResult.data.search.tag}"`,
         optsParsingResult.data.silent,
       );
 
       const storageProvider = createStorageProvider(
-        config.storage,
+        projectConfig.storage,
         optsParsingResult.data.debug,
       );
 
