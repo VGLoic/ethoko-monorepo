@@ -24,87 +24,6 @@ Ethoko supports both Hardhat and Foundry development environments, compile once,
     <img alt="Ethoko workflow" src="images/ethoko-workflow-light.svg" />
 </picture>
 
-## Overview
-
-### Development process
-
-Once compilation is done, push the artifacts to Ethoko under a specific tag
-
-<picture>
-  <img alt="Push example" src="images/push-example.png">
-</picture>
-
-### Operation processes
-
-Pull the project artifacts from Ethoko locally
-
-<picture>
-  <img alt="Pull example" src="images/pull-example.png">
-</picture>
-
-<br />
-
-Export the artifact for a specific contract and tag for local use, e.g. ABI retrieving, deployment, etc...
-
-<picture>
-  <img alt="Export example" src="images/export-example.png">
-</picture>
-
-<br />
-
-Alternatively, if in a Typescript environment, generate typings for the pulled artifacts
-
-<picture>
-  <img alt="Typings example" src="images/typings-example.png">
-</picture>
-
-<br />
-
-Write scripts in a fully typed and transparent manner
-
-```ts
-...
-import { deploy } from "my-favorite-deploy-lib";
-
-// ~~~~~~~~~~ Using the exported artifact directly ~~~~~~~~~~
-import CounterArtifact from "../releases/2026-02-04/counter.json";
-
-async function deployCounterFromArtifact() {
-    // Deploy `Counter` using the static artifact
-    // `deploy` is an arbitrary util, "À la Hardhat Deploy"
-    await deploy("Counter@2026-02-04", {
-      contract: {
-        abi: CounterArtifact.abi,
-        bytecode: CounterArtifact.bytecode,
-        metadata: CounterArtifact.metadata,
-      },
-    })
-}
-
-// ~~~~~~~~~~ Or using the generated typings ~~~~~~~~~~
-import { project } from "../.ethoko-typings";
-
-async function deployCounter() {
-    // Get project utilities for the target tag
-    const projectUtils = project("forge-counter").tag("2026-02-04");
-
-    // Get `Counter` static artifact for the target release
-    const myContractArtifact = await projectUtils.getContractArtifact(
-      "src/Counter.sol:Counter",
-    );
-
-    // Deploy `Counter` using the static artifact
-    // `deploy` is an arbitrary util, "À la Hardhat Deploy"
-    await deploy("Counter@2026-02-04", {
-      contract: {
-        abi: myContractArtifact.abi,
-        bytecode: myContractArtifact.bytecode,
-        metadata: myContractArtifact.metadata,
-      },
-    })
-}
-```
-
 ## CLI
 
 Ethoko ships as a standalone CLI.
@@ -149,21 +68,13 @@ Each project can be configured with its own storage backend, Ethoko supports two
 
 Check out the full [configuration reference in the docs](docs/external/CONFIGURATION.md).
 
-### Projects, tags and IDs
-
-A unique **ID**, e.g. `b5e41181986a`, is derived for each compilation artifact. The ID is based on the content of the artifact.
-
-A **tag**, e.g. `2026-02-02` or `v1.2.3`, can be associated to a compilation artifact when pushed.
-
-A **project**, e.g. `doubtful-project`, will gather many compilation artifacts.
-
 ### Commands
 
 Run `ethoko --help` for a full list of available commands and options. Use the `--help` flag with any command to get more details about its usage, e.g. `ethoko push --help`.
 
 #### Push
 
-Push a local compilation artifact for the configured project to the storage, creating the remote artifact with its ID and optionally tagging it.
+Push a local compilation artifact for the configured project, creating the remote artifact with its ID and optionally tagging it.
 
 Only push the compilation artifact without an additional tag:
 
@@ -204,6 +115,35 @@ ethoko pull my-project@b5e41181986a
 ethoko pull my-project:2026-02-02
 ```
 
+#### Export
+
+Export a contract artifact from a locally pulled artifact.
+
+```bash
+# Using only the contract name, case insensitive, will fail if multiple contracts with the same name are found
+ethoko export my-project:2026-02-02 --contract Counter
+# Using the fully qualified path to the contract, case sensitive, will avoid any ambiguity
+ethoko export my-project@b5e41181986a --contract contracts/Counter.sol:Counter
+```
+
+Write the contract artifact to a file (overwrites if it exists):
+
+```bash
+ethoko export my-project:2026-02-02 --contract Counter --output ./Counter.json
+```
+
+Pipe the artifact to another tool:
+
+```bash
+ethoko export my-project:2026-02-02 --contract Counter | jq
+```
+
+Export the ABI as a TypeScript `const`:
+
+```bash
+echo "export const MY_ABI = $(ethoko export my-project:2026-02-02 --contract Counter | jq .abi) as const;" > ./my-abi.ts
+```
+
 #### Typings
 
 Once the artifacts have been pulled, one can generate the TypeScript typings based on the pulled projects.
@@ -238,38 +178,9 @@ Output JSON for scripting:
 ethoko inspect my-project:2026-02-02 --json
 ```
 
-#### Export
-
-Export a contract artifact from a locally pulled artifact.
-
-```bash
-# Using only the contract name, case insensitive, will fail if multiple contracts with the same name are found
-ethoko export my-project:2026-02-02 --contract Counter
-# Using the fully qualified path to the contract, case sensitive, will avoid any ambiguity
-ethoko export my-project@b5e41181986a --contract contracts/Counter.sol:Counter
-```
-
-Write the contract artifact to a file (overwrites if it exists):
-
-```bash
-ethoko export my-project:2026-02-02 --contract Counter --output ./Counter.json
-```
-
-Pipe the artifact to another tool:
-
-```bash
-ethoko export my-project:2026-02-02 --contract Counter | jq
-```
-
-Export the ABI as a TypeScript `const`:
-
-```bash
-echo "export const MY_ABI = $(ethoko export my-project:2026-02-02 --contract Counter | jq .abi) as const;" > ./my-abi.ts
-```
-
 #### Restore
 
-Restore original compilation artifacts from a locally pulled artifact to a local directory.
+Original compilation artifacts are never lost and can be restored from a locally pulled artifact to a local directory.
 
 ```bash
 ethoko restore my-project@b5e41181986a --output ./restored
@@ -296,47 +207,39 @@ If not setup in the configuration or need to be overriden, the path to the compi
 ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
-### Using the typings
+### Using the exported artifacts in scripts
+
+The exported artifacts can be used as any JSON files in scripts in for various purposes, e.g. deployment, verification, etc... 
+
+Below is an example of a deployment script with the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin for deploying a released smart contract.
+
+```ts
+import { deployScript } from "../rocketh/deploy.js";
+import CounterArtifact from "../releases/2026-02-04/counter.json";
+import type * as RockethTypes from "rocketh/types";
+
+export default deployScript(
+  async ({ deploy, namedAccounts }) => {
+    const { deployer } = namedAccounts;
+
+    await deploy(`Counter@2026-02-04`, {
+      account: deployer,
+      artifact: {
+        abi: CounterArtifact.abi as RockethTypes.Abi,
+        bytecode: CounterArtifact.bytecode,
+        metadata: CounterArtifact.metadata,
+      },
+    });
+  },
+  { tags: ["Counter", "Counter_deploy", "2026-02-04"] },
+);
+```
+
+### Using the typings in a Typescript environment
 
 The typings are exposed in order to help the developer retrieve easily and safely a contract artifact (ABI, bytecode, etc...).
 
-There are two available utils in order to retrieve a contract artifact, it would depend on the task at hand:
-
-- start with a contract, select one of its available tags
-
-```ts
-import { project } from "../.ethoko-typings";
-
-const artifact = await project("doubtful-project")
-  .contract("src/path/to/my/contract.sol:Foo")
-  .getArtifact("2026-02-02");
-```
-
-- start with a tag, select a contract within it
-
-```ts
-import { project } from "../.ethoko-typings";
-
-const artifact = await project("doubtful-project")
-  .tag("2026-02-02")
-  .getContractArtifact("src/path/to/my/contract.sol:Foo");
-```
-
-If typings have been generated from existing projects, the inputs of the utils will be strongly typed and wrong project, tags or contracts names will be detected.
-
-In case there are no projects or the projects have not been pulled, the generated typings are made in such a way that strong typecheck disappears and any string can be used with the helper functions.
-
-### Retrieve input and outputs compilation artifacts
-
-The input and contract outputs compilation artifacts of a tag can be retrieved using the `project("doubtful-project").tag("2026-02-02").{getInputCompilationArtifact, getContractOutputCompilationArtifact}` methods.
-
-The input compilation artifact contains the sources and settings used for compilation. There is one output compilation artifact per contract, each containing the ABI, bytecode and metadata for the contract.
-
-#### Example with hardhat-deploy v2
-
-An example can be made with the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin for deploying a released smart contract.
-
-The advantage of this deployment is that it only works with frozen artifacts. New development will never have an impact on it.
+The same deployment script as above can be rewritten using the generated typings:
 
 ```ts
 import { deployScript } from "../rocketh/deploy.js";
@@ -346,22 +249,40 @@ export default deployScript(
   async ({ deploy, namedAccounts }) => {
     const { deployer } = namedAccounts;
 
-    const fooArtifact = await project("doubtful-project")
+    const counterArtifact = await project("doubtful-project")
       .tag("2026-02-04")
-      .getContractArtifact("src/Foo.sol:Foo");
+      .getContractArtifact("src/Counter.sol:Counter");
 
-    await deploy(`Foo@2026-02-04`, {
+    await deploy(`Counter@2026-02-04`, {
       account: deployer,
       artifact: {
-        abi: fooArtifact.abi,
-        bytecode: fooArtifact.bytecode,
-        metadata: fooArtifact.metadata,
+        abi: counterArtifact.abi,
+        bytecode: counterArtifact.bytecode,
+        metadata: counterArtifact.metadata,
       },
     });
   },
-  { tags: ["Foo", "Foo_deploy", "2026-02-04"] },
+  { tags: ["Counter", "Counter_deploy", "2026-02-04"] },
 );
 ```
+
+If typings have been generated from existing projects, the inputs of the utils will be strongly typed and wrong project, tags or contracts names will be detected.
+
+In case there are no projects or the projects have not been pulled, the generated typings are made in such a way that strong typecheck disappears and any string can be used with the helper functions.
+
+#### Retrieve input and outputs compilation artifacts
+
+The input and contract outputs compilation artifacts of a tag can be retrieved using the `project("doubtful-project").tag("2026-02-02").{getInputCompilationArtifact, getContractOutputCompilationArtifact}` methods.
+
+The input compilation artifact contains the sources and settings used for compilation. There is one output compilation artifact per contract, each containing the ABI, bytecode and metadata for the contract.
+
+### Projects, tags and IDs
+
+A unique **ID**, e.g. `b5e41181986a`, is derived for each compilation artifact. The ID is based on the content of the artifact.
+
+A **tag**, e.g. `2026-02-02` or `v1.2.3`, can be associated to a compilation artifact when pushed.
+
+A **project**, e.g. `doubtful-project`, will gather many compilation artifacts.
 
 ## Integration examples
 
