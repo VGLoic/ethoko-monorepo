@@ -349,14 +349,16 @@ Create an ethoko.config.json file or pass --config <path>.
 Example ethoko.config.json:
 
 {
-  "project": "my-contracts",
   "pulledArtifactsPath": "./.ethoko-e2e/.ethoko",
   "typingsPath": "./.ethoko-typings",
   "compilationOutputPath": "./artifacts",
-  "storage": {
-    "type": "filesystem",
-    "path": "./.ethoko-e2e/.storage"
-  }
+  "projects": [{
+    "name": "my-contracts",
+    "storage": {
+      "type": "filesystem",
+      "path": "./.ethoko-e2e/.storage"
+    }
+  }]
 }`);
   }
 
