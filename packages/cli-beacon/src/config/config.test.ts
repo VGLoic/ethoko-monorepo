@@ -312,7 +312,8 @@ describe('"loadConfig" must parse accordingly to rules', () => {
     test("should load config without errors", async () => {
       const loadedConfig = await loadConfig(configPath);
       expect(loadedConfig).toBeDefined();
-      expect(loadedConfig.project).toBe(configToTest.project);
+      expect(loadedConfig.getProjectConfig("dummy")?.project).toEqual("dummy");
+      // expect(loadedConfig.getProjectConfig("unknown")).toEqual(null); // REMIND ME
     });
   });
 
