@@ -1,12 +1,15 @@
+import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
 import {
   boxHeader,
-  displayRestoreResult,
   error as cliError,
+  LOG_COLORS,
+  boxSummary,
+  success,
 } from "@/ui/index.js";
 import { CliError, restore, type RestoreResult } from "@/client/index.js";
-import { LocalStorage } from "@/local-storage/local-storage.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 import { createStorageProvider } from "./utils/storage-provider.js";
@@ -91,13 +94,15 @@ export function registerRestoreCommand(
         ...config,
         debug: config.debug || optsParsingResult.data.debug,
       });
-      const localStorage = new LocalStorage(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
 
       await restore(
         { project: optsParsingResult.data.project, search },
         optsParsingResult.data.output ?? config.pulledArtifactsPath,
         storageProvider,
-        localStorage,
+        pulledArtifactStore,
         {
           force: optsParsingResult.data.force,
           debug: config.debug || optsParsingResult.data.debug,
@@ -121,4 +126,21 @@ export function registerRestoreCommand(
           process.exitCode = 1;
         });
     });
+}
+
+function displayRestoreResult(result: RestoreResult, silent = false): void {
+  if (silent) return;
+
+  console.error("");
+  success(
+    `Restored ${result.filesRestored.length} file${result.filesRestored.length > 1 ? "s" : ""} to ${result.outputPath}`,
+    silent,
+  );
+
+  const summaryLines = result.filesRestored.map((file) =>
+    styleText(LOG_COLORS.log, `  • ${file}`),
+  );
+  if (summaryLines.length > 0) {
+    boxSummary("Restored Files", summaryLines, silent);
+  }
 }

@@ -3,7 +3,7 @@ import fs from "fs/promises";
 // The ideal would be to work only with the path but it does not work right now with tsup (and NPM package) AND Bun (and binaries)
 // There is a plan to migrate everything to Bun in the future, and rely on Bun's file loading capabilities, but in the meantime we need to support both environments
 import typingsTemplate from "../../templates/typings.txt";
-import { LocalStorage } from "../local-storage/local-storage";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 
@@ -40,25 +40,25 @@ import { CliError } from "./error";
  * ```
  *
  * The function consists of the following steps:
- * 1. Set up the local storage and the typings folder
- * 2. Read the projects, tags and contracts from the local storage and generate a summary object
+ * 1. Set up the pulled artifact store and the typings folder
+ * 2. Read the projects, tags and contracts from the pulled artifact store and generate a summary object
  * 3. If no projects are found, generate empty summaries and typings files.
  *    Otherwise, generate the content of the `summary-exports.ts` file and write all the typings files to the typings folder.
  *
- * @throws CliError if there is an error while reading local storage or writing typings files.
+ * @throws CliError if there is an error while reading pulled artifact store or writing typings files.
  */
 export async function generateArtifactsSummariesAndTypings(
   ethokoTypingsPath: string,
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; silent?: boolean },
 ): Promise<void> {
-  const ensureLocalStorageResult = await toAsyncResult(
-    localStorage.ensureSetup(),
+  const ensurePulledArtifactStoreResult = await toAsyncResult(
+    pulledArtifactStore.ensureSetup(),
     { debug: opts.debug },
   );
-  if (!ensureLocalStorageResult.success) {
+  if (!ensurePulledArtifactStoreResult.success) {
     throw new CliError(
-      "Error setting up local storage, is the script not allowed to write to the filesystem? Run with debug mode for more info",
+      "Error setting up pulled artifact store, is the script not allowed to write to the filesystem? Run with debug mode for more info",
     );
   }
 
@@ -78,9 +78,12 @@ export async function generateArtifactsSummariesAndTypings(
     }
   }
 
-  const projectsResult = await toAsyncResult(localStorage.listProjects(), {
-    debug: opts.debug,
-  });
+  const projectsResult = await toAsyncResult(
+    pulledArtifactStore.listProjects(),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!projectsResult.success) {
     throw new CliError(
       "Error listing the projects. Is the script not allowed to read from the filesystem? Run with debug mode for more info",
@@ -89,7 +92,7 @@ export async function generateArtifactsSummariesAndTypings(
   const projects = projectsResult.value;
   if (projects.length === 0) {
     const emptySummariesResult = await toAsyncResult(
-      writeEmptySummaries(localStorage.rootPath, ethokoTypingsPath),
+      writeEmptySummaries(pulledArtifactStore.rootPath, ethokoTypingsPath),
       { debug: opts.debug },
     );
     if (!emptySummariesResult.success) {
@@ -117,9 +120,12 @@ export async function generateArtifactsSummariesAndTypings(
   > = {};
 
   for (const project of projects) {
-    const tagsResult = await toAsyncResult(localStorage.listTags(project), {
-      debug: opts.debug,
-    });
+    const tagsResult = await toAsyncResult(
+      pulledArtifactStore.listTags(project),
+      {
+        debug: opts.debug,
+      },
+    );
     if (!tagsResult.success) {
       throw new CliError(
         `Error listing the tags for project "${project}". Run with debug mode for more info`,
@@ -139,7 +145,7 @@ export async function generateArtifactsSummariesAndTypings(
         projectAbisPerContractPerTag[tag] = {};
       }
       const artifactIdResult = await toAsyncResult(
-        localStorage.retrieveArtifactId(project, tag),
+        pulledArtifactStore.retrieveArtifactId(project, tag),
         { debug: opts.debug },
       );
       if (!artifactIdResult.success) {
@@ -148,7 +154,10 @@ export async function generateArtifactsSummariesAndTypings(
         );
       }
       const contractArtifactsResult = await toAsyncResult(
-        localStorage.listContractArtifacts(project, artifactIdResult.value),
+        pulledArtifactStore.listContractArtifacts(
+          project,
+          artifactIdResult.value,
+        ),
         { debug: opts.debug },
       );
       if (!contractArtifactsResult.success) {
@@ -161,7 +170,7 @@ export async function generateArtifactsSummariesAndTypings(
         contractName,
       } of contractArtifactsResult.value) {
         const artifactResult = await toAsyncResult(
-          localStorage.retrieveContractOutputArtifact(
+          pulledArtifactStore.retrieveContractOutputArtifact(
             project,
             artifactIdResult.value,
             sourceName,
@@ -194,7 +203,11 @@ export async function generateArtifactsSummariesAndTypings(
   }
 
   const generatedSummaryResult = await toAsyncResult(
-    writeGeneratedSummaries(summary, localStorage.rootPath, ethokoTypingsPath),
+    writeGeneratedSummaries(
+      summary,
+      pulledArtifactStore.rootPath,
+      ethokoTypingsPath,
+    ),
     { debug: opts.debug },
   );
   if (!generatedSummaryResult.success) {

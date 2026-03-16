@@ -16,11 +16,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - export contract artifact by tag",
-      async ([, artifactFixture], { storageProvider, localStorage }) => {
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -38,7 +38,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "tag", tag },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -51,7 +51,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const exportResult = await exportContractArtifact(
           { project, search: { type: "tag", tag } },
           exportFixture.name,
-          localStorage,
+          pulledArtifactStore,
           {
             debug: false,
             silent: true,
@@ -85,10 +85,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
       "%s artifacts - export contract artifact by ID",
-      async ([, artifactFixture], { storageProvider, localStorage }) => {
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactId = await push(
           artifactFixture.folderPath,
@@ -106,7 +106,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "id", id: artifactId },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -119,7 +119,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const exportResult = await exportContractArtifact(
           { project, search: { type: "id", id: artifactId } },
           exportFixture.name,
-          localStorage,
+          pulledArtifactStore,
           {
             debug: false,
             silent: true,
@@ -153,16 +153,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "export with non-existent artifact returns error",
-      async ({ localStorage }) => {
+      async ({ pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
           exportContractArtifact(
             { project, search: { type: "tag", tag: "non-existent-tag" } },
             "Counter",
-            localStorage,
+            pulledArtifactStore,
             {
               debug: false,
               silent: true,
@@ -174,10 +174,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "export with non-existent contract returns error",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
-        await localStorage.ensureProjectSetup(project);
+        await pulledArtifactStore.ensureProjectSetup(project);
 
         const artifactFixture =
           TEST_CONSTANTS.ARTIFACTS_FIXTURES.COUNTER.TARGETS.HARDHAT_V3;
@@ -198,7 +198,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           project,
           { type: "id", id: artifactId },
           storageProvider,
-          localStorage,
+          pulledArtifactStore,
           {
             force: false,
             debug: false,
@@ -210,7 +210,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           exportContractArtifact(
             { project, search: { type: "id", id: artifactId } },
             "NonExistentContract",
-            localStorage,
+            pulledArtifactStore,
             {
               debug: false,
               silent: true,

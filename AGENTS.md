@@ -68,7 +68,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     // Simple test
     storageProviderTest(
       "test name",
-      async ({ storageProvider, localStorage }) => {
+      async ({ storageProvider, pulledArtifactStore }) => {
         // Test implementation - fixtures auto-cleanup on completion
       },
     );
@@ -79,7 +79,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       ["Case 2", data2],
     ] as const)(
       "test: %s",
-      async ([name, data], { storageProvider, localStorage }) => {
+      async ([name, data], { storageProvider, pulledArtifactStore }) => {
         // Test implementation
       },
     );
@@ -89,8 +89,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
 **Key Points:**
 
-- All tests automatically run against both Local Storage and S3 (LocalStack) providers
-- Fixtures (`storageProvider`, `localStorage`) are auto-setup and auto-cleaned
+- All tests automatically run against both filesystem and S3 (LocalStack) providers
+- Fixtures (`storageProvider`, `pulledArtifactStore`) are auto-setup and auto-cleaned
 - No manual `beforeEach`/`afterEach` needed
 - Use `storageProviderTest.for()` instead of `describe.each()` for parameterized tests
 - Always use `as const` on test data arrays for better type inference
@@ -260,13 +260,13 @@ export class CliError extends Error {
 ```typescript
 // client method example
 const ensureResult = await toAsyncResult(
-  localStorage.ensureProjectSetup(project),
+  pulledArtifactStore.ensureProjectSetup(project),
   { debug: opts.debug },
 );
 if (!ensureResult.success) {
-  steps.fail("Failed to setup local storage");
+  steps.fail("Failed to setup pulled artifact store");
   throw new CliError(
-    "Error setting up local storage, is the script not allowed to write to the filesystem? Run with debug mode for more info",
+    "Error setting up pulled artifact store, is the script not allowed to write to the filesystem? Run with debug mode for more info",
   );
 }
 ```
@@ -309,7 +309,7 @@ await pull(
   optsParsingResult.data.project,
   search,
   storageProvider,
-  localStorage,
+  pulledArtifactStore,
   {
     force: optsParsingResult.data.force,
     debug: ethokoConfig.debug || optsParsingResult.data.debug,
@@ -351,11 +351,11 @@ packages/cli-beacon/
 │   ├── commands/                      # CLI command definitions and handlers (consumes client methods)
 │   ├── config/                        # CLI configuration management
 │   ├── ethoko-artifacts/              # Ethoko artifact definitions
-│   ├── local-storage/                 # Local artifact storage read/write logic
+│   ├── pulled-artifact-store/         # Pulled artifact store read/write logic
 │   ├── solc-artifacts/                # Solc artifact definitions
 │   ├── storage-provider/              # Storage provider interfaces and implementations
 │   ├── supported-origins/             # Supported origins for artifacts with mapping logic (e.g., Hardhat, Foundry)
-│   ├── ui/                            # CLI UI primitives (spinners, output helpers)
+│   ├── ui/                            # CLI UI primitives (spinners, loggers, etc.)
 │   └── utils/                         # Utility functions and helpers
 ├── templates-builder/                 # Template for generated typescript typings (through `typings` command)
 ├── test/                              # End to end tests for `client` methods (Vitest)

@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 
-import { createSpinner } from "../ui/utils";
-import { LocalStorage } from "../local-storage/local-storage";
+import { createSpinner } from "../ui";
+import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 import {
@@ -132,7 +132,7 @@ export type Difference = {
  * @throws CliError if there is an error during the execution of the steps, with user-friendly messages that can be directly shown to the user
  * @param artifactPath The path to the artifact to compare with,
  * @param artifact The artifact to compare with, containing the project and the tag or id of the target artifact
- * @param localStorage The local storage used to persist pulled artifacts
+ * @param pulledArtifactStore The store used to persist pulled artifacts
  * @param opts Options for the diff command
  * @param opts.debug Enable debug mode for more verbose logging
  * @param opts.silent Suppress CLI output (errors and warnings still shown)
@@ -145,62 +145,62 @@ export async function generateDiffWithTargetRelease(
     project: string;
     search: { type: "tag"; tag: string } | { type: "id"; id: string };
   },
-  localStorage: LocalStorage,
+  pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; silent?: boolean; isCI?: boolean },
 ): Promise<Difference[]> {
   // Step 1: Check if target artifact exists locally
 
   const spinner1 = createSpinner(
-    "Checking local artifact existence...",
+    "Checking artifact existence locally...",
     opts.silent,
   );
   const ensureResult = await toAsyncResult(
-    localStorage.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifact.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
-    spinner1.fail("Failed to setup local storage");
+    spinner1.fail("Failed to setup pulled artifact store");
     throw new CliError(
-      "Error setting up local storage, is the script not allowed to write to the filesystem? Run with debug mode for more info",
+      "Error setting up pulled artifact store, is the script not allowed to write to the filesystem? Run with debug mode for more info",
     );
   }
 
   if (artifact.search.type === "tag") {
     const hasTagResult = await toAsyncResult(
-      localStorage.hasTag(artifact.project, artifact.search.tag),
+      pulledArtifactStore.hasTag(artifact.project, artifact.search.tag),
       { debug: opts.debug },
     );
     if (!hasTagResult.success) {
-      spinner1.fail("Failed to check local artifacts");
+      spinner1.fail("Failed to check pulled artifact store");
       throw new CliError(
-        "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+        "Error checking pulled artifact store, is the script not allowed to read from the filesystem? Run with debug mode for more info",
       );
     }
     if (!hasTagResult.value) {
-      spinner1.fail("Local artifact not found");
+      spinner1.fail("Artifact not found locally");
       throw new CliError(
         `The artifact "${artifact.project}:${artifact.search.tag}" has not been found locally. Please, make sure to have the artifact locally before running the diff command. Run with debug mode for more info`,
       );
     }
   } else {
     const hasIdResult = await toAsyncResult(
-      localStorage.hasId(artifact.project, artifact.search.id),
+      pulledArtifactStore.hasId(artifact.project, artifact.search.id),
       { debug: opts.debug },
     );
     if (!hasIdResult.success) {
-      spinner1.fail("Failed to check local artifacts");
+      spinner1.fail("Failed to check pulled artifact store");
       throw new CliError(
-        "Error checking local storage, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+        "Error checking pulled artifact store, is the script not allowed to read from the filesystem? Run with debug mode for more info",
       );
     }
     if (!hasIdResult.value) {
-      spinner1.fail("Local artifact not found");
+      spinner1.fail("Artifact not found locally");
       throw new CliError(
         `The artifact "${artifact.project}:${artifact.search.id}" has not been found locally. Please, make sure to have the artifact locally before running the diff command. Run with debug mode for more info`,
       );
     }
   }
-  spinner1.succeed("Local artifact found");
+  spinner1.succeed("Artifact found locally");
 
   // Step 2: Look for compilation artifact
   const spinner2 = createSpinner(
@@ -291,7 +291,10 @@ export async function generateDiffWithTargetRelease(
     artifactId = artifact.search.id;
   } else {
     const idResult = await toAsyncResult(
-      localStorage.retrieveArtifactId(artifact.project, artifact.search.tag),
+      pulledArtifactStore.retrieveArtifactId(
+        artifact.project,
+        artifact.search.tag,
+      ),
       { debug: opts.debug },
     );
     if (!idResult.success) {
@@ -304,7 +307,7 @@ export async function generateDiffWithTargetRelease(
   }
 
   const contractListResult = await toAsyncResult(
-    localStorage.listContractArtifacts(artifact.project, artifactId),
+    pulledArtifactStore.listContractArtifacts(artifact.project, artifactId),
     { debug: opts.debug },
   );
   if (!contractListResult.success) {
@@ -323,7 +326,7 @@ export async function generateDiffWithTargetRelease(
   const commonContractArtifactsResult = await toAsyncResult(
     Promise.all(
       commonContracts.map((contract) =>
-        localStorage.retrieveContractOutputArtifact(
+        pulledArtifactStore.retrieveContractOutputArtifact(
           artifact.project,
           artifactId,
           contract.sourceName,

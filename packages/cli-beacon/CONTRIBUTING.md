@@ -37,7 +37,7 @@ Use debugging helpers in test code:
 
 ```ts
 await inspectS3Bucket(storageProvider, project);
-await inspectLocalStorage(localProvider, project);
+await inspectFilesystemStorage(localProvider, project);
 ```
 
 Or check LocalStack logs:
