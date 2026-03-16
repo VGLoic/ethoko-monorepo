@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import fs from "fs/promises";
 import path from "path";
-import { prompts, error as cliError } from "@/ui";
+import { prompts, error as cliError, info as cliInfo } from "@/ui";
 import { CliError } from "@/client/error";
 
 /**
@@ -11,7 +11,6 @@ export function registerInitCommand(program: Command): void {
   program
     .command("init")
     .description("Initialize Ethoko configuration interactively")
-    .requiredOption("--project <name>", "Project name")
     .option("--config <path>", "Custom config file path", "ethoko.config.json")
     .option("--force", "Overwrite existing config without prompting")
     .action(async (opts) => {
@@ -31,24 +30,6 @@ export function registerInitCommand(program: Command): void {
     });
 }
 
-type StorageConfig =
-  | {
-      type: "aws";
-      awsRegion: string;
-      awsBucketName: string;
-      awsProfile?: string;
-      awsAccessKeyId?: string;
-      awsSecretAccessKey?: string;
-      awsRoleArn?: string;
-      awsRoleExternalId?: string;
-      awsRoleSessionName?: string;
-      awsRoleDurationSeconds?: number;
-    }
-  | {
-      type: "filesystem";
-      path: string;
-    };
-
 type ConfigData = {
   pulledArtifactsPath: string;
   typingsPath: string;
@@ -61,7 +42,6 @@ type ConfigData = {
 };
 
 async function runInit(opts: {
-  project: string;
   config: string;
   force?: boolean;
 }): Promise<void> {
@@ -82,278 +62,47 @@ async function runInit(opts: {
     });
 
     if (prompts.isCancel(overwrite)) {
-      prompts.cancel("Configuration cancelled");
+      cliInfo("Configuration cancelled");
       return;
     }
 
     if (!overwrite) {
-      prompts.cancel("Configuration cancelled");
+      cliInfo("Configuration cancelled");
       return;
     }
   }
 
-  // Storage type selection
-  const storageType = await prompts.select({
-    message: "Select storage type:",
-    options: [
-      {
-        value: "aws",
-        label: "AWS S3",
-        hint: "Store artifacts in an S3 bucket",
-      },
-      {
-        value: "filesystem",
-        label: "Filesystem",
-        hint: "Store artifacts on local filesystem",
-      },
-    ],
-  });
-
-  if (prompts.isCancel(storageType)) {
-    prompts.cancel("Configuration cancelled");
+  const projectConfigResult = await promptFirstProject();
+  if (projectConfigResult.cancelled) {
+    cliInfo("Operation cancelled during project configuration");
     return;
   }
 
-  let storageConfig: StorageConfig;
-
-  if (storageType === "aws") {
-    // AWS Region
-    const awsRegion = await prompts.text({
-      message: "AWS Region:",
-      placeholder: "e.g., us-east-1, eu-west-3",
-      validate: (value) => {
-        if (!value || value.trim().length === 0) {
-          return "AWS Region is required";
-        }
-        return undefined;
-      },
-    });
-
-    if (prompts.isCancel(awsRegion)) {
-      prompts.cancel("Configuration cancelled");
-      return;
-    }
-
-    // AWS Bucket Name
-    const awsBucketName = await prompts.text({
-      message: "S3 Bucket Name:",
-      validate: (value) => {
-        if (!value || value.trim().length === 0) {
-          return "S3 Bucket Name is required";
-        }
-        return undefined;
-      },
-    });
-
-    if (prompts.isCancel(awsBucketName)) {
-      prompts.cancel("Configuration cancelled");
-      return;
-    }
-
-    // Auth method
-    const authMethod = await prompts.select({
-      message: "AWS Authentication method:",
-      options: [
-        {
-          value: "default",
-          label: "Environment (default credentials)",
-          hint: "Use AWS credentials from environment or instance role",
-        },
-        {
-          value: "profile",
-          label: "AWS Profile",
-          hint: "Use a named AWS CLI profile",
-        },
-        {
-          value: "access-keys",
-          label: "Access Keys",
-          hint: "Provide AWS access key and secret",
-        },
-      ],
-    });
-
-    if (prompts.isCancel(authMethod)) {
-      prompts.cancel("Configuration cancelled");
-      return;
-    }
-
-    if (authMethod === "profile") {
-      const awsProfile = await clack.text({
-        message: "AWS Profile name:",
-        validate: (value) => {
-          if (!value || value.trim().length === 0) {
-            return "Profile name is required";
-          }
-          return undefined;
-        },
-      });
-
-      if (clack.isCancel(awsProfile)) {
-        clack.cancel("Configuration cancelled");
-        return;
-      }
-
-      storageConfig = {
-        type: "aws",
-        awsRegion,
-        awsBucketName,
-        awsProfile,
-      };
-    } else if (authMethod === "access-keys") {
-      const awsAccessKeyId = await prompts.text({
-        message: "AWS Access Key ID:",
-        validate: (value) => {
-          if (!value || value.trim().length === 0) {
-            return "Access Key ID is required";
-          }
-          return undefined;
-        },
-      });
-
-      if (prompts.isCancel(awsAccessKeyId)) {
-        prompts.cancel("Configuration cancelled");
-        return;
-      }
-
-      const awsSecretAccessKey = await prompts.password({
-        message: "AWS Secret Access Key:",
-        validate: (value) => {
-          if (!value || value.trim().length === 0) {
-            return "Secret Access Key is required";
-          }
-          return undefined;
-        },
-      });
-
-      if (prompts.isCancel(awsSecretAccessKey)) {
-        prompts.cancel("Configuration cancelled");
-        return;
-      }
-
-      // Role configuration (optional for static credentials)
-      const awsRoleArn = await prompts.text({
-        message: "AWS Role ARN (optional, press Enter to skip):",
-        placeholder: "arn:aws:iam::123456789012:role/MyRole",
-      });
-
-      if (prompts.isCancel(awsRoleArn)) {
-        prompts.cancel("Configuration cancelled");
-        return;
-      }
-
-      let awsRoleExternalId: string | undefined;
-      let awsRoleSessionName: string | undefined;
-      let awsRoleDurationSeconds: number | undefined;
-
-      if (awsRoleArn && awsRoleArn.trim().length > 0) {
-        const roleExternalIdResult = await prompts.text({
-          message: "Role External ID (optional, press Enter to skip):",
-        });
-
-        if (prompts.isCancel(roleExternalIdResult)) {
-          prompts.cancel("Configuration cancelled");
-          return;
-        }
-
-        awsRoleExternalId = roleExternalIdResult || undefined;
-
-        const roleSessionNameResult = await prompts.text({
-          message: "Role Session Name (optional, press Enter to skip):",
-        });
-
-        if (prompts.isCancel(roleSessionNameResult)) {
-          prompts.cancel("Configuration cancelled");
-          return;
-        }
-
-        awsRoleSessionName = roleSessionNameResult || undefined;
-
-        const durationInput = await prompts.text({
-          message:
-            "Role Duration in seconds (900-43200, optional, press Enter to skip):",
-          validate: (value) => {
-            if (!value || value.trim().length === 0) {
-              return undefined; // Allow empty
-            }
-            const num = parseInt(value, 10);
-            if (isNaN(num)) {
-              return "Duration must be a number";
-            }
-            if (num < 900 || num > 43200) {
-              return "Duration must be between 900 and 43200 seconds";
-            }
-            return undefined;
-          },
-        });
-
-        if (prompts.isCancel(durationInput)) {
-          prompts.cancel("Configuration cancelled");
-          return;
-        }
-
-        if (durationInput && durationInput.trim().length > 0) {
-          awsRoleDurationSeconds = parseInt(durationInput, 10);
-        }
-      }
-
-      storageConfig = {
-        type: "aws",
-        awsRegion,
-        awsBucketName,
-        awsAccessKeyId,
-        awsSecretAccessKey,
-        ...(awsRoleArn && awsRoleArn.trim().length > 0
-          ? {
-              awsRoleArn,
-              ...(awsRoleExternalId && awsRoleExternalId.trim().length > 0
-                ? { awsRoleExternalId }
-                : {}),
-              ...(awsRoleSessionName && awsRoleSessionName.trim().length > 0
-                ? { awsRoleSessionName }
-                : {}),
-              ...(awsRoleDurationSeconds !== undefined
-                ? { awsRoleDurationSeconds }
-                : {}),
-            }
-          : {}),
-      };
-    } else {
-      // Default credentials
-      storageConfig = {
-        type: "aws",
-        awsRegion,
-        awsBucketName,
-      };
-    }
-  } else {
-    // Filesystem storage
-    const storagePath = await prompts.text({
-      message:
-        "Choose a path where Ethoko will store artifacts (default is .ethoko-storage):",
-      initialValue: ".ethoko-storage",
-      validate: (value) => {
-        if (!value || value.trim().length === 0) {
-          return "Storage path cannot be empty";
-        }
-        return undefined;
-      },
-    });
-
-    if (prompts.isCancel(storagePath)) {
-      prompts.cancel("Configuration cancelled");
-      return;
-    }
-
-    storageConfig = {
-      type: "filesystem",
-      path: storagePath,
-    };
-  }
+  prompts.note(
+    `Project "${projectConfigResult.project.name}" configured successfully!\nLet's finish with the last details!`,
+  );
 
   // Additional paths
+
+  // REMIND ME: improve this by checking in the repository
+  const compilationOutputResult = await prompts.text({
+    message:
+      "Input the path where your compilation output are stored (e.g. `./out` for Forge, `./artifacts` for Hardhat):",
+  });
+
+  if (prompts.isCancel(compilationOutputResult)) {
+    cliInfo("Configuration cancelled");
+    return;
+  }
+
+  const compilationOutputPath =
+    compilationOutputResult.trim().length > 0
+      ? compilationOutputResult.trim()
+      : undefined;
+
   const pulledArtifactsPath = await prompts.text({
     message:
-      "Choose a path where Ethoko will store pulled artifacts (default is .ethoko):",
+      "Choose a path for the pulled artifacts store (default is .ethoko):",
     initialValue: ".ethoko",
     validate: (value) => {
       if (!value || value.trim().length === 0) {
@@ -364,13 +113,13 @@ async function runInit(opts: {
   });
 
   if (prompts.isCancel(pulledArtifactsPath)) {
-    prompts.cancel("Configuration cancelled");
+    cliInfo("Configuration cancelled");
     return;
   }
 
   const typingsPath = await prompts.text({
     message:
-      "Choose a path where Ethoko will generate TypeScript typings (default is .ethoko-typings):",
+      "Choose a path for the generated TypeScript typings (default is .ethoko-typings):",
     initialValue: ".ethoko-typings",
     validate: (value) => {
       if (!value || value.trim().length === 0) {
@@ -381,71 +130,64 @@ async function runInit(opts: {
   });
 
   if (prompts.isCancel(typingsPath)) {
-    prompts.cancel("Configuration cancelled");
+    cliInfo("Configuration cancelled");
     return;
   }
-
-  // REMIND ME: improve this by checking in the repository
-  const compilationOutputResult = await prompts.text({
-    message:
-      "Input the path where your compilation output are stored (e.g. `./out` for Forge, `./artifacts` for Hardhat):",
-  });
-
-  if (prompts.isCancel(compilationOutputResult)) {
-    prompts.cancel("Configuration cancelled");
-    return;
-  }
-
-  const compilationOutputPath =
-    compilationOutputResult.trim().length > 0
-      ? compilationOutputResult.trim()
-      : undefined;
 
   // Build config object
   const configData: ConfigData = {
     pulledArtifactsPath,
     typingsPath,
     compilationOutputPath,
-    projects: [
-      {
-        name: opts.project,
-        storage: storageConfig,
-      },
-    ],
+    projects: [projectConfigResult.project],
     debug: false,
   };
 
   // Show summary
   const summaryLines: string[] = [
-    `Project: ${opts.project}`,
-    `Storage Type: ${storageConfig.type === "aws" ? "AWS S3" : "Filesystem"}`,
+    `Project: ${projectConfigResult.project.name}`,
+    ` Storage type: ${projectConfigResult.project.storage.type === "aws" ? "AWS S3" : "Filesystem"}`,
   ];
 
-  if (storageConfig.type === "aws") {
-    summaryLines.push(`AWS Region: ${storageConfig.awsRegion}`);
-    summaryLines.push(`S3 Bucket: ${storageConfig.awsBucketName}`);
-    if (storageConfig.awsProfile) {
-      summaryLines.push(`AWS Profile: ${storageConfig.awsProfile}`);
-    } else if (storageConfig.awsAccessKeyId) {
-      summaryLines.push(`AWS Access Key ID: ${storageConfig.awsAccessKeyId}`);
-      summaryLines.push(`AWS Secret Access Key: ****`);
-      if (storageConfig.awsRoleArn) {
-        summaryLines.push(`Role ARN: ${storageConfig.awsRoleArn}`);
+  if (projectConfigResult.project.storage.type === "aws") {
+    summaryLines.push(
+      ` AWS region: ${projectConfigResult.project.storage.awsRegion}`,
+    );
+    summaryLines.push(
+      ` S3 bucket: ${projectConfigResult.project.storage.awsBucketName}`,
+    );
+    if (projectConfigResult.project.storage.awsProfile) {
+      summaryLines.push(
+        ` AWS profile: ${projectConfigResult.project.storage.awsProfile}`,
+      );
+    } else if (projectConfigResult.project.storage.awsAccessKeyId) {
+      summaryLines.push(
+        ` AWS access Key ID: ${projectConfigResult.project.storage.awsAccessKeyId}`,
+      );
+      summaryLines.push(` AWS Secret Access Key: ****`);
+      if (projectConfigResult.project.storage.awsRoleArn) {
+        summaryLines.push(
+          ` AWS role ARN: ${projectConfigResult.project.storage.awsRoleArn}`,
+        );
       }
     } else {
-      summaryLines.push(`Authentication: Environment (default)`);
+      summaryLines.push(` Authentication: environment (default)`);
     }
   } else {
-    summaryLines.push(`Storage Path: ${storageConfig.path}`);
+    summaryLines.push(
+      ` Storage path: ${projectConfigResult.project.storage.path}`,
+    );
   }
 
-  summaryLines.push(`Pulled Artifacts Path: ${pulledArtifactsPath}`);
-  summaryLines.push(`Typings Path: ${typingsPath}`);
+  summaryLines.push("");
+  summaryLines.push("Artifact paths:");
+  summaryLines.push(` Pulled artifacts path: ${pulledArtifactsPath}`);
+  summaryLines.push(` Typings path: ${typingsPath}`);
   if (compilationOutputPath) {
-    summaryLines.push(`Compilation Output Path: ${compilationOutputPath}`);
+    summaryLines.push(` Compilation output path: ${compilationOutputPath}`);
   }
 
-  prompts.note(summaryLines.join("\n"), "Configuration Summary");
+  prompts.note(summaryLines.join("\n"), "Configuration summary");
 
   const proceed = await prompts.confirm({
     message: "Save this configuration?",
@@ -453,12 +195,12 @@ async function runInit(opts: {
   });
 
   if (prompts.isCancel(proceed)) {
-    prompts.cancel("Configuration cancelled");
+    cliInfo("Configuration cancelled");
     return;
   }
 
   if (!proceed) {
-    prompts.cancel("Configuration cancelled");
+    cliInfo("Configuration cancelled");
     return;
   }
 
@@ -476,6 +218,339 @@ async function runInit(opts: {
   }
 
   prompts.outro(
-    `Configuration saved to ${opts.config}\n\nYou can now run: ethoko push <path>`,
+    `Configuration saved to ${opts.config}\n\nEdit this file to add more projects or customize your configuration further.\nRun "ethoko pull ${projectConfigResult.project.name}" to pull artifacts for your project.`,
+  );
+}
+
+type StorageConfig =
+  | {
+      type: "aws";
+      awsRegion: string;
+      awsBucketName: string;
+      awsProfile?: string;
+      awsAccessKeyId?: string;
+      awsSecretAccessKey?: string;
+      awsRoleArn?: string;
+      awsRoleExternalId?: string;
+      awsRoleSessionName?: string;
+      awsRoleDurationSeconds?: number;
+    }
+  | {
+      type: "filesystem";
+      path: string;
+    };
+
+type ProjectConfig = {
+  name: string;
+  storage: StorageConfig;
+};
+async function promptFirstProject(): Promise<
+  { cancelled: false; project: ProjectConfig } | { cancelled: true }
+> {
+  const projectName = await prompts.text({
+    message: "Enter the name of your first project:",
+    validate: (value) => {
+      if (!value || value.trim().length === 0) {
+        return "Project name cannot be empty";
+      }
+      return undefined;
+    },
+  });
+
+  if (prompts.isCancel(projectName)) {
+    return { cancelled: true };
+  }
+
+  // Storage type selection
+  const storageType = await prompts.select({
+    message: `Project "${projectName}" ~ Select the storage type:`,
+    options: [
+      {
+        value: "aws",
+        label: "AWS S3",
+        hint: "Store artifacts in an S3 bucket",
+      },
+      {
+        value: "filesystem",
+        label: "Filesystem",
+        hint: "Store artifacts on local filesystem",
+      },
+    ],
+  });
+
+  if (prompts.isCancel(storageType)) {
+    return { cancelled: true };
+  }
+
+  if (storageType === "aws") {
+    const awsConfigResult = await promptAwsS3Config(projectName);
+    if (awsConfigResult.cancelled) {
+      return { cancelled: true };
+    }
+
+    return {
+      cancelled: false,
+      project: {
+        name: projectName,
+        storage: awsConfigResult.storageConfig,
+      },
+    };
+  }
+
+  if (storageType === "filesystem") {
+    const storagePath = await prompts.text({
+      message: `Project "${projectName}" ~ Choose a path for the artifacts store (default is .ethoko-storage):`,
+      initialValue: ".ethoko-storage",
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Storage path cannot be empty";
+        }
+        return undefined;
+      },
+    });
+
+    if (prompts.isCancel(storagePath)) {
+      return { cancelled: true };
+    }
+
+    return {
+      cancelled: false,
+      project: {
+        name: projectName,
+        storage: {
+          type: "filesystem",
+          path: storagePath,
+        },
+      },
+    };
+  }
+
+  throw new Error(`Unsupported storage type: ${storageType satisfies never}`);
+}
+
+async function promptAwsS3Config(
+  projectName: string,
+): Promise<
+  | { cancelled: false; storageConfig: Extract<StorageConfig, { type: "aws" }> }
+  | { cancelled: true }
+> {
+  const awsRegionInput = await prompts.text({
+    message: `Project "${projectName}" ~ Enter AWS Region:`,
+    placeholder: "e.g., us-east-1, eu-west-3",
+    validate: (value) => {
+      if (!value || value.trim().length === 0) {
+        return "AWS Region is required";
+      }
+      return undefined;
+    },
+  });
+
+  if (prompts.isCancel(awsRegionInput)) {
+    return { cancelled: true };
+  }
+  const awsRegion = awsRegionInput.trim();
+
+  const awsBucketNameInput = await prompts.text({
+    message: `Project "${projectName}" ~ Enter S3 Bucket Name:`,
+    validate: (value) => {
+      if (!value || value.trim().length === 0) {
+        return "S3 Bucket Name is required";
+      }
+      return undefined;
+    },
+  });
+
+  if (prompts.isCancel(awsBucketNameInput)) {
+    return { cancelled: true };
+  }
+  const awsBucketName = awsBucketNameInput.trim();
+
+  // Auth method
+  const authMethod = await prompts.select({
+    message: `Project "${projectName}" ~ Select AWS Authentication method:`,
+    options: [
+      {
+        value: "default",
+        label: "Environment (default credentials)",
+        hint: "Use AWS credentials from environment or instance role",
+      },
+      {
+        value: "profile",
+        label: "AWS Profile",
+        hint: "Use a named AWS CLI profile",
+      },
+      {
+        value: "access-keys",
+        label: "Access Keys",
+        hint: "Provide AWS access key and secret",
+      },
+    ],
+  });
+
+  if (prompts.isCancel(authMethod)) {
+    return { cancelled: true };
+  }
+
+  if (authMethod === "default") {
+    return {
+      cancelled: false,
+      storageConfig: {
+        type: "aws",
+        awsRegion,
+        awsBucketName,
+      },
+    };
+  }
+
+  if (authMethod === "profile") {
+    const awsProfileInput = await prompts.text({
+      message: `Project "${projectName}" ~ Enter AWS Profile name:`,
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Profile name is required";
+        }
+        return undefined;
+      },
+    });
+
+    if (prompts.isCancel(awsProfileInput)) {
+      return { cancelled: true };
+    }
+
+    const awsProfile = awsProfileInput.trim();
+
+    return {
+      cancelled: false,
+      storageConfig: {
+        type: "aws",
+        awsRegion,
+        awsBucketName,
+        awsProfile,
+      },
+    };
+  }
+
+  if (authMethod === "access-keys") {
+    const awsAccessKeyIdInput = await prompts.text({
+      message: `Project "${projectName}" ~ Enter AWS Access Key ID:`,
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Access Key ID is required";
+        }
+        return undefined;
+      },
+    });
+
+    if (prompts.isCancel(awsAccessKeyIdInput)) {
+      return { cancelled: true };
+    }
+    const awsAccessKeyId = awsAccessKeyIdInput.trim();
+
+    const awsSecretAccessKeyInput = await prompts.password({
+      message: `Project "${projectName}" ~ Enter AWS Secret Access Key:`,
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return "Secret Access Key is required";
+        }
+        return undefined;
+      },
+    });
+
+    if (prompts.isCancel(awsSecretAccessKeyInput)) {
+      return { cancelled: true };
+    }
+    const awsSecretAccessKey = awsSecretAccessKeyInput.trim();
+
+    const awsRoleArnInput = await prompts.text({
+      message: `Project "${projectName}" ~ Enter AWS Role ARN (optional, press Enter to skip):`,
+      placeholder: "arn:aws:iam::123456789012:role/MyRole",
+    });
+
+    if (prompts.isCancel(awsRoleArnInput)) {
+      return { cancelled: true };
+    }
+    const awsRoleArn = awsRoleArnInput.trim();
+
+    if (!awsRoleArn) {
+      return {
+        cancelled: false,
+        storageConfig: {
+          type: "aws",
+          awsRegion,
+          awsBucketName,
+          awsAccessKeyId,
+          awsSecretAccessKey,
+        },
+      };
+    }
+
+    const awsRoleExternalIdInput = await prompts.text({
+      message: `Project "${projectName}" ~ Enter Role External ID (optional, press Enter to skip):`,
+    });
+
+    if (prompts.isCancel(awsRoleExternalIdInput)) {
+      return { cancelled: true };
+    }
+    const awsRoleExternalId =
+      awsRoleExternalIdInput.trim().length > 0
+        ? awsRoleExternalIdInput.trim()
+        : undefined;
+
+    const awsRoleSessionNameInput = await prompts.text({
+      message: `Project "${projectName}" ~ Enter Role Session Name (optional, press Enter to skip):`,
+    });
+
+    if (prompts.isCancel(awsRoleSessionNameInput)) {
+      return { cancelled: true };
+    }
+    const awsRoleSessionName =
+      awsRoleSessionNameInput.trim().length > 0
+        ? awsRoleSessionNameInput.trim()
+        : undefined;
+
+    const duration = await prompts.text({
+      message: `Project "${projectName}" ~ Enter Role Duration in seconds (900-43200, optional, press Enter to skip):`,
+      validate: (value) => {
+        if (!value || value.trim().length === 0) {
+          return undefined; // Allow empty
+        }
+        const num = parseInt(value, 10);
+        if (isNaN(num)) {
+          return "Duration must be a number";
+        }
+        if (num < 900 || num > 43200) {
+          return "Duration must be between 900 and 43200 seconds";
+        }
+        return undefined;
+      },
+    });
+
+    if (prompts.isCancel(duration)) {
+      return { cancelled: true };
+    }
+
+    let awsRoleDurationSeconds: number | undefined;
+    if (duration && duration.trim().length > 0) {
+      awsRoleDurationSeconds = parseInt(duration, 10);
+    }
+
+    return {
+      cancelled: false,
+      storageConfig: {
+        type: "aws",
+        awsRegion,
+        awsBucketName,
+        awsAccessKeyId,
+        awsSecretAccessKey,
+        awsRoleArn,
+        awsRoleSessionName,
+        awsRoleDurationSeconds,
+        awsRoleExternalId,
+      },
+    };
+  }
+
+  throw new Error(
+    `Unsupported authentication method: ${authMethod satisfies never}`,
   );
 }
