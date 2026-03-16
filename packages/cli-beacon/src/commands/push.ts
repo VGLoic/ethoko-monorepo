@@ -11,6 +11,8 @@ import { CliError, push } from "@/client/index.js";
 
 import type { EthokoCliConfig } from "../config/config.js";
 import { createStorageProvider } from "./utils/storage-provider.js";
+import { toAsyncResult } from "@/utils/result.js";
+import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -21,17 +23,52 @@ export function registerPushCommand(
   program
     .command("push")
     .description("Upload compilation artifacts to storage")
+    .argument(
+      "<PROJECT[:TAG]>",
+      "Target project and optional tag to associate with the pushed artifact",
+    )
     .option("--artifact-path <path>", "Path to compilation artifacts")
-    .option("--tag <tag>", "Tag to associate with artifacts")
     .option("--force", "Force push even if tag exists", false)
     .option("--debug", "Enable debug logging", false)
     .option("--silent", "Suppress output", false)
-    .action(async (options) => {
-      let config: EthokoCliConfig;
-      try {
-        config = await getConfig();
-      } catch (err) {
-        cliError(err instanceof Error ? err.message : String(err));
+    .action(async (projectArg, options) => {
+      const configResult = await toAsyncResult(getConfig());
+      if (!configResult.success) {
+        cliError(
+          configResult.error instanceof Error
+            ? configResult.error.message
+            : String(configResult.error),
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const config = configResult.value;
+
+      const artifactKeyParsingResult = ArtifactKeySchema.transform(
+        (artifactKey) => {
+          if (artifactKey.artifact?.type === "id") {
+            return z.NEVER;
+          }
+          return {
+            project: artifactKey.project,
+            tag: artifactKey.artifact?.tag,
+          };
+        },
+      ).safeParse(projectArg);
+      if (!artifactKeyParsingResult.success) {
+        cliError(
+          `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG]`,
+        );
+        process.exitCode = 1;
+        return;
+      }
+      const projectConfig = config.getProjectConfig(
+        artifactKeyParsingResult.data.project,
+      );
+      if (!projectConfig) {
+        cliError(
+          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+        );
         process.exitCode = 1;
         return;
       }
@@ -43,13 +80,6 @@ export function registerPushCommand(
             .min(
               1,
               'The "artifactPath" cannot be empty. Provide a valid path to compilation artifacts or set compilationOutputPath in ethoko.config.json',
-            )
-            .optional(),
-          tag: z
-            .string('The "tag" option must be a string')
-            .min(
-              1,
-              'If provided, the "tag" cannot be empty. Provide a meaningful tag like "v1.0.0" or "latest"',
             )
             .optional(),
           force: z
@@ -84,31 +114,31 @@ export function registerPushCommand(
       }
 
       boxHeader(
-        `Pushing artifact to "${config.project}"${optsParsingResult.data.tag ? ` with tag "${optsParsingResult.data.tag}"` : ""}`,
+        `Pushing artifact to "${artifactKeyParsingResult.data.project}"${artifactKeyParsingResult.data.tag ? ` with tag "${artifactKeyParsingResult.data.tag}"` : ""}`,
         optsParsingResult.data.silent,
       );
 
-      const storageProvider = createStorageProvider({
-        ...config,
-        debug: config.debug || optsParsingResult.data.debug,
-      });
+      const storageProvider = createStorageProvider(
+        projectConfig.storage,
+        optsParsingResult.data.debug,
+      );
 
       await push(
         finalArtifactPath,
-        config.project,
-        optsParsingResult.data.tag,
+        artifactKeyParsingResult.data.project,
+        artifactKeyParsingResult.data.tag,
         storageProvider,
         {
           force: optsParsingResult.data.force,
-          debug: config.debug || optsParsingResult.data.debug,
+          debug: optsParsingResult.data.debug,
           isCI: process.env.CI === "true" || process.env.CI === "1",
           silent: optsParsingResult.data.silent,
         },
       )
         .then((result) =>
           displayPushResult(
-            config.project,
-            optsParsingResult.data.tag,
+            artifactKeyParsingResult.data.project,
+            artifactKeyParsingResult.data.tag,
             result,
             optsParsingResult.data.silent,
           ),
