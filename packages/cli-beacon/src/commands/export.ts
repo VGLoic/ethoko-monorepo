@@ -41,7 +41,7 @@ export function registerExportCommand(
         process.exitCode = 1;
         return;
       }
-      const config = configResult.value.config;
+      const config = configResult.value;
 
       const optsParsingResult = z
         .object({

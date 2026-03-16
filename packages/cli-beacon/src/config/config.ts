@@ -298,12 +298,22 @@ type EthokoConfig = z.infer<typeof EthokoConfigSchema>;
 export type EthokoStorageConfig = EthokoConfig["storage"];
 
 export class EthokoCliConfig {
-  public config: z.infer<typeof EthokoConfigSchema> & { configPath: string };
+  public project: string;
+  public pulledArtifactsPath: string;
+  public typingsPath: string;
+  public compilationOutputPath?: string;
+  public debug: boolean;
+  public configPath: string;
+  public storage: EthokoStorageConfig;
 
-  constructor(
-    config: z.infer<typeof EthokoConfigSchema> & { configPath: string },
-  ) {
-    this.config = config;
+  constructor(config: z.infer<typeof EthokoConfigSchema>, configPath: string) {
+    this.project = config.project;
+    this.pulledArtifactsPath = config.pulledArtifactsPath;
+    this.typingsPath = config.typingsPath;
+    this.compilationOutputPath = config.compilationOutputPath;
+    this.debug = config.debug;
+    this.configPath = configPath;
+    this.storage = config.storage;
   }
 }
 
@@ -358,10 +368,7 @@ Example ethoko.config.json:
     );
   }
 
-  return new EthokoCliConfig({
-    ...parsingResult.data,
-    configPath: resolvedPath,
-  });
+  return new EthokoCliConfig(parsingResult.data, resolvedPath);
 }
 
 async function findConfigPath(startDir: string): Promise<string | null> {
