@@ -130,7 +130,6 @@ Ethoko CLI can be configured through an `ethoko.config.json` file at the root of
 
 ```json
 {
-  "compilationOutputPath": "out",
   "projects": [{
     "name": "<my-project>",
     "storage": {
@@ -138,11 +137,12 @@ Ethoko CLI can be configured through an `ethoko.config.json` file at the root of
       "awsBucket": "<my-ethoko-bucket>",
       "awsRegion": "<my-aws-region>"
     }
-  }]
+  }],
+  "compilationOutputPath": "out"
 }
 ```
 
-Ethoko supports two types of storage backends for now:
+Each project can be configured with its own storage backend, Ethoko supports two types of storage backends for now:
 
 - `aws`: store the compilation artifacts in an AWS S3 bucket. The bucket must be created beforehand, and the AWS credentials must be configured locally for Ethoko to be able to access it.
 - `filesystem`: store the compilation artifacts locally in the directory.
@@ -168,20 +168,20 @@ Push a local compilation artifact for the configured project to the storage, cre
 Only push the compilation artifact without an additional tag:
 
 ```bash
-ethoko push
+ethoko push my-project
 ```
 
 Or use a tag to associate the compilation artifact with it
 
 ```bash
-ethoko push --tag 2026-02-02
+ethoko push my-project:2026-02-02
 ```
 
 If not setup in the configuration with `compilationOutputPath` or need to be overriden, the path to the compilation artifact can be provided
 
 ```bash
 # e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
-ethoko push --artifact-path ./path/to/artifacts
+ethoko push my-project --artifact-path ./path/to/artifacts
 ```
 
 > [!NOTE]
@@ -189,20 +189,19 @@ ethoko push --artifact-path ./path/to/artifacts
 
 #### Pull
 
-Pull locally the missing artifacts from the configured storage.
+Pull locally the missing artifacts for a configured project.
 
-One can pull all the artifacts from the configured project
+One can pull all the artifacts from a project
 
 ```bash
-ethoko pull
+ethoko pull my-project
 ```
 
-Or target a specific artifact using its tag or ID or another project:
+Or target a specific artifact using its tag or ID:
 
 ```bash
-ethoko pull --id b5e41181986a
-ethoko pull --tag 2026-02-02
-ethoko pull --tag v1.2.3 --project another-project
+ethoko pull my-project@b5e41181986a
+ethoko pull my-project:2026-02-02
 ```
 
 #### Typings
@@ -229,20 +228,14 @@ ethoko artifacts
 Inspect a pulled compilation artifact to list contracts and metadata.
 
 ```bash
-ethoko inspect --tag 2026-02-02
-ethoko inspect --id b5e41181986a
-```
-
-Target a different project:
-
-```bash
-ethoko inspect --project another-project --tag 2026-02-02
+ethoko inspect my-project:2026-02-02
+ethoko inspect my-project@b5e41181986a
 ```
 
 Output JSON for scripting:
 
 ```bash
-ethoko inspect --tag 2026-02-02 --json
+ethoko inspect my-project:2026-02-02 --json
 ```
 
 #### Export
@@ -250,26 +243,28 @@ ethoko inspect --tag 2026-02-02 --json
 Export a contract artifact from a locally pulled artifact.
 
 ```bash
-ethoko export --tag 2026-02-02 --contract Counter
-ethoko export --id b5e41181986a --contract contracts/Counter.sol:Counter
+# Using only the contract name, case insensitive, will fail if multiple contracts with the same name are found
+ethoko export my-project:2026-02-02 --contract Counter
+# Using the fully qualified path to the contract, case sensitive, will avoid any ambiguity
+ethoko export my-project@b5e41181986a --contract contracts/Counter.sol:Counter
 ```
 
 Write the contract artifact to a file (overwrites if it exists):
 
 ```bash
-ethoko export --tag 2026-02-02 --contract Counter --output ./Counter.json
+ethoko export my-project:2026-02-02 --contract Counter --output ./Counter.json
 ```
 
 Pipe the artifact to another tool:
 
 ```bash
-ethoko export --tag 2026-02-02 --contract Counter | jq
+ethoko export my-project:2026-02-02 --contract Counter | jq
 ```
 
 Export the ABI as a TypeScript `const`:
 
 ```bash
-echo "export const MY_ABI = $(ethoko export --tag 2026-02-02 --contract Counter | jq .abi) as const;" > ./my-abi.ts
+echo "export const MY_ABI = $(ethoko export my-project:2026-02-02 --contract Counter | jq .abi) as const;" > ./my-abi.ts
 ```
 
 #### Restore
@@ -277,9 +272,8 @@ echo "export const MY_ABI = $(ethoko export --tag 2026-02-02 --contract Counter 
 Restore original compilation artifacts from a locally pulled artifact to a local directory.
 
 ```bash
-ethoko restore --id b5e41181986a --output ./restored
-ethoko restore --tag 2026-02-02 --output ./restored
-ethoko restore --tag v1.2.3 --project another-project --output ./restored
+ethoko restore my-project@b5e41181986a --output ./restored
+ethoko restore my-project:2026-02-02 --output ./restored
 ```
 
 > [!NOTE]
@@ -290,16 +284,16 @@ ethoko restore --tag v1.2.3 --project another-project --output ./restored
 Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.
 
 ```bash
-ethoko diff --tag 2026-02-02
+ethoko diff my-project:2026-02-02
 
-ethoko diff --id b5e41181986a
+ethoko diff my-project@b5e41181986a
 ```
 
 If not setup in the configuration or need to be overriden, the path to the compilation artifact can be provided
 
 ```bash
 # e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
-ethoko diff --tag 2026-02-02 --artifact-path ./path/to/artifacts
+ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
 ### Using the typings
