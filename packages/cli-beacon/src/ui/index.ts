@@ -1,4 +1,3 @@
-import boxen from "boxen";
 import { styleText } from "node:util";
 import * as clackPrompts from "@clack/prompts";
 
@@ -48,13 +47,12 @@ interface Spinner {
  */
 export function boxHeader(message: string, silent = false): void {
   if (silent) return;
-  const boxed = boxen(message, {
-    padding: 0,
-    margin: { top: 1, bottom: 0, left: 0, right: 0 },
-    borderStyle: "round",
-    borderColor: "cyan",
+  clackPrompts.box(message, undefined, {
+    width: "auto",
+    rounded: true,
+    contentAlign: "center",
+    output: process.stderr,
   });
-  console.error(boxed);
 }
 
 /**
@@ -66,15 +64,15 @@ export function boxSummary(
   silent = false,
 ): void {
   if (silent) return;
-  const boldTitle = styleText("bold", title);
-  const content = `${boldTitle}\n\n${lines.join("\n")}`;
-  const boxed = boxen(content, {
-    padding: 1,
-    margin: { top: 1, bottom: 1, left: 0, right: 0 },
-    borderStyle: "round",
-    borderColor: "cyan",
+  clackPrompts.box(lines.join("\n"), title, {
+    width: "auto",
+    rounded: true,
+    contentAlign: "left",
+    titleAlign: "center",
+    titlePadding: 1,
+    contentPadding: 2,
+    output: process.stderr,
   });
-  console.error(boxed);
 }
 
 /**
