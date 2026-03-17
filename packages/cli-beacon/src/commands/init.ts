@@ -1,7 +1,7 @@
 import { Command } from "commander";
 import fs from "fs/promises";
 import path from "path";
-import { prompts, CommandLogger } from "@/ui";
+import { CommandLogger } from "@/ui";
 import { CliError } from "@/client/error";
 
 /**
@@ -79,12 +79,12 @@ async function runInit(
     .catch(() => false);
 
   if (configExists && !opts.force) {
-    const overwrite = await prompts.confirm({
+    const overwrite = await logger.prompts.confirm({
       message: `Configuration file already exists at ${configPath}. Overwrite?`,
       initialValue: false,
     });
 
-    if (prompts.isCancel(overwrite)) {
+    if (logger.prompts.isCancel(overwrite)) {
       logger.cancel("Configuration cancelled");
       return;
     }
@@ -95,7 +95,7 @@ async function runInit(
     }
   }
 
-  const projectConfigResult = await promptFirstProject();
+  const projectConfigResult = await promptFirstProject(logger);
   if (projectConfigResult.cancelled) {
     logger.cancel("Operation cancelled during project configuration");
     return;
@@ -110,7 +110,7 @@ async function runInit(
   const compilationOutputOptions = await deriveCompilationOutputPathsOptions();
   let compilationOutputPath: string | undefined = undefined;
   if (compilationOutputOptions.length > 0) {
-    const compilationOutputSelection = await prompts.select({
+    const compilationOutputSelection = await logger.prompts.select({
       message: "Select the path where your compilation output are stored:",
       options: [
         ...compilationOutputOptions.map((option) => ({
@@ -124,7 +124,7 @@ async function runInit(
         },
       ],
     });
-    if (prompts.isCancel(compilationOutputSelection)) {
+    if (logger.prompts.isCancel(compilationOutputSelection)) {
       logger.cancel("Configuration cancelled");
       return;
     }
@@ -133,12 +133,12 @@ async function runInit(
     }
   }
   if (!compilationOutputPath) {
-    const compilationOutputResult = await prompts.text({
+    const compilationOutputResult = await logger.prompts.text({
       message:
         "Input the path where your compilation output are stored (e.g. `./out` for Forge, `./artifacts` for Hardhat, press Enter to skip):",
     });
 
-    if (prompts.isCancel(compilationOutputResult)) {
+    if (logger.prompts.isCancel(compilationOutputResult)) {
       logger.cancel("Configuration cancelled");
       return;
     }
@@ -148,7 +148,7 @@ async function runInit(
         : undefined;
   }
 
-  const pulledArtifactsPath = await prompts.text({
+  const pulledArtifactsPath = await logger.prompts.text({
     message:
       "Choose a path for the pulled artifacts store (default is .ethoko):",
     initialValue: ".ethoko",
@@ -160,12 +160,12 @@ async function runInit(
     },
   });
 
-  if (prompts.isCancel(pulledArtifactsPath)) {
+  if (logger.prompts.isCancel(pulledArtifactsPath)) {
     logger.cancel("Configuration cancelled");
     return;
   }
 
-  const typingsPath = await prompts.text({
+  const typingsPath = await logger.prompts.text({
     message:
       "Choose a path for the generated TypeScript typings (default is .ethoko-typings):",
     initialValue: ".ethoko-typings",
@@ -177,7 +177,7 @@ async function runInit(
     },
   });
 
-  if (prompts.isCancel(typingsPath)) {
+  if (logger.prompts.isCancel(typingsPath)) {
     logger.cancel("Configuration cancelled");
     return;
   }
@@ -235,14 +235,14 @@ async function runInit(
     summaryLines.push(` Compilation output path: ${compilationOutputPath}`);
   }
 
-  prompts.note(summaryLines.join("\n"), "Configuration summary");
+  logger.note(summaryLines.join("\n"), "Configuration summary");
 
-  const proceed = await prompts.confirm({
+  const proceed = await logger.prompts.confirm({
     message: "Save this configuration?",
     initialValue: true,
   });
 
-  if (prompts.isCancel(proceed)) {
+  if (logger.prompts.isCancel(proceed)) {
     logger.cancel("Configuration cancelled");
     return;
   }
@@ -275,10 +275,10 @@ async function runInit(
  * Handles both AWS S3 and filesystem storage options with appropriate follow-up questions.
  * @returns An object containing the configured project or a cancellation flag if the user cancels at any point.
  */
-async function promptFirstProject(): Promise<
-  { cancelled: false; project: ProjectConfig } | { cancelled: true }
-> {
-  const projectName = await prompts.text({
+async function promptFirstProject(
+  logger: CommandLogger,
+): Promise<{ cancelled: false; project: ProjectConfig } | { cancelled: true }> {
+  const projectName = await logger.prompts.text({
     message: "Enter the name of your first project:",
     validate: (value) => {
       if (!value || value.trim().length === 0) {
@@ -288,12 +288,12 @@ async function promptFirstProject(): Promise<
     },
   });
 
-  if (prompts.isCancel(projectName)) {
+  if (logger.prompts.isCancel(projectName)) {
     return { cancelled: true };
   }
 
   // Storage type selection
-  const storageType = await prompts.select({
+  const storageType = await logger.prompts.select({
     message: `Project "${projectName}" ~ Select the storage type:`,
     options: [
       {
@@ -309,12 +309,12 @@ async function promptFirstProject(): Promise<
     ],
   });
 
-  if (prompts.isCancel(storageType)) {
+  if (logger.prompts.isCancel(storageType)) {
     return { cancelled: true };
   }
 
   if (storageType === "aws") {
-    const awsConfigResult = await promptAwsS3Config(projectName);
+    const awsConfigResult = await promptAwsS3Config(logger, projectName);
     if (awsConfigResult.cancelled) {
       return { cancelled: true };
     }
@@ -329,7 +329,7 @@ async function promptFirstProject(): Promise<
   }
 
   if (storageType === "filesystem") {
-    const storagePath = await prompts.text({
+    const storagePath = await logger.prompts.text({
       message: `Project "${projectName}" ~ Choose a path for the artifacts store (default is .ethoko-storage):`,
       initialValue: ".ethoko-storage",
       validate: (value) => {
@@ -340,7 +340,7 @@ async function promptFirstProject(): Promise<
       },
     });
 
-    if (prompts.isCancel(storagePath)) {
+    if (logger.prompts.isCancel(storagePath)) {
       return { cancelled: true };
     }
 
@@ -366,12 +366,13 @@ async function promptFirstProject(): Promise<
  * @returns The AWS storage configuration or a cancellation flag if the user cancels at any point.
  */
 async function promptAwsS3Config(
+  logger: CommandLogger,
   projectName: string,
 ): Promise<
   | { cancelled: false; storageConfig: Extract<StorageConfig, { type: "aws" }> }
   | { cancelled: true }
 > {
-  const awsRegionInput = await prompts.text({
+  const awsRegionInput = await logger.prompts.text({
     message: `Project "${projectName}" ~ Enter AWS Region:`,
     placeholder: "e.g., us-east-1, eu-west-3",
     validate: (value) => {
@@ -382,12 +383,12 @@ async function promptAwsS3Config(
     },
   });
 
-  if (prompts.isCancel(awsRegionInput)) {
+  if (logger.prompts.isCancel(awsRegionInput)) {
     return { cancelled: true };
   }
   const awsRegion = awsRegionInput.trim();
 
-  const awsBucketNameInput = await prompts.text({
+  const awsBucketNameInput = await logger.prompts.text({
     message: `Project "${projectName}" ~ Enter S3 Bucket Name:`,
     validate: (value) => {
       if (!value || value.trim().length === 0) {
@@ -397,13 +398,13 @@ async function promptAwsS3Config(
     },
   });
 
-  if (prompts.isCancel(awsBucketNameInput)) {
+  if (logger.prompts.isCancel(awsBucketNameInput)) {
     return { cancelled: true };
   }
   const awsBucketName = awsBucketNameInput.trim();
 
   // Auth method
-  const authMethod = await prompts.select({
+  const authMethod = await logger.prompts.select({
     message: `Project "${projectName}" ~ Select AWS Authentication method:`,
     options: [
       {
@@ -424,7 +425,7 @@ async function promptAwsS3Config(
     ],
   });
 
-  if (prompts.isCancel(authMethod)) {
+  if (logger.prompts.isCancel(authMethod)) {
     return { cancelled: true };
   }
 
@@ -440,7 +441,7 @@ async function promptAwsS3Config(
   }
 
   if (authMethod === "profile") {
-    const awsProfileInput = await prompts.text({
+    const awsProfileInput = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter AWS Profile name:`,
       validate: (value) => {
         if (!value || value.trim().length === 0) {
@@ -450,7 +451,7 @@ async function promptAwsS3Config(
       },
     });
 
-    if (prompts.isCancel(awsProfileInput)) {
+    if (logger.prompts.isCancel(awsProfileInput)) {
       return { cancelled: true };
     }
 
@@ -468,7 +469,7 @@ async function promptAwsS3Config(
   }
 
   if (authMethod === "access-keys") {
-    const awsAccessKeyIdInput = await prompts.text({
+    const awsAccessKeyIdInput = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter AWS Access Key ID:`,
       validate: (value) => {
         if (!value || value.trim().length === 0) {
@@ -478,12 +479,12 @@ async function promptAwsS3Config(
       },
     });
 
-    if (prompts.isCancel(awsAccessKeyIdInput)) {
+    if (logger.prompts.isCancel(awsAccessKeyIdInput)) {
       return { cancelled: true };
     }
     const awsAccessKeyId = awsAccessKeyIdInput.trim();
 
-    const awsSecretAccessKeyInput = await prompts.password({
+    const awsSecretAccessKeyInput = await logger.prompts.password({
       message: `Project "${projectName}" ~ Enter AWS Secret Access Key:`,
       validate: (value) => {
         if (!value || value.trim().length === 0) {
@@ -493,17 +494,17 @@ async function promptAwsS3Config(
       },
     });
 
-    if (prompts.isCancel(awsSecretAccessKeyInput)) {
+    if (logger.prompts.isCancel(awsSecretAccessKeyInput)) {
       return { cancelled: true };
     }
     const awsSecretAccessKey = awsSecretAccessKeyInput.trim();
 
-    const awsRoleArnInput = await prompts.text({
+    const awsRoleArnInput = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter AWS Role ARN (optional, press Enter to skip):`,
       placeholder: "arn:aws:iam::123456789012:role/MyRole",
     });
 
-    if (prompts.isCancel(awsRoleArnInput)) {
+    if (logger.prompts.isCancel(awsRoleArnInput)) {
       return { cancelled: true };
     }
     const awsRoleArn = awsRoleArnInput.trim();
@@ -521,11 +522,11 @@ async function promptAwsS3Config(
       };
     }
 
-    const awsRoleExternalIdInput = await prompts.text({
+    const awsRoleExternalIdInput = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter Role External ID (optional, press Enter to skip):`,
     });
 
-    if (prompts.isCancel(awsRoleExternalIdInput)) {
+    if (logger.prompts.isCancel(awsRoleExternalIdInput)) {
       return { cancelled: true };
     }
     const awsRoleExternalId =
@@ -533,11 +534,11 @@ async function promptAwsS3Config(
         ? awsRoleExternalIdInput.trim()
         : undefined;
 
-    const awsRoleSessionNameInput = await prompts.text({
+    const awsRoleSessionNameInput = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter Role Session Name (optional, press Enter to skip):`,
     });
 
-    if (prompts.isCancel(awsRoleSessionNameInput)) {
+    if (logger.prompts.isCancel(awsRoleSessionNameInput)) {
       return { cancelled: true };
     }
     const awsRoleSessionName =
@@ -545,7 +546,7 @@ async function promptAwsS3Config(
         ? awsRoleSessionNameInput.trim()
         : undefined;
 
-    const duration = await prompts.text({
+    const duration = await logger.prompts.text({
       message: `Project "${projectName}" ~ Enter Role Duration in seconds (900-43200, optional, press Enter to skip):`,
       validate: (value) => {
         if (!value || value.trim().length === 0) {
@@ -562,7 +563,7 @@ async function promptAwsS3Config(
       },
     });
 
-    if (prompts.isCancel(duration)) {
+    if (logger.prompts.isCancel(duration)) {
       return { cancelled: true };
     }
 

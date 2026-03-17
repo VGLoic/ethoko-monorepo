@@ -7,7 +7,7 @@ import {
   InferredArtifact,
 } from "@/supported-origins/infer-original-artifact-format";
 import { OriginalBuildInfoPaths } from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
-import { prompts } from "@/ui";
+import { CommandLogger } from "@/ui";
 
 type CandidateBuildInfoOption = {
   display: string;
@@ -451,6 +451,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
 
 /**
  * Prompts the user to select one option from a list
+ * @param logger The CommandLogger instance to use for prompting the user
  * @param message The message to display to the user
  * @param options The list of options to choose from
  * @param timeoutMs Optional timeout in milliseconds (default: 30000ms = 30s). Set to 0 to disable timeout.
@@ -458,6 +459,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
  * @throws CliError when timeout is reached or user cancels
  */
 export async function promptUserSelection(
+  logger: CommandLogger,
   message: string,
   options: CandidateBuildInfoOption[],
   timeoutMs: number = 30_000,
@@ -477,7 +479,7 @@ export async function promptUserSelection(
         })
       : new Promise<never>(() => {}); // Never resolves if timeout is disabled
 
-  const selectionPromise = prompts
+  const selectionPromise = logger.prompts
     .select<OriginalBuildInfoPaths>({
       message,
       options: options.map((opt) => ({
@@ -489,7 +491,7 @@ export async function promptUserSelection(
       })) as any,
     })
     .then((result) => {
-      if (prompts.isCancel(result)) {
+      if (logger.prompts.isCancel(result)) {
         throw new CliError("Selection cancelled by user");
       }
       return result;

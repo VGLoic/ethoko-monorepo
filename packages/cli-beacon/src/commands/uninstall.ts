@@ -4,7 +4,7 @@ import path from "node:path";
 
 import { Command } from "commander";
 import { z } from "zod";
-import { CommandLogger, prompts } from "@/ui/index.js";
+import { CommandLogger } from "@/ui/index.js";
 
 import {
   detectInstallMethod,
@@ -115,7 +115,7 @@ export function registerUninstallCommand(program: Command): void {
         return;
       }
 
-      const shouldProceed = prompts.confirm({
+      const shouldProceed = logger.prompts.confirm({
         message: `This will remove:
 - ~/.ethoko/bin/ethoko (binary)
 - ~/.ethoko/ (all data and pulled artifacts)
@@ -123,7 +123,7 @@ export function registerUninstallCommand(program: Command): void {
 
 Proceed with uninstallation?`,
       });
-      if (prompts.isCancel(shouldProceed)) {
+      if (logger.prompts.isCancel(shouldProceed)) {
         logger.cancel("Uninstall cancelled.");
         return;
       }

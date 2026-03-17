@@ -79,6 +79,15 @@ export class CommandLogger {
   public silent: boolean;
   private active: boolean = false;
 
+  public prompts = {
+    select: clackPrompts.select,
+    isCancel: clackPrompts.isCancel,
+    cancel: clackPrompts.cancel,
+    confirm: clackPrompts.confirm,
+    text: clackPrompts.text,
+    password: clackPrompts.password,
+  };
+
   constructor(silent = false) {
     this.silent = silent;
   }
@@ -202,15 +211,3 @@ export function info(message: string, silent = false): void {
   if (silent) return;
   console.error(styleText(LOG_COLORS.log, `ℹ ${message}`));
 }
-
-export const prompts = {
-  select: clackPrompts.select,
-  isCancel: clackPrompts.isCancel,
-  cancel: clackPrompts.cancel,
-  intro: clackPrompts.intro,
-  outro: clackPrompts.outro,
-  confirm: clackPrompts.confirm,
-  text: clackPrompts.text,
-  note: clackPrompts.note,
-  password: clackPrompts.password,
-};
