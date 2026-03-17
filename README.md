@@ -45,33 +45,13 @@ npm install --save-dev @ethoko/cli
 
 ### Configuration
 
-#### Quick Setup (Recommended)
-
-Initialize your Ethoko configuration interactively:
-
-```bash
-ethoko init --project my-contracts
-```
-
-This will guide you through setting up:
-
-- Storage backend (AWS S3 or filesystem)
-- Authentication method (for AWS)
-- Paths for pulled artifacts and typings
-
-#### Manual Configuration
-
-Alternatively, create an `ethoko.config.json` file at the root of your repository:
-
-**AWS S3 Storage with Profile:**
+Ethoko CLI can be configured through an `ethoko.config.json` file at the root of your repository.
 
 ```json
 {
-  "pulledArtifactsPath": "./.ethoko",
-  "typingsPath": "./.ethoko-typings",
   "projects": [
     {
-      "name": "my-contracts",
+      "name": "my-project",
       "storage": {
         "type": "aws",
         "awsRegion": "us-east-1",
@@ -79,62 +59,19 @@ Alternatively, create an `ethoko.config.json` file at the root of your repositor
         "awsProfile": "my-profile"
       }
     }
-  ]
+  ],
+  "compilationOutputPath": "./out",
 }
 ```
 
-**AWS S3 Storage with Access Keys:**
+Each project can be configured with its own storage backend, Ethoko supports two types of storage backends for now:
+- `aws`: store the compilation artifacts in an AWS S3 bucket. The bucket must be created beforehand, and the AWS credentials must be configured locally for Ethoko to be able to access it.
+- `filesystem`: store the compilation artifacts locally in the directory.
 
-```json
-{
-  "pulledArtifactsPath": "./.ethoko",
-  "typingsPath": "./.ethoko-typings",
-  "projects": [
-    {
-      "name": "my-contracts",
-      "storage": {
-        "type": "aws",
-        "awsRegion": "us-east-1",
-        "awsBucketName": "my-artifacts-bucket",
-        "awsAccessKeyId": "YOUR_ACCESS_KEY",
-        "awsSecretAccessKey": "YOUR_SECRET_KEY"
-      }
-    }
-  ]
-}
+For a quick setup, it is recommended to use the init command:
+```bash
+ethoko init
 ```
-
-**Filesystem Storage:**
-
-```json
-{
-  "pulledArtifactsPath": "./.ethoko",
-  "typingsPath": "./.ethoko-typings",
-  "projects": [
-    {
-      "name": "my-contracts",
-      "storage": {
-        "type": "filesystem",
-        "path": "./.ethoko-storage"
-      }
-    }
-  ]
-}
-```
-
-#### Configuration Options
-
-- **`pulledArtifactsPath`**: Directory where pulled artifacts are stored (default: `./.ethoko`)
-- **`typingsPath`**: Directory where TypeScript typings are generated (default: `./.ethoko-typings`)
-- **`compilationOutputPath`**: Optional path to your compilation output directory (e.g., `./artifacts` for Hardhat, `./out` for Foundry)
-- **`projects`**: Array of project configurations with storage backend
-
-#### Storage Backends
-
-Ethoko supports two types of storage backends:
-
-- **`aws`**: Store compilation artifacts in an AWS S3 bucket. The bucket must be created beforehand, and AWS credentials must be configured (via profile, access keys, or environment variables).
-- **`filesystem`**: Store compilation artifacts in a local directory.
 
 Check out the full [configuration reference in the docs](docs/external/CONFIGURATION.md).
 
