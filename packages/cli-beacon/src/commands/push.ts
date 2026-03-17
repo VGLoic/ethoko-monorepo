@@ -124,7 +124,7 @@ export function registerPushCommand(
           force: optsParsingResult.data.force,
           debug: optsParsingResult.data.debug,
           isCI: process.env.CI === "true" || process.env.CI === "1",
-          silent: logger.silent,
+          logger,
         },
       )
         .then((result) => {

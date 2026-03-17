@@ -127,7 +127,7 @@ export function registerDiffCommand(
         {
           debug: paramParsingResult.data.debug,
           isCI: process.env.CI === "true" || process.env.CI === "1",
-          silent: logger.silent,
+          logger,
         },
       )
         .then((result) => {

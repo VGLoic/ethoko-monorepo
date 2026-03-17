@@ -118,7 +118,7 @@ export function registerRestoreCommand(
         {
           force: optsParsingResult.data.force,
           debug: optsParsingResult.data.debug,
-          silent: logger.silent,
+          logger,
         },
       )
         .then((result: RestoreResult) => displayRestoreResult(logger, result))

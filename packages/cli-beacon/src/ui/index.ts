@@ -148,33 +148,3 @@ export class CommandLogger {
     return this;
   }
 }
-
-/**
- * Enhanced success message
- */
-export function success(message: string, silent = false): void {
-  if (silent) return;
-  console.error(styleText(LOG_COLORS.success, `✔ ${message}`));
-}
-
-/**
- * Enhanced error message
- */
-export function error(message: string): void {
-  console.error(styleText(LOG_COLORS.error, `✖ ${message}`));
-}
-
-/**
- * Enhanced warning message
- */
-export function warn(message: string): void {
-  console.error(styleText(LOG_COLORS.warn, `⚠ ${message}`));
-}
-
-/**
- * Enhanced info message
- */
-export function info(message: string, silent = false): void {
-  if (silent) return;
-  console.error(styleText(LOG_COLORS.log, `ℹ ${message}`));
-}

@@ -124,7 +124,7 @@ export function registerExportCommand(
         pulledArtifactStore,
         {
           debug: optsParsingResult.data.debug,
-          silent: logger.silent,
+          logger,
         },
       )
         .then(async (result: ExportContractArtifactResult) => {

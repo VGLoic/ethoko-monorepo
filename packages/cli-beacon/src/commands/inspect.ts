@@ -103,7 +103,6 @@ export function registerInspectCommand(
         pulledArtifactStore,
         {
           debug: optsParsingResult.data.debug,
-          silent: logger.silent,
         },
       )
         .then((result) => {

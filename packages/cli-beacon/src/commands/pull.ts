@@ -1,7 +1,7 @@
 import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
-import { error as cliError, CommandLogger, LOG_COLORS } from "@/ui/index.js";
+import { CommandLogger, LOG_COLORS } from "@/ui/index.js";
 import { CliError, pull, PullResult } from "@/client/index.js";
 import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
 
@@ -89,7 +89,7 @@ export function registerPullCommand(
         })
         .safeParse(options);
       if (!optsParsingResult.success) {
-        cliError(
+        logger.error(
           `Invalid command arguments:\n${z.prettifyError(optsParsingResult.error)}`,
         );
         process.exitCode = 1;
@@ -111,7 +111,7 @@ export function registerPullCommand(
         {
           force: optsParsingResult.data.force,
           debug: optsParsingResult.data.debug,
-          silent: options.silent,
+          logger,
         },
       )
         .then((result) => {
