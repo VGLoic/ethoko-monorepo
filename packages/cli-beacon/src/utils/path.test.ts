@@ -34,12 +34,40 @@ describe("absolute path utils", () => {
 });
 
 describe("relative path utils", () => {
-  test("RelativePath.unsafeFrom should create a relative path from the given paths", () => {
-    const relativePath = RelativePath.unsafeFrom("foo", "bar");
-    expect(relativePath.relativePath).toBe("foo/bar");
-  });
+  const VALID_RELATIVE_PATHS = [
+    ["foo"],
+    ["foo", "bar"],
+    ["foo", "bar", "baz"],
+    ["./foo"],
+    ["./foo", "bar"],
+    ["./foo", "bar", "baz"],
+  ];
+  test.each(VALID_RELATIVE_PATHS)(
+    "RelativePath.unsafeFrom should create a relative path from the given path %s",
+    (...paths) => {
+      const relativePath = RelativePath.unsafeFrom(...paths);
+      expect(relativePath.relativePath).toBe(path.join(...paths));
+    },
+  );
 
   test("RelativePath.unsafeFrom should throw an error if the joined path is absolute", () => {
     expect(() => RelativePath.unsafeFrom("/foo")).toThrowError();
   });
+
+  const INVALID_TRAVERSAL_PATHS = [
+    ["foo", "..", "bar"],
+    ["foo", "bar", ".."],
+    ["..", "foo", "bar"],
+    ["foo", ".."],
+    ["..", "foo"],
+    ["./../foo"],
+    ["../foo"],
+    ["foo/.."],
+  ];
+  test.each(INVALID_TRAVERSAL_PATHS)(
+    "RelativePath.unsafeFrom should throw an error if the joined path contains '..' segments",
+    (...paths) => {
+      expect(() => RelativePath.unsafeFrom(...paths)).toThrowError();
+    },
+  );
 });

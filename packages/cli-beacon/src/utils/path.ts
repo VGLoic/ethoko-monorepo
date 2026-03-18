@@ -100,6 +100,13 @@ export class RelativePath {
    * @throws Will throw an error if the joined path is absolute.
    */
   public static unsafeFrom(...from: string[]): RelativePath {
+    // Protect against traversal vulnerabilities by ensuring no segment of the path is ".."
+    if (from.some((segment) => segment === ".." || segment.includes(".."))) {
+      throw new Error(
+        `RelativePath cannot contain '..' segments: ${from.join("/")}`,
+      );
+    }
+
     const joinedPath = path.join(...from);
     if (path.isAbsolute(joinedPath)) {
       throw new Error(`RelativePath cannot be an absolute path: ${joinedPath}`);
