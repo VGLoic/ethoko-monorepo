@@ -19,6 +19,7 @@ import {
 import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import path from "path";
 
 type S3BucketProviderConfig = {
   bucketName: string;
@@ -264,7 +265,7 @@ export class S3BucketProvider implements StorageProvider {
         : undefined;
     } while (continuationToken);
 
-    return paths.map((relativePath) => RelativePath.unsafeFrom(relativePath));
+    return paths.map((relativePath) => this.fromS3Path(relativePath));
   }
 
   public async listTags(project: string): Promise<string[]> {
@@ -367,7 +368,7 @@ export class S3BucketProvider implements StorageProvider {
       );
       const putCommand = new PutObjectCommand({
         Bucket: this.config.bucketName,
-        Key: `${this.rootPath}/${project}/ids/${inputArtifact.id}/original/${originalContentPath}`,
+        Key: `${this.rootPath}/${project}/ids/${inputArtifact.id}/original/${this.toS3Path(originalContentPath)}`,
         Body: content,
       });
       await client.send(putCommand);
@@ -460,7 +461,7 @@ export class S3BucketProvider implements StorageProvider {
     const client = await this.getClient();
     const getObjectCommand = new GetObjectCommand({
       Bucket: this.config.bucketName,
-      Key: `${this.rootPath}/${project}/ids/${id}/original/${relativePath.relativePath}`,
+      Key: `${this.rootPath}/${project}/ids/${id}/original/${this.toS3Path(relativePath)}`,
     });
     const getObjectResult = await client.send(getObjectCommand);
     if (!getObjectResult.Body) {
@@ -536,5 +537,20 @@ export class S3BucketProvider implements StorageProvider {
     } while (continuationToken);
 
     return paths;
+  }
+
+  /**
+   * Converts a RelativePath to an S3-compatible key segment.
+   * S3 keys always use forward slashes, regardless of platform.
+   */
+  private toS3Path(relativePath: RelativePath): string {
+    return relativePath.relativePath.replace(/\\/g, "/");
+  }
+  /**
+   * Converts an S3 key segment to a RelativePath.
+   * Normalizes forward slashes to the platform's separator.
+   */
+  private fromS3Path(s3Path: string): RelativePath {
+    return RelativePath.unsafeFrom(s3Path.replace(/\//g, path.sep));
   }
 }
