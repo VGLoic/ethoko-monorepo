@@ -1,6 +1,6 @@
 import { Command } from "commander";
 
-import { loadConfig } from "./config/config.js";
+import { loadConfig } from "./config";
 import { registerArtifactsCommand } from "./commands/artifacts.js";
 import { registerDiffCommand } from "./commands/diff.js";
 import { registerExportCommand } from "./commands/export.js";
@@ -19,10 +19,16 @@ const program = new Command();
 program
   .name("ethoko")
   .description("Ethoko CLI")
-  .option("--config <path>", "Path to ethoko.config.json configuration file")
+  .option(
+    "--config <path>",
+    "Path to local ethoko.config.json configuration file",
+  )
   .version(VERSION);
 
-const getConfig = async () => loadConfig(program.opts().config);
+const getConfig = async () =>
+  loadConfig({
+    localConfigPath: program.opts().config,
+  });
 
 registerInitCommand(program);
 registerPushCommand(program, getConfig);

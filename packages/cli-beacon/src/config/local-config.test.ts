@@ -2,13 +2,17 @@ import { beforeAll, describe, expect, test } from "vitest";
 import fs from "fs/promises";
 import os from "node:os";
 import path from "path";
-import { loadConfig } from "./config.js";
+import { loadLocalConfig } from "./local-config";
+import { AbsolutePath } from "@/utils/path";
 
-describe('"loadConfig" must parse accordingly to rules', () => {
+describe('"loadLocalConfig" must parse accordingly to rules', () => {
   let tmpDirPath: string;
   beforeAll(async () => {
     // Create a temporary directory for the tests
-    tmpDirPath = path.join(os.tmpdir(), `ethoko-config-test-${Date.now()}`);
+    tmpDirPath = path.join(
+      os.tmpdir(),
+      `ethoko-local-config-test-${Date.now()}`,
+    );
     await fs.mkdir(tmpDirPath, { recursive: true });
     return async () => {
       // Clean up the temporary directory after all tests have run
@@ -48,6 +52,20 @@ describe('"loadConfig" must parse accordingly to rules', () => {
       },
       /"typingsPath" and "pulledArtifactsPath" cannot be in a parent-child relationship/,
     ],
+    [
+      "Pulled artifacts path empty",
+      {
+        pulledArtifactsPath: "",
+      },
+      /'pulledArtifactsPath' cannot be an empty string/,
+    ],
+    [
+      "Typings path empty",
+      {
+        typingsPath: "",
+      },
+      /'typingsPath' cannot be an empty string/,
+    ],
     // Bad project configuration
     [
       '"name" field is missing in project configuration',
@@ -83,20 +101,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
           },
         ],
       },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
-    ],
-    [
-      '"path" field is equal to "pulledArtifactsPath"',
-      {
-        pulledArtifactsPath: "path/to/artifacts",
-        projects: [
-          {
-            name: "dummy",
-            storage: { type: "filesystem", path: "path/to/artifacts" },
-          },
-        ],
-      },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath"/,
     ],
     [
       '"path" field is a child of "typingsPath"',
@@ -109,20 +114,7 @@ describe('"loadConfig" must parse accordingly to rules', () => {
           },
         ],
       },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
-    ],
-    [
-      '"path" field is a child of "pulledArtifactsPath"',
-      {
-        pulledArtifactsPath: "path/to/typings",
-        projects: [
-          {
-            name: "dummy",
-            storage: { type: "filesystem", path: "path/to/typings/subdir" },
-          },
-        ],
-      },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath"/,
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath"/,
     ],
     // AWS storage specific cases
     [
@@ -234,6 +226,17 @@ describe('"loadConfig" must parse accordingly to rules', () => {
       },
       /When "awsRoleArn" is not provided, role configuration fields \("awsRoleExternalId", "awsRoleSessionName", "awsRoleDurationSeconds"\) must be empty/,
     ],
+    // Duplicate project names
+    [
+      "Duplicate project names",
+      {
+        projects: [
+          { name: "dummy", storage: defaultStorageConfig },
+          { name: "dummy", storage: defaultStorageConfig },
+        ],
+      },
+      /Duplicate project name "dummy" found. Each project must have a unique name./,
+    ],
   ] as const;
 
   describe.for(invalidCases)("%s", ([, configToTest, expectedError]) => {
@@ -249,11 +252,12 @@ describe('"loadConfig" must parse accordingly to rules', () => {
     });
 
     test("should throw an error with invalid config", async () => {
-      await expect(loadConfig(configPath)).rejects.toThrow(expectedError);
+      await expect(loadLocalConfig(configPath)).rejects.toThrow(expectedError);
     });
   });
 
   const validCases = [
+    ["Empty config (should use defaults)", {}],
     // Filesystem storage valid cases
     [
       "Minimal valid config with filesystem storage",
@@ -359,21 +363,22 @@ describe('"loadConfig" must parse accordingly to rules', () => {
     });
 
     test("should load config without errors", async () => {
-      const loadedConfig = await loadConfig(configPath);
+      const loadedConfig = await loadLocalConfig(configPath);
       expect(loadedConfig).toBeDefined();
-      expect(loadedConfig.getProjectConfig("dummy")?.name).toEqual("dummy");
-      expect(loadedConfig.getProjectConfig("unknown")).toEqual(undefined);
     });
   });
 
-  test("should throw an error if config file does not exist", async () => {
+  test("should load default config if config file does not exist", async () => {
     const nonExistentConfigPath = path.join(
       tmpDirPath,
       "non-existent-config.json",
     );
-    await expect(loadConfig(nonExistentConfigPath)).rejects.toThrow(
-      /Failed to read ethoko.config.json at/,
-    );
+    await expect(loadLocalConfig(nonExistentConfigPath)).resolves.toEqual({
+      typingsPath: AbsolutePath.from(".ethoko-typings"),
+      projects: [],
+      debug: false,
+      configPath: undefined,
+    });
   });
 
   describe("should throw an error if config file contains invalid JSON", async () => {
@@ -393,8 +398,8 @@ describe('"loadConfig" must parse accordingly to rules', () => {
       };
     });
     test("should throw an error with invalid JSON content", async () => {
-      await expect(loadConfig(invalidJsonConfigPath)).rejects.toThrow(
-        /Invalid JSON in ethoko.config.json at/,
+      await expect(loadLocalConfig(invalidJsonConfigPath)).rejects.toThrow(
+        /Failed to parse local config file at/,
       );
     });
   });

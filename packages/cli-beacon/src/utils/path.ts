@@ -56,6 +56,19 @@ export class AbsolutePath {
   }
 
   /**
+   * Returns true if the current path is a subpath of the given parent path.
+   * A subpath means that
+   *  - the current path is located within the directory tree of the parent path,
+   *  - but is not the same as the parent path itself.
+   */
+  public isSubpathOf(parent: AbsolutePath): boolean {
+    return (
+      parent.resolvedPath !== this.resolvedPath &&
+      this.resolvedPath.startsWith(parent.resolvedPath + path.sep)
+    );
+  }
+
+  /**
    * Creates an AbsolutePath instance from the given paths. The paths will be resolved to an absolute path.
    * @example
    * ```typescript
@@ -130,6 +143,18 @@ export const AbsolutePathSchema = z.string().transform((str, ctx) => {
     ctx.addIssue({
       code: "custom",
       message: `Invalid absolute path: ${error instanceof Error ? error.message : String(error)}`,
+    });
+    return z.NEVER;
+  }
+});
+
+export const RelativePathSchema = z.string().transform((str, ctx) => {
+  try {
+    return RelativePath.unsafeFrom(str);
+  } catch (error) {
+    ctx.addIssue({
+      code: "custom",
+      message: `Invalid relative path: ${error instanceof Error ? error.message : String(error)}`,
     });
     return z.NEVER;
   }

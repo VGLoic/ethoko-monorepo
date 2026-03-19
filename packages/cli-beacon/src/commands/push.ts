@@ -3,7 +3,7 @@ import { z } from "zod";
 import { CommandLogger } from "@/ui/index.js";
 import { CliError, push } from "@/client/index.js";
 
-import type { EthokoCliConfig } from "../config/config.js";
+import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
 import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
