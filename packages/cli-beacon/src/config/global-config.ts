@@ -3,6 +3,7 @@ import fs from "node:fs/promises";
 import z from "zod";
 import { AbsolutePath, RelativePathSchema } from "@/utils/path";
 import { toAsyncResult, toResult } from "@/utils/result";
+import { generateProjectConfigSchema } from "./projects";
 
 function getEthokoGlobalPath(): AbsolutePath {
   return AbsolutePath.from(os.homedir(), ".ethoko");
@@ -12,31 +13,79 @@ function getEthokoGlobalConfigPath(): AbsolutePath {
   return getEthokoGlobalPath().join("config.json");
 }
 
-const GlobalEthokoConfigSchema = z.object({
-  pulledArtifactsPath: z
-    .string('"pulledArtifactsPath" field must be a string or left empty')
-    .min(
-      1,
-      '"pulledArtifactsPath" cannot be an empty string. Provide a valid relative path to "~/.ethoko" or leave it empty to use the default path.',
-    )
-    .refine(
-      (value) => value !== "config.json",
-      '"pulledArtifactsPath" cannot be equal to "config.json". Please choose a different name for the pulled artifacts directory.',
-    )
-    .optional()
-    .transform((value) => {
-      if (!value) {
-        return getEthokoGlobalPath().join("pulled-artifacts");
+const GlobalEthokoConfigSchema = z
+  .object({
+    pulledArtifactsPath: z
+      .string('"pulledArtifactsPath" field must be a string or left empty')
+      .min(
+        1,
+        '"pulledArtifactsPath" cannot be an empty string. Provide a valid relative path to "~/.ethoko" or leave it empty to use the default path.',
+      )
+      .refine(
+        (value) => value !== "config.json",
+        '"pulledArtifactsPath" cannot be equal to "config.json". Please choose a different name for the pulled artifacts directory.',
+      )
+      .optional()
+      .transform((value) => {
+        if (!value) {
+          return getEthokoGlobalPath().join("pulled-artifacts");
+        }
+        // If the path is relative, resolve it against the global config directory.
+        // Else, return the path as is
+        const relativePathResult = RelativePathSchema.safeParse(value);
+        if (!relativePathResult.success) {
+          return AbsolutePath.from(value);
+        }
+        return getEthokoGlobalPath().join(relativePathResult.data);
+      }),
+    projects: z
+      .array(
+        generateProjectConfigSchema(getEthokoGlobalPath),
+        '"projects" field must be an array of project configurations',
+      )
+      .default([])
+      .superRefine((projects, ctx) => {
+        const projectNames = new Set<string>();
+        for (const project of projects) {
+          if (projectNames.has(project.name)) {
+            ctx.addIssue({
+              code: "custom",
+              message: `Duplicate project name "${project.name}" found. Each project must have a unique name.`,
+            });
+          } else {
+            projectNames.add(project.name);
+          }
+        }
+      }),
+  })
+  .superRefine((data, ctx) => {
+    // Pulled artifacts path must not be a parent-child relationship with any of the project paths
+    for (const project of data.projects) {
+      if (project.storage.type === "filesystem") {
+        if (
+          data.pulledArtifactsPath.resolvedPath ===
+          project.storage.path.resolvedPath
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Pulled artifacts path "${data.pulledArtifactsPath.resolvedPath}" cannot be the same as project "${project.name}" storage path "${project.storage.path.resolvedPath}". Please choose a different pulled artifacts path or storage path.`,
+          });
+        }
+        if (data.pulledArtifactsPath.isChildOf(project.storage.path)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Pulled artifacts path "${data.pulledArtifactsPath.resolvedPath}" cannot be a parent of project "${project.name}" storage path "${project.storage.path.resolvedPath}". Please choose a different pulled artifacts path or storage path.`,
+          });
+        }
+        if (project.storage.path.isChildOf(data.pulledArtifactsPath)) {
+          ctx.addIssue({
+            code: "custom",
+            message: `Pulled artifacts path "${data.pulledArtifactsPath.resolvedPath}" cannot be a child of project "${project.name}" storage path "${project.storage.path.resolvedPath}". Please choose a different pulled artifacts path or storage path.`,
+          });
+        }
       }
-      // If the path is relative, resolve it against the global config directory.
-      // Else, return the path as is
-      const relativePathResult = RelativePathSchema.safeParse(value);
-      if (!relativePathResult.success) {
-        return AbsolutePath.from(value);
-      }
-      return getEthokoGlobalPath().join(relativePathResult.data);
-    }),
-});
+    }
+  });
 
 export type GlobalEthokoConfig = z.infer<typeof GlobalEthokoConfigSchema> & {
   configPath: AbsolutePath | undefined;

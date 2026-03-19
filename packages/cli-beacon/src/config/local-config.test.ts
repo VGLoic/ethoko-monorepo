@@ -85,24 +85,57 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
       },
       /Duplicate project name "dummy" found. Each project must have a unique name./,
     ],
+    // Storage path is a child of typings path
+    [
+      "Storage path is a child of typings path",
+      {
+        typingsPath: "path/to/typings",
+        projects: [
+          {
+            name: "dummy",
+            storage: { type: "filesystem", path: "path/to/typings/storage" },
+          },
+        ],
+      },
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath" \(if defined\)/,
+    ],
+    // Storage path is a child of pulled artifacts path
+    [
+      "Storage path is a child of pulled artifacts path",
+      {
+        pulledArtifactsPath: "path/to/artifacts",
+        projects: [
+          {
+            name: "dummy",
+            storage: { type: "filesystem", path: "path/to/artifacts/storage" },
+          },
+        ],
+      },
+      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath" \(if defined\)/,
+    ],
   ] as const;
 
-  describe.for(invalidCases)("%s", ([, configToTest, expectedError]) => {
-    let configPath: string;
-    beforeAll(async () => {
-      // Create a temporary config file with the provided configToTest
-      configPath = path.join(tmpDirPath, "ethoko.config.json");
-      await fs.writeFile(configPath, JSON.stringify(configToTest));
-      return async () => {
-        // Clean up the temporary config file after the test
-        await fs.rm(configPath, { force: true });
-      };
-    });
+  describe.for(invalidCases)(
+    "%s",
+    ([description, configToTest, expectedError]) => {
+      let configPath: string;
+      beforeAll(async () => {
+        // Create a temporary config file with the provided configToTest
+        configPath = path.join(tmpDirPath, "ethoko.config.json");
+        await fs.writeFile(configPath, JSON.stringify(configToTest));
+        return async () => {
+          // Clean up the temporary config file after the test
+          await fs.rm(configPath, { force: true });
+        };
+      });
 
-    test("should throw an error with invalid config", async () => {
-      await expect(loadLocalConfig(configPath)).rejects.toThrow(expectedError);
-    });
-  });
+      test(`${description} - should throw an error with invalid config`, async () => {
+        await expect(loadLocalConfig(configPath)).rejects.toThrow(
+          expectedError,
+        );
+      });
+    },
+  );
 
   const validCases = [
     ["Empty config (should use defaults)", {}],
@@ -144,7 +177,7 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
     ],
   ] as const;
 
-  describe.for(validCases)("%s", ([, configToTest]) => {
+  describe.for(validCases)("%s", ([description, configToTest]) => {
     let configPath: string;
     beforeAll(async () => {
       // Create a temporary config file with the provided configToTest
@@ -156,7 +189,7 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
       };
     });
 
-    test("should load config without errors", async () => {
+    test(`${description} - should load config without errors`, async () => {
       const loadedConfig = await loadLocalConfig(configPath);
       expect(loadedConfig).toBeDefined();
     });

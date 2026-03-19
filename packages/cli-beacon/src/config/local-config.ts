@@ -60,8 +60,8 @@ const EthokoLocalConfigSchema = z
         return (
           data.typingsPath.resolvedPath !==
             data.pulledArtifactsPath.resolvedPath &&
-          !data.pulledArtifactsPath.isSubpathOf(data.typingsPath) &&
-          !data.typingsPath.isSubpathOf(data.pulledArtifactsPath)
+          !data.pulledArtifactsPath.isChildOf(data.typingsPath) &&
+          !data.typingsPath.isChildOf(data.pulledArtifactsPath)
         );
       }
       return true;
@@ -73,7 +73,7 @@ const EthokoLocalConfigSchema = z
   )
   .refine(
     (data) => {
-      // In case of storage type "filesystem", the storage path must not be a child of typings path
+      // In case of storage type "filesystem", the storage path must not be a child of typings path or pulled artifacts path
       const filesystemProjectPaths: AbsolutePath[] = [];
       for (const project of data.projects) {
         if (project.storage.type === "filesystem") {
@@ -84,7 +84,7 @@ const EthokoLocalConfigSchema = z
         return filesystemProjectPaths.every((resolvedStoragePath) => {
           const isDifferentPathThanTypingsPath =
             data.typingsPath.resolvedPath !== resolvedStoragePath.resolvedPath;
-          const isNotChildOfTypingsPath = !resolvedStoragePath.isSubpathOf(
+          const isNotChildOfTypingsPath = !resolvedStoragePath.isChildOf(
             data.typingsPath,
           );
           const isDifferentPathThanPulledArtifactsPath =
@@ -93,7 +93,7 @@ const EthokoLocalConfigSchema = z
                 resolvedStoragePath.resolvedPath
               : true;
           const isNotChildOfPulledArtifactsPath = data.pulledArtifactsPath
-            ? !resolvedStoragePath.isSubpathOf(data.pulledArtifactsPath)
+            ? !resolvedStoragePath.isChildOf(data.pulledArtifactsPath)
             : true;
           return (
             isDifferentPathThanTypingsPath &&

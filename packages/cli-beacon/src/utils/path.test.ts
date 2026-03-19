@@ -31,6 +31,16 @@ describe("absolute path utils", () => {
     const relativePath = absPath.relativeTo(basePath);
     expect(relativePath.relativePath).toBe("bar/baz");
   });
+
+  test("AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
+    const parentPath = AbsolutePath.from("/foo");
+    const childPath = AbsolutePath.from("/foo/bar/baz");
+    const siblingPath = AbsolutePath.from("/bar");
+    expect(childPath.isChildOf(parentPath)).toBe(true);
+    expect(parentPath.isChildOf(childPath)).toBe(false);
+    expect(parentPath.isChildOf(parentPath)).toBe(false);
+    expect(siblingPath.isChildOf(parentPath)).toBe(false);
+  });
 });
 
 describe("relative path utils", () => {

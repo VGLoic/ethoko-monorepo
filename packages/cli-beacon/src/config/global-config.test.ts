@@ -26,6 +26,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
    * - the second element is the config object to test,
    * - the third element is the expected error message (or a regex to match it). See EthokoConfigSchema for more details on the validation rules.
    */
+  const defaultStorageConfig = { type: "filesystem" };
   const invalidCases = [
     [
       "Pulled artifacts path intentionally empty",
@@ -41,24 +42,89 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
       },
       /"pulledArtifactsPath" cannot be equal to "config.json"/,
     ],
+    [
+      '"projects" field is not an array',
+      {
+        projects: "stuff",
+      },
+      /"projects" field must be an array/,
+    ],
+    // Duplicate project names
+    [
+      "Duplicate project names",
+      {
+        projects: [
+          { name: "dummy", storage: defaultStorageConfig },
+          { name: "dummy", storage: defaultStorageConfig },
+        ],
+      },
+      /Duplicate project name "dummy" found. Each project must have a unique name./,
+    ],
+    // Storage path is a child of pulled artifacts path
+    [
+      "Storage path is a child of pulled artifacts path",
+      {
+        pulledArtifactsPath: "artifacts",
+        projects: [
+          {
+            name: "project1",
+            storage: { type: "filesystem", path: "artifacts/project1-storage" },
+          },
+        ],
+      },
+      / cannot be a child of project "/,
+    ],
+    // Storage path is equal to pulled artifacts path
+    [
+      "Storage path is equal to pulled artifacts path",
+      {
+        pulledArtifactsPath: "artifacts",
+        projects: [
+          {
+            name: "project1",
+            storage: { type: "filesystem", path: "artifacts" },
+          },
+        ],
+      },
+      /" cannot be the same as project "/,
+    ],
+    // Storage path is a parent of pulled artifacts path
+    [
+      "Storage path is a parent of pulled artifacts path",
+      {
+        pulledArtifactsPath: "artifacts/project1-storage",
+        projects: [
+          {
+            name: "project1",
+            storage: { type: "filesystem", path: "artifacts" },
+          },
+        ],
+      },
+      / cannot be a parent of project "/,
+    ],
   ] as const;
 
-  describe.for(invalidCases)("%s", ([, configToTest, expectedError]) => {
-    let configPath: string;
-    beforeAll(async () => {
-      // Create a temporary config file with the provided configToTest
-      configPath = path.join(tmpDirPath, "ethoko.config.json");
-      await fs.writeFile(configPath, JSON.stringify(configToTest));
-      return async () => {
-        // Clean up the temporary config file after the test
-        await fs.rm(configPath, { force: true });
-      };
-    });
+  describe.for(invalidCases)(
+    "%s",
+    ([description, configToTest, expectedError]) => {
+      let configPath: string;
+      beforeAll(async () => {
+        // Create a temporary config file with the provided configToTest
+        configPath = path.join(tmpDirPath, "ethoko.config.json");
+        await fs.writeFile(configPath, JSON.stringify(configToTest));
+        return async () => {
+          // Clean up the temporary config file after the test
+          await fs.rm(configPath, { force: true });
+        };
+      });
 
-    test("should throw an error with invalid config", async () => {
-      await expect(loadGlobalConfig(configPath)).rejects.toThrow(expectedError);
-    });
-  });
+      test(`${description} - should throw an error with invalid config`, async () => {
+        await expect(loadGlobalConfig(configPath)).rejects.toThrow(
+          expectedError,
+        );
+      });
+    },
+  );
 
   const validCases = [
     ["Empty config (should use defaults)", {}],
@@ -66,7 +132,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
     ["Absolute path", { pulledArtifactsPath: "/absolute/path" }],
   ] as const;
 
-  describe.for(validCases)("%s", ([, configToTest]) => {
+  describe.for(validCases)("%s", ([description, configToTest]) => {
     let configPath: string;
     beforeAll(async () => {
       // Create a temporary config file with the provided configToTest
@@ -78,7 +144,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
       };
     });
 
-    test("should load config without errors", async () => {
+    test(`${description} - should load config without errors`, async () => {
       const loadedConfig = await loadGlobalConfig(configPath);
       expect(loadedConfig).toBeDefined();
     });
@@ -144,6 +210,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
         ".ethoko",
         "pulled-artifacts",
       ),
+      projects: [],
     });
   });
 

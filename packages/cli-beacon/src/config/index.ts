@@ -1,11 +1,9 @@
 import { AbsolutePath } from "@/utils/path";
-import { z } from "zod";
-import { ProjectConfigSchema } from "./projects";
+import type { ProjectConfig } from "./projects";
 import { GlobalEthokoConfig, loadGlobalConfig } from "./global-config";
 import { loadLocalConfig, LocalEthokoConfig } from "./local-config";
 import { toAsyncResult } from "@/utils/result";
 
-type ProjectConfig = z.infer<typeof ProjectConfigSchema>;
 export type EthokoStorageConfig = ProjectConfig["storage"];
 
 export class EthokoCliConfig {

@@ -232,3 +232,7 @@ export function generateProjectConfigSchema(
     ),
   });
 }
+
+export type ProjectConfig = z.infer<
+  ReturnType<typeof generateProjectConfigSchema>
+>;

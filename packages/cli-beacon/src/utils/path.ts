@@ -56,12 +56,12 @@ export class AbsolutePath {
   }
 
   /**
-   * Returns true if the current path is a subpath of the given parent path.
-   * A subpath means that
+   * Returns true if the current path is a child path of the given parent path.
+   * A child path means that
    *  - the current path is located within the directory tree of the parent path,
    *  - but is not the same as the parent path itself.
    */
-  public isSubpathOf(parent: AbsolutePath): boolean {
+  public isChildOf(parent: AbsolutePath): boolean {
     return (
       parent.resolvedPath !== this.resolvedPath &&
       this.resolvedPath.startsWith(parent.resolvedPath + path.sep)
