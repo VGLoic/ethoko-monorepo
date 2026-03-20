@@ -119,10 +119,9 @@ describe("Project configuration validation", () => {
     async ([, configToTest, expectedError]) => {
       expect(() => {
         try {
-          generateProjectConfigSchema({
-            requireAbsolutePath: false,
-            basePathResolver: () => new AbsolutePath("."),
-          }).parse(configToTest);
+          generateProjectConfigSchema(() => new AbsolutePath(".")).parse(
+            configToTest,
+          );
           throw new Error("Expected validation to fail, but it succeeded.");
         } catch (err) {
           throw z.prettifyError(err as z.ZodError);
@@ -206,10 +205,9 @@ describe("Project configuration validation", () => {
   test.for(validCases)(
     "%s - should load config without errors",
     async ([, configToTest]) => {
-      const parsedConfig = generateProjectConfigSchema({
-        requireAbsolutePath: false,
-        basePathResolver: () => new AbsolutePath("."),
-      }).parse(configToTest);
+      const parsedConfig = generateProjectConfigSchema(
+        () => new AbsolutePath("."),
+      ).parse(configToTest);
       expect(parsedConfig).toBeDefined();
     },
   );
@@ -220,10 +218,9 @@ describe("Project configuration validation", () => {
       name: "dummy",
       storage: { type: "filesystem", path: "relative/storage/path" },
     };
-    const parsedConfig = generateProjectConfigSchema({
-      requireAbsolutePath: false,
-      basePathResolver: () => basePath,
-    }).parse(configToTest);
+    const parsedConfig = generateProjectConfigSchema(() => basePath).parse(
+      configToTest,
+    );
     expect(parsedConfig.storage).toEqual({
       type: "filesystem",
       path: new AbsolutePath("/base/path/relative/storage/path"),
@@ -236,10 +233,9 @@ describe("Project configuration validation", () => {
       name: "dummy",
       storage: { type: "filesystem", path: "/absolute/storage/path" },
     };
-    const parsedConfig = generateProjectConfigSchema({
-      requireAbsolutePath: false,
-      basePathResolver: () => basePath,
-    }).parse(configToTest);
+    const parsedConfig = generateProjectConfigSchema(() => basePath).parse(
+      configToTest,
+    );
     expect(parsedConfig.storage).toEqual({
       type: "filesystem",
       path: new AbsolutePath("/absolute/storage/path"),

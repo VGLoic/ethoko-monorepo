@@ -32,10 +32,7 @@ const EthokoLocalConfigSchema = z
       .optional(),
     projects: z
       .array(
-        generateProjectConfigSchema({
-          requireAbsolutePath: false,
-          basePathResolver: () => new AbsolutePath(process.cwd()),
-        }),
+        generateProjectConfigSchema(() => new AbsolutePath(process.cwd())),
         '"projects" field must be an array of project configurations',
       )
       .default([])

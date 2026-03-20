@@ -29,10 +29,7 @@ const GlobalEthokoConfigSchema = z
       .pipe(generateAbsolutePathSchema(getEthokoGlobalPath)),
     projects: z
       .array(
-        generateProjectConfigSchema({
-          requireAbsolutePath: false,
-          basePathResolver: getEthokoGlobalPath,
-        }),
+        generateProjectConfigSchema(getEthokoGlobalPath),
         '"projects" field must be an array of project configurations',
       )
       .default([])

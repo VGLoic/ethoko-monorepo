@@ -1,9 +1,8 @@
 import { AbsolutePath } from "@/utils/path";
-import { generateProjectConfigSchema, type ProjectConfig } from "./projects";
+import { type ProjectConfig } from "./projects";
 import { GlobalEthokoConfig, loadGlobalConfig } from "./global-config";
 import { loadLocalConfig, LocalEthokoConfig } from "./local-config";
 import { toAsyncResult } from "@/utils/result";
-import z from "zod";
 
 export type EthokoStorageConfig = ProjectConfig["storage"];
 
@@ -30,64 +29,6 @@ export class EthokoCliConfig {
     return this.projects.find((p) => p.name === project);
   }
 }
-
-const AbsolutePathSchema = z.instanceof(AbsolutePath, {
-  message: "Path must be an absolute path",
-});
-
-const MergedEthokoConfigSchema = z
-  .object({
-    pulledArtifactsPath: AbsolutePathSchema,
-    typingsPath: AbsolutePathSchema,
-    compilationOutputPath: AbsolutePathSchema.optional(),
-    projects: z.array(
-      generateProjectConfigSchema({ requireAbsolutePath: true }),
-    ),
-    debug: z.boolean(),
-  })
-  .superRefine((data, ctx) => {
-    // Typings path and pulled artifacts path must not be a parent-child relationship
-    if (
-      data.pulledArtifactsPath.eq(data.typingsPath) ||
-      data.pulledArtifactsPath.isChildOf(data.typingsPath) ||
-      data.typingsPath.isChildOf(data.pulledArtifactsPath)
-    ) {
-      ctx.addIssue({
-        code: "custom",
-        message:
-          '"typingsPath" and "pulledArtifactsPath" cannot be in a parent-child relationship',
-      });
-    }
-    // In case of storage type "filesystem", the storage path must not be a child or parent of typings path or pulled artifacts path
-    for (const project of data.projects) {
-      if (project.storage.type === "filesystem") {
-        if (
-          project.storage.path.isChildOf(data.typingsPath) ||
-          data.typingsPath.isChildOf(project.storage.path) ||
-          project.storage.path.eq(data.typingsPath)
-        ) {
-          ctx.addIssue({
-            code: "custom",
-            message: `For project "${project.name}", the "storage.path" cannot be a child or parent of "typingsPath".`,
-            input: data,
-          });
-        }
-        if (
-          data.pulledArtifactsPath &&
-          (project.storage.path.isChildOf(data.pulledArtifactsPath) ||
-            data.pulledArtifactsPath.isChildOf(project.storage.path) ||
-            project.storage.path.eq(data.pulledArtifactsPath))
-        ) {
-          ctx.addIssue({
-            code: "custom",
-            message: `For project "${project.name}", the "storage.path" cannot be a child or parent of "pulledArtifactsPath".`,
-            input: data,
-          });
-        }
-      }
-    }
-  });
-
 interface EthokoConfig {
   pulledArtifactsPath: AbsolutePath;
   typingsPath: AbsolutePath;
@@ -126,12 +67,7 @@ export async function loadConfig(
     localConfigResult.value,
   );
 
-  const validationResult = MergedEthokoConfigSchema.safeParse(mergeConfig);
-  if (!validationResult.success) {
-    throw new Error(
-      `Failed to merge config: ${z.prettifyError(validationResult.error)}`,
-    );
-  }
+  validateMergedConfig(mergeConfig);
 
   return new EthokoCliConfig(mergeConfig);
 }
@@ -156,4 +92,48 @@ function mergeConfigs(
     localConfigPath: localConfig.configPath,
     globalConfigPath: globalConfig.configPath,
   };
+}
+
+function validateMergedConfig(config: EthokoConfig) {
+  const errors: string[] = [];
+
+  // Validate pulledArtifactsPath and typingsPath relationship
+  if (
+    config.pulledArtifactsPath.eq(config.typingsPath) ||
+    config.pulledArtifactsPath.isChildOf(config.typingsPath) ||
+    config.typingsPath.isChildOf(config.pulledArtifactsPath)
+  ) {
+    errors.push(
+      '"typingsPath" and "pulledArtifactsPath" cannot be in a parent-child relationship',
+    );
+  }
+
+  // Validate storage paths for each project
+  for (const project of config.projects) {
+    if (project.storage.type === "filesystem") {
+      if (
+        project.storage.path.isChildOf(config.typingsPath) ||
+        config.typingsPath.isChildOf(project.storage.path) ||
+        project.storage.path.eq(config.typingsPath)
+      ) {
+        errors.push(
+          `For project "${project.name}", the "storage.path" cannot be a child or parent of "typingsPath".`,
+        );
+      }
+      if (
+        config.pulledArtifactsPath &&
+        (project.storage.path.isChildOf(config.pulledArtifactsPath) ||
+          config.pulledArtifactsPath.isChildOf(project.storage.path) ||
+          project.storage.path.eq(config.pulledArtifactsPath))
+      ) {
+        errors.push(
+          `For project "${project.name}", the "storage.path" cannot be a child or parent of "pulledArtifactsPath".`,
+        );
+      }
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new Error(`Invalid configuration:\n${errors.join("\n")}`);
+  }
 }
