@@ -32,16 +32,60 @@ describe("absolute path utils", () => {
     expect(relativePath.relativePath).toBe("bar/baz");
   });
 
-  test("AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
-    const parentPath = AbsolutePath.from("/foo");
-    const childPath = AbsolutePath.from("/foo/bar/baz");
-    const siblingPath = AbsolutePath.from("/bar");
-    expect(childPath.isChildOf(parentPath)).toBe(true);
-    expect(parentPath.isChildOf(childPath)).toBe(false);
-    expect(parentPath.isChildOf(parentPath)).toBe(false);
-    expect(siblingPath.isChildOf(parentPath)).toBe(false);
+  test("Case #0 absolute path - AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
+    const parentPath = AbsolutePath.from("/foo/bar");
+
+    expect(AbsolutePath.from("/foo/bar/baz").isChildOf(parentPath)).toBe(true);
+    expect(AbsolutePath.from("/foo/bar").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("/foo/bar/").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("/foo").isChildOf(parentPath)).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/bar"))).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/bar/"))).toBe(false);
+  });
+
+  test("Case #1 absolute path with separator - AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
+    const parentPath = AbsolutePath.from("/foo/bar/");
+
+    expect(AbsolutePath.from("/foo/bar/baz").isChildOf(parentPath)).toBe(true);
+    expect(AbsolutePath.from("/foo/bar").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("/foo/bar/").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("/foo").isChildOf(parentPath)).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/bar"))).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("/foo/bar/"))).toBe(false);
+  });
+
+  test("Case #2 relative path - AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
+    const parentPath = AbsolutePath.from("foo/bar");
+
+    expect(AbsolutePath.from("foo/bar/baz").isChildOf(parentPath)).toBe(true);
+    expect(AbsolutePath.from("foo/bar").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("foo/bar/").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("foo").isChildOf(parentPath)).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/bar"))).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/bar/"))).toBe(false);
+  });
+
+  test("Case #3 relative path with separator - AbsolutePath.isChildOf should return true if the current path is a child of the given parent path", () => {
+    const parentPath = AbsolutePath.from("foo/bar/");
+
+    expect(AbsolutePath.from("foo/bar/baz").isChildOf(parentPath)).toBe(true);
+    expect(AbsolutePath.from("foo/bar").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("foo/bar/").isChildOf(parentPath)).toBe(false);
+    expect(AbsolutePath.from("foo").isChildOf(parentPath)).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/"))).toBe(true);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/bar"))).toBe(false);
+    expect(parentPath.isChildOf(AbsolutePath.from("foo/bar/"))).toBe(false);
   });
 });
+// typingsPath: '/Users/slourp/personal/ethoko/ethoko-monorepo/packages/cli-beacon/path/to/',
+//   pulledArtifactsPath: '/Users/slourp/personal/ethoko/ethoko-monorepo/packages/cli-beacon/path/to/typings',
 
 describe("relative path utils", () => {
   const VALID_RELATIVE_PATHS = [

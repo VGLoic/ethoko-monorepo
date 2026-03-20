@@ -1,4 +1,4 @@
-import { AbsolutePath, RelativePathSchema } from "@/utils/path";
+import { AbsolutePath, generateAbsolutePathSchema } from "@/utils/path";
 import { z } from "zod";
 
 const AwsStorageSchema = z
@@ -196,7 +196,7 @@ const AwsStorageSchema = z
     };
   });
 
-function generateFilesystemStorageSchema(basePath: AbsolutePath) {
+function generateFilesystemStorageSchema(basePathResolver: () => AbsolutePath) {
   return z.object({
     type: z.literal("filesystem"),
     path: z
@@ -206,15 +206,7 @@ function generateFilesystemStorageSchema(basePath: AbsolutePath) {
         'The "path" field can not be an empty string when "type" is "filesystem". Provide a valid path or set it to "." to use the current directory or leave it empty to default to "./.ethoko-storage"',
       )
       .default("./.ethoko-storage")
-      .transform((pathStr) => {
-        // If the path is relative, resolve it against the base path.
-        // Else, return the path as is
-        const relativePathResult = RelativePathSchema.safeParse(pathStr);
-        if (!relativePathResult.success) {
-          return AbsolutePath.from(pathStr);
-        }
-        return basePath.join(relativePathResult.data);
-      }),
+      .pipe(generateAbsolutePathSchema(basePathResolver)),
   });
 }
 
@@ -227,7 +219,7 @@ export function generateProjectConfigSchema(
       .min(1, '"name" field must be a non-empty string'),
     storage: z.discriminatedUnion(
       "type",
-      [AwsStorageSchema, generateFilesystemStorageSchema(basePathResolver())],
+      [AwsStorageSchema, generateFilesystemStorageSchema(basePathResolver)],
       '"storage" field must be a valid storage configuration object. Start with specifying the "type" field as either "aws" or "filesystem" and provide the corresponding configuration fields.',
     ),
   });

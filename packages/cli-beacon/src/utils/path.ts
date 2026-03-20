@@ -20,7 +20,7 @@ export class AbsolutePath {
    * ```
    */
   public dirname(): AbsolutePath {
-    return new AbsolutePath(path.dirname(this.resolvedPath));
+    return AbsolutePath.from(path.dirname(this.resolvedPath));
   }
 
   /**
@@ -37,7 +37,7 @@ export class AbsolutePath {
       to instanceof RelativePath ? to.relativePath : to,
     );
     const joinedPath = path.join(this.resolvedPath, ...toPath);
-    return new AbsolutePath(joinedPath);
+    return AbsolutePath.from(joinedPath);
   }
 
   /**
@@ -66,6 +66,13 @@ export class AbsolutePath {
       parent.resolvedPath !== this.resolvedPath &&
       this.resolvedPath.startsWith(parent.resolvedPath + path.sep)
     );
+  }
+
+  /**
+   * Returns true if the current path is the same as the other path.
+   */
+  public eq(other: AbsolutePath): boolean {
+    return this.resolvedPath === other.resolvedPath;
   }
 
   /**
@@ -136,19 +143,29 @@ export class RelativePath {
   }
 }
 
-export const AbsolutePathSchema = z.string().transform((str, ctx) => {
-  try {
-    return AbsolutePath.from(str);
-  } catch (error) {
-    ctx.addIssue({
-      code: "custom",
-      message: `Invalid absolute path: ${error instanceof Error ? error.message : String(error)}`,
+export function generateAbsolutePathSchema(
+  basePathResolver: () => AbsolutePath,
+) {
+  return z
+    .string()
+    .min(1)
+    .transform((pathStr) => {
+      // If the path is relative, resolve it against the base path.
+      // Else, return the path as is
+      const relativePathResult = RelativePathSchema.safeParse(pathStr);
+      if (!relativePathResult.success) {
+        return AbsolutePath.from(pathStr);
+      }
+      return basePathResolver().join(relativePathResult.data);
     });
-    return z.NEVER;
-  }
-});
+}
 
-export const RelativePathSchema = z.string().transform((str, ctx) => {
+export const AbsolutePathSchema = z
+  .string()
+  .min(1)
+  .refine((pathStr) => path.isAbsolute(pathStr), "Invalid absolute path");
+
+const RelativePathSchema = z.string().transform((str, ctx) => {
   try {
     return RelativePath.unsafeFrom(str);
   } catch (error) {

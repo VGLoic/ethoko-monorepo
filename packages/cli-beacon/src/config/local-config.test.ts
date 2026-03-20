@@ -97,7 +97,21 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
           },
         ],
       },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath" \(if defined\)/,
+      /For project "dummy", the "storage.path" cannot be a child or parent of "typingsPath"./,
+    ],
+    // Storage path is a parent of typings path
+    [
+      "Storage path is a parent of typings path",
+      {
+        typingsPath: "path/to/typings",
+        projects: [
+          {
+            name: "dummy",
+            storage: { type: "filesystem", path: "path/to/" },
+          },
+        ],
+      },
+      /For project "dummy", the "storage.path" cannot be a child or parent of "typingsPath"./,
     ],
     // Storage path is a child of pulled artifacts path
     [
@@ -111,7 +125,21 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
           },
         ],
       },
-      /For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath" \(if defined\)/,
+      /For project "dummy", the "storage.path" cannot be a child or parent of "pulledArtifactsPath"./,
+    ],
+    // Storage path is a parent of pulled artifacts path
+    [
+      "Storage path is a parent of pulled artifacts path",
+      {
+        pulledArtifactsPath: "path/to/artifacts",
+        projects: [
+          {
+            name: "dummy",
+            storage: { type: "filesystem", path: "path/to/" },
+          },
+        ],
+      },
+      /For project "dummy", the "storage.path" cannot be a child or parent of "pulledArtifactsPath"./,
     ],
   ] as const;
 

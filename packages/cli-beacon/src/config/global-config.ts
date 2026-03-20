@@ -1,7 +1,7 @@
 import os from "node:os";
 import fs from "node:fs/promises";
 import z from "zod";
-import { AbsolutePath, RelativePathSchema } from "@/utils/path";
+import { AbsolutePath, generateAbsolutePathSchema } from "@/utils/path";
 import { toAsyncResult, toResult } from "@/utils/result";
 import { generateProjectConfigSchema } from "./projects";
 
@@ -25,19 +25,8 @@ const GlobalEthokoConfigSchema = z
         (value) => value !== "config.json",
         '"pulledArtifactsPath" cannot be equal to "config.json". Please choose a different name for the pulled artifacts directory.',
       )
-      .optional()
-      .transform((value) => {
-        if (!value) {
-          return getEthokoGlobalPath().join("pulled-artifacts");
-        }
-        // If the path is relative, resolve it against the global config directory.
-        // Else, return the path as is
-        const relativePathResult = RelativePathSchema.safeParse(value);
-        if (!relativePathResult.success) {
-          return AbsolutePath.from(value);
-        }
-        return getEthokoGlobalPath().join(relativePathResult.data);
-      }),
+      .default("pulled-artifacts")
+      .pipe(generateAbsolutePathSchema(getEthokoGlobalPath)),
     projects: z
       .array(
         generateProjectConfigSchema(getEthokoGlobalPath),
@@ -59,13 +48,10 @@ const GlobalEthokoConfigSchema = z
       }),
   })
   .superRefine((data, ctx) => {
-    // Pulled artifacts path must not be a parent-child relationship with any of the project paths
+    // Pulled artifacts path must not be a child relationship with any of the project paths
     for (const project of data.projects) {
       if (project.storage.type === "filesystem") {
-        if (
-          data.pulledArtifactsPath.resolvedPath ===
-          project.storage.path.resolvedPath
-        ) {
+        if (data.pulledArtifactsPath.eq(project.storage.path)) {
           ctx.addIssue({
             code: "custom",
             message: `Pulled artifacts path "${data.pulledArtifactsPath.resolvedPath}" cannot be the same as project "${project.name}" storage path "${project.storage.path.resolvedPath}". Please choose a different pulled artifacts path or storage path.`,

@@ -75,12 +75,18 @@ function mergeConfigs(
   globalConfig: GlobalEthokoConfig,
   localConfig: LocalEthokoConfig,
 ): EthokoConfig {
+  const mergedProjects = [...localConfig.projects];
+  for (const globalProject of globalConfig.projects) {
+    if (!localConfig.projects.some((p) => p.name === globalProject.name)) {
+      mergedProjects.push(globalProject);
+    }
+  }
   return {
     pulledArtifactsPath:
       localConfig.pulledArtifactsPath || globalConfig.pulledArtifactsPath,
     typingsPath: localConfig.typingsPath,
     compilationOutputPath: localConfig.compilationOutputPath,
-    projects: localConfig.projects,
+    projects: mergedProjects,
     debug: localConfig.debug,
     localConfigPath: localConfig.configPath,
     globalConfigPath: globalConfig.configPath,

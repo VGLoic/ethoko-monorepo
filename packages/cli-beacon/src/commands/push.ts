@@ -7,7 +7,7 @@ import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
 import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
-import { AbsolutePathSchema } from "@/utils/path.js";
+import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -82,7 +82,11 @@ export function registerPushCommand(
               1,
               'The "artifactPath" cannot be empty. Provide a valid path to compilation artifacts or set compilationOutputPath in ethoko.config.json',
             )
-            .pipe(AbsolutePathSchema)
+            .pipe(
+              generateAbsolutePathSchema(() =>
+                AbsolutePath.from(process.cwd()),
+              ),
+            )
             .optional(),
           force: z
             .boolean('The "force" option must be a boolean')

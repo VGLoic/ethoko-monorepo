@@ -12,7 +12,7 @@ import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-sto
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
 import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
-import { AbsolutePathSchema } from "@/utils/path.js";
+import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -92,7 +92,11 @@ export function registerExportCommand(
               1,
               'If provided, the "output" cannot be empty. Provide a valid file path.',
             )
-            .pipe(AbsolutePathSchema)
+            .pipe(
+              generateAbsolutePathSchema(() =>
+                AbsolutePath.from(process.cwd()),
+              ),
+            )
             .optional(),
           debug: z
             .boolean('The "debug" option must be a boolean')

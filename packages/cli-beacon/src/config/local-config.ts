@@ -1,4 +1,4 @@
-import { AbsolutePath, AbsolutePathSchema } from "@/utils/path";
+import { AbsolutePath, generateAbsolutePathSchema } from "@/utils/path";
 import fs from "node:fs/promises";
 import { z } from "zod";
 import { generateProjectConfigSchema } from "./projects";
@@ -13,14 +13,14 @@ const EthokoLocalConfigSchema = z
         "'typingsPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty to default to './.ethoko-typings'",
       )
       .default(".ethoko-typings")
-      .pipe(AbsolutePathSchema),
+      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd()))),
     pulledArtifactsPath: z
       .string('"pulledArtifactsPath" field must be a string or left empty')
       .min(
         1,
         "'pulledArtifactsPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty to use the global pulled artifacts path",
       )
-      .pipe(AbsolutePathSchema)
+      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd())))
       .optional(),
     compilationOutputPath: z
       .string('"compilationOutputPath" field must be a string or left empty')
@@ -28,7 +28,7 @@ const EthokoLocalConfigSchema = z
         1,
         "'compilationOutputPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty",
       )
-      .pipe(AbsolutePathSchema)
+      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd())))
       .optional(),
     projects: z
       .array(
@@ -55,61 +55,51 @@ const EthokoLocalConfigSchema = z
   })
   .refine(
     (data) => {
-      // Typings path and pulled artifacts path must not a parent-child relationship
-      if (data.pulledArtifactsPath) {
-        return (
-          data.typingsPath.resolvedPath !==
-            data.pulledArtifactsPath.resolvedPath &&
-          !data.pulledArtifactsPath.isChildOf(data.typingsPath) &&
-          !data.typingsPath.isChildOf(data.pulledArtifactsPath)
-        );
+      // Typings path and pulled artifacts path must not be a parent-child relationship
+      if (!data.pulledArtifactsPath) {
+        return true;
       }
-      return true;
+      return !(
+        data.typingsPath.eq(data.pulledArtifactsPath) ||
+        data.pulledArtifactsPath.isChildOf(data.typingsPath) ||
+        data.typingsPath.isChildOf(data.pulledArtifactsPath)
+      );
     },
     {
       message:
         '"typingsPath" and "pulledArtifactsPath" cannot be in a parent-child relationship',
     },
   )
-  .refine(
-    (data) => {
-      // In case of storage type "filesystem", the storage path must not be a child of typings path or pulled artifacts path
-      const filesystemProjectPaths: AbsolutePath[] = [];
-      for (const project of data.projects) {
-        if (project.storage.type === "filesystem") {
-          filesystemProjectPaths.push(project.storage.path);
+  .superRefine((data, ctx) => {
+    // In case of storage type "filesystem", the storage path must not be a child or parent of typings path or pulled artifacts path
+    for (const project of data.projects) {
+      if (project.storage.type === "filesystem") {
+        if (
+          project.storage.path.isChildOf(data.typingsPath) ||
+          data.typingsPath.isChildOf(project.storage.path) ||
+          project.storage.path.eq(data.typingsPath)
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: `For project "${project.name}", the "storage.path" cannot be a child or parent of "typingsPath".`,
+            input: data,
+          });
+        }
+        if (
+          data.pulledArtifactsPath &&
+          (project.storage.path.isChildOf(data.pulledArtifactsPath) ||
+            data.pulledArtifactsPath.isChildOf(project.storage.path) ||
+            project.storage.path.eq(data.pulledArtifactsPath))
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            message: `For project "${project.name}", the "storage.path" cannot be a child or parent of "pulledArtifactsPath".`,
+            input: data,
+          });
         }
       }
-      if (filesystemProjectPaths.length > 0) {
-        return filesystemProjectPaths.every((resolvedStoragePath) => {
-          const isDifferentPathThanTypingsPath =
-            data.typingsPath.resolvedPath !== resolvedStoragePath.resolvedPath;
-          const isNotChildOfTypingsPath = !resolvedStoragePath.isChildOf(
-            data.typingsPath,
-          );
-          const isDifferentPathThanPulledArtifactsPath =
-            data.pulledArtifactsPath
-              ? data.pulledArtifactsPath.resolvedPath !==
-                resolvedStoragePath.resolvedPath
-              : true;
-          const isNotChildOfPulledArtifactsPath = data.pulledArtifactsPath
-            ? !resolvedStoragePath.isChildOf(data.pulledArtifactsPath)
-            : true;
-          return (
-            isDifferentPathThanTypingsPath &&
-            isNotChildOfTypingsPath &&
-            isDifferentPathThanPulledArtifactsPath &&
-            isNotChildOfPulledArtifactsPath
-          );
-        });
-      }
-      return true;
-    },
-    {
-      message:
-        'For "filesystem" storage, the "storage.path" cannot be in a child relationship with "typingsPath" or "pulledArtifactsPath" (if defined).',
-    },
-  );
+    }
+  });
 
 export type LocalEthokoConfig = z.infer<typeof EthokoLocalConfigSchema> & {
   configPath: AbsolutePath | undefined;
