@@ -14,6 +14,8 @@ export class EthokoCliConfig {
   public localConfigPath: AbsolutePath | undefined;
   public globalConfigPath: AbsolutePath | undefined;
   public debug: boolean;
+  public localProjectNames: ReadonlySet<string>;
+  public globalProjectNames: ReadonlySet<string>;
 
   constructor(config: EthokoConfig) {
     this.pulledArtifactsPath = config.pulledArtifactsPath;
@@ -23,6 +25,8 @@ export class EthokoCliConfig {
     this.projects = config.projects;
     this.localConfigPath = config.localConfigPath;
     this.globalConfigPath = config.globalConfigPath;
+    this.localProjectNames = config.localProjectNames;
+    this.globalProjectNames = config.globalProjectNames;
   }
 
   public getProjectConfig(project: string): ProjectConfig | undefined {
@@ -37,6 +41,8 @@ interface EthokoConfig {
   debug: boolean;
   localConfigPath: AbsolutePath | undefined;
   globalConfigPath: AbsolutePath | undefined;
+  localProjectNames: ReadonlySet<string>;
+  globalProjectNames: ReadonlySet<string>;
 }
 
 export async function loadConfig(
@@ -91,6 +97,8 @@ function mergeConfigs(
     debug: localConfig.debug,
     localConfigPath: localConfig.configPath,
     globalConfigPath: globalConfig.configPath,
+    localProjectNames: new Set(localConfig.projects.map((p) => p.name)),
+    globalProjectNames: new Set(globalConfig.projects.map((p) => p.name)),
   };
 }
 
