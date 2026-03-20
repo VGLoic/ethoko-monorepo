@@ -229,7 +229,7 @@ describe('"loadLocalConfig" must parse accordingly to rules', () => {
       "non-existent-config.json",
     );
     await expect(loadLocalConfig(nonExistentConfigPath)).resolves.toEqual({
-      typingsPath: AbsolutePath.from(".ethoko-typings"),
+      typingsPath: new AbsolutePath(".ethoko-typings"),
       projects: [],
       debug: false,
       configPath: undefined,

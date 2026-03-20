@@ -6,7 +6,18 @@ import z from "zod";
  */
 export class AbsolutePath {
   public resolvedPath: string;
-  private constructor(resolvedPath: string) {
+  /**
+   * Creates an AbsolutePath instance from the given paths. The paths will be resolved to an absolute path.
+   * @example
+   * ```typescript
+   * const absPath1 = new AbsolutePath("/foo/bar");
+   * console.log(absPath1.resolvedPath); // Output: "/foo/bar"
+   * const absPath2 = new AbsolutePath("foo/bar");
+   * console.log(absPath2.resolvedPath); // Output: "/current/working/directory/foo/bar"
+   * ```
+   */
+  public constructor(...from: string[]) {
+    const resolvedPath = path.resolve(...from);
     this.resolvedPath = resolvedPath;
   }
 
@@ -14,20 +25,20 @@ export class AbsolutePath {
    * Returns the directory name of the path.
    * @example
    * ```typescript
-   * const absPath = AbsolutePath.from("/foo/bar/baz");
+   * const absPath = new AbsolutePath("/foo/bar/baz");
    * const dirName = absPath.dirname();
    * console.log(dirName.resolvedPath); // Output: "/foo/bar"
    * ```
    */
   public dirname(): AbsolutePath {
-    return AbsolutePath.from(path.dirname(this.resolvedPath));
+    return new AbsolutePath(path.dirname(this.resolvedPath));
   }
 
   /**
    * Joins the path with the given paths.
    * @example
    * ```typescript
-   * const absPath = AbsolutePath.from("/foo");
+   * const absPath = new AbsolutePath("/foo");
    * const joinedPath = absPath.join("bar", "baz");
    * console.log(joinedPath.resolvedPath); // Output: "/foo/bar/baz"
    * ```
@@ -37,15 +48,15 @@ export class AbsolutePath {
       to instanceof RelativePath ? to.relativePath : to,
     );
     const joinedPath = path.join(this.resolvedPath, ...toPath);
-    return AbsolutePath.from(joinedPath);
+    return new AbsolutePath(joinedPath);
   }
 
   /**
    * Returns the relative path from the base path to the current path.
    * @example
    * ```typescript
-   * const absPath = AbsolutePath.from("/foo/bar/baz");
-   * const basePath = AbsolutePath.from("/foo");
+   * const absPath = new AbsolutePath("/foo/bar/baz");
+   * const basePath = new AbsolutePath("/foo");
    * const relativePath = absPath.relativeTo(basePath);
    * console.log(relativePath.relativePath); // Output: "bar/baz"
    * ```
@@ -73,21 +84,6 @@ export class AbsolutePath {
    */
   public eq(other: AbsolutePath): boolean {
     return this.resolvedPath === other.resolvedPath;
-  }
-
-  /**
-   * Creates an AbsolutePath instance from the given paths. The paths will be resolved to an absolute path.
-   * @example
-   * ```typescript
-   * const absPath1 = AbsolutePath.from("/foo/bar");
-   * console.log(absPath1.resolvedPath); // Output: "/foo/bar"
-   * const absPath2 = AbsolutePath.from("foo/bar");
-   * console.log(absPath2.resolvedPath); // Output: "/current/working/directory/foo/bar"
-   * ```
-   */
-  public static from(...from: string[]): AbsolutePath {
-    const resolvedPath = path.resolve(...from);
-    return new AbsolutePath(resolvedPath);
   }
 
   /**
@@ -154,7 +150,7 @@ export function generateAbsolutePathSchema(
       // Else, return the path as is
       const relativePathResult = RelativePathSchema.safeParse(pathStr);
       if (!relativePathResult.success) {
-        return AbsolutePath.from(pathStr);
+        return new AbsolutePath(pathStr);
       }
       return basePathResolver().join(relativePathResult.data);
     });

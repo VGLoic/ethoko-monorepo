@@ -90,9 +90,7 @@ export function registerDiffCommand(
               'The "artifactPath" cannot be empty. Provide a valid path to compilation artifacts or set compilationOutputPath in ethoko.config.json',
             )
             .pipe(
-              generateAbsolutePathSchema(() =>
-                AbsolutePath.from(process.cwd()),
-              ),
+              generateAbsolutePathSchema(() => new AbsolutePath(process.cwd())),
             )
             .optional(),
           debug: z

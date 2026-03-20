@@ -168,7 +168,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
     test("should resolve relative path against global config directory", async () => {
       const loadedConfig = await loadGlobalConfig(configPath);
       expect(loadedConfig).toBeDefined();
-      const expectedPath = AbsolutePath.from(os.homedir(), ".ethoko").join(
+      const expectedPath = new AbsolutePath(os.homedir(), ".ethoko").join(
         "relative/path",
       ).resolvedPath;
       expect(loadedConfig.pulledArtifactsPath.resolvedPath).toBe(expectedPath);
@@ -205,7 +205,7 @@ describe('"loadGlobalConfig" must parse accordingly to rules', () => {
       "non-existent-config.json",
     );
     await expect(loadGlobalConfig(nonExistentConfigPath)).resolves.toEqual({
-      pulledArtifactsPath: AbsolutePath.from(
+      pulledArtifactsPath: new AbsolutePath(
         os.homedir(),
         ".ethoko",
         "pulled-artifacts",

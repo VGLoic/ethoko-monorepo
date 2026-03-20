@@ -93,9 +93,7 @@ export function registerExportCommand(
               'If provided, the "output" cannot be empty. Provide a valid file path.',
             )
             .pipe(
-              generateAbsolutePathSchema(() =>
-                AbsolutePath.from(process.cwd()),
-              ),
+              generateAbsolutePathSchema(() => new AbsolutePath(process.cwd())),
             )
             .optional(),
           debug: z

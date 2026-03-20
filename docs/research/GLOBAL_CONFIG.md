@@ -411,7 +411,7 @@ const finalConfig = {
 **1.2 Support Home-Relative Paths**
 
 - Add `~` expansion in path resolution
-- Update `AbsolutePath.from()` to handle `~`
+- Update `new AbsolutePath()` to handle `~`
 - Validate no relative paths in global config (except with `~`)
 
 **1.3 Update Config Validation**

@@ -84,9 +84,7 @@ export function registerRestoreCommand(
               'The "output" cannot be empty. Provide a valid output directory path.',
             )
             .pipe(
-              generateAbsolutePathSchema(() =>
-                AbsolutePath.from(process.cwd()),
-              ),
+              generateAbsolutePathSchema(() => new AbsolutePath(process.cwd())),
             ),
           force: z
             .boolean('The "force" option must be a boolean')

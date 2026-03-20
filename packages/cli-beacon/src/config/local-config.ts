@@ -13,14 +13,14 @@ const EthokoLocalConfigSchema = z
         "'typingsPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty to default to './.ethoko-typings'",
       )
       .default(".ethoko-typings")
-      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd()))),
+      .pipe(generateAbsolutePathSchema(() => new AbsolutePath(process.cwd()))),
     pulledArtifactsPath: z
       .string('"pulledArtifactsPath" field must be a string or left empty')
       .min(
         1,
         "'pulledArtifactsPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty to use the global pulled artifacts path",
       )
-      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd())))
+      .pipe(generateAbsolutePathSchema(() => new AbsolutePath(process.cwd())))
       .optional(),
     compilationOutputPath: z
       .string('"compilationOutputPath" field must be a string or left empty')
@@ -28,11 +28,14 @@ const EthokoLocalConfigSchema = z
         1,
         "'compilationOutputPath' cannot be an empty string. Provide a valid path or set it to '.' to use the current directory or leave it empty",
       )
-      .pipe(generateAbsolutePathSchema(() => AbsolutePath.from(process.cwd())))
+      .pipe(generateAbsolutePathSchema(() => new AbsolutePath(process.cwd())))
       .optional(),
     projects: z
       .array(
-        generateProjectConfigSchema(() => AbsolutePath.from(process.cwd())),
+        generateProjectConfigSchema({
+          requireAbsolutePath: false,
+          basePathResolver: () => new AbsolutePath(process.cwd()),
+        }),
         '"projects" field must be an array of project configurations',
       )
       .default([])
@@ -109,8 +112,8 @@ export async function loadLocalConfig(
   configPath?: string,
 ): Promise<LocalEthokoConfig> {
   const resolvedPath = configPath
-    ? AbsolutePath.from(configPath)
-    : await findLocalConfigPath(AbsolutePath.from(process.cwd()));
+    ? new AbsolutePath(configPath)
+    : await findLocalConfigPath(new AbsolutePath(process.cwd()));
 
   if (!resolvedPath) {
     return { ...EthokoLocalConfigSchema.parse({}), configPath: undefined };

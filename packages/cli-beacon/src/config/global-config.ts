@@ -6,7 +6,7 @@ import { toAsyncResult, toResult } from "@/utils/result";
 import { generateProjectConfigSchema } from "./projects";
 
 function getEthokoGlobalPath(): AbsolutePath {
-  return AbsolutePath.from(os.homedir(), ".ethoko");
+  return new AbsolutePath(os.homedir(), ".ethoko");
 }
 
 function getEthokoGlobalConfigPath(): AbsolutePath {
@@ -29,7 +29,10 @@ const GlobalEthokoConfigSchema = z
       .pipe(generateAbsolutePathSchema(getEthokoGlobalPath)),
     projects: z
       .array(
-        generateProjectConfigSchema(getEthokoGlobalPath),
+        generateProjectConfigSchema({
+          requireAbsolutePath: false,
+          basePathResolver: getEthokoGlobalPath,
+        }),
         '"projects" field must be an array of project configurations',
       )
       .default([])
@@ -81,7 +84,7 @@ export async function loadGlobalConfig(
   configPath?: string,
 ): Promise<GlobalEthokoConfig> {
   const resolvedConfigPath = configPath
-    ? AbsolutePath.from(configPath)
+    ? new AbsolutePath(configPath)
     : getEthokoGlobalConfigPath();
   const configExists = await fs
     .stat(resolvedConfigPath.resolvedPath)
