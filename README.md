@@ -119,13 +119,13 @@ ethoko push my-project --artifact-path ./path/to/artifacts
 ```
 
 > [!NOTE]  
-> Ethoko will try to read the compilation artifact from the configured or provided path. If multiple choices are possible, it will ask the user to select one of them. One can avoid this prompt by providing the full path to the compilation artifact or ensure there is only one compilation artifact in the provided path.
+> Ethoko will try to read the compilation artifact from the configured or provided path. If multiple choices are possible, it will ask the user to select one of them. To avoid this prompt, provide the full path to the compilation artifact, or ensure there is only one compilation artifact in the path.
 
 ### Pull
 
 Pull locally the missing artifacts for a configured project.
 
-One can pull all the artifacts from a project
+To pull all artifacts from a project, run:
 
 ```bash
 ethoko pull my-project
@@ -143,9 +143,9 @@ ethoko pull my-project:2026-02-02
 Export a contract artifact from a locally pulled artifact.
 
 ```bash
-# Using only the contract name, case insensitive, will fail if multiple contracts with the same name are found
+# Using only the contract name (case-insensitive) — fails if multiple contracts share the same name
 ethoko export my-project:2026-02-02 --contract Counter
-# Using the fully qualified path to the contract, case sensitive, will avoid any ambiguity
+# Using the fully qualified path (case-sensitive) — avoids any ambiguity
 ethoko export my-project@b5e41181986a --contract contracts/Counter.sol:Counter
 ```
 
@@ -169,14 +169,14 @@ echo "export const MY_ABI = $(ethoko export my-project:2026-02-02 --contract Cou
 
 ### Typings
 
-Once the artifacts have been pulled, one can generate the TypeScript typings based on the pulled projects.
+Once the artifacts have been pulled, run the following command to generate TypeScript typings:
 
 ```bash
 ethoko typings
 ```
 
 > [!NOTE]  
-> If no projects have been pulled, one can still generate the default typings using this command. It may be helpful for those who do not care about the scripts involving Ethoko but want to be unblocked in case of missing files.
+> If no projects have been pulled, you can still generate the default typings. This is useful if you don't need Ethoko scripts but want to avoid missing-file errors.
 
 ### Artifacts
 
