@@ -54,7 +54,7 @@ For a quick guided setup, it is recommended to use the init command:
 ethoko init
 ```
 
-Generally, the global configuration file will define the projects
+Generally, the global configuration file will define the projects:
 ```json
 // Global ~/.ethoko/config.json: defines global projects
 {
@@ -107,13 +107,13 @@ Only push the compilation artifact without an additional tag:
 ethoko push my-project
 ```
 
-Or use a tag to associate the compilation artifact with it
+Or use a tag to associate the compilation artifact with it:
 
 ```bash
 ethoko push my-project:2026-02-02
 ```
 
-If not setup in the local configuration with `compilationOutputPath` or need to be overridden, the path to the compilation artifact can be provided
+If not set up in the local configuration with `compilationOutputPath` or need to be overridden, the path to the compilation artifact can be provided:
 
 ```bash
 # e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
@@ -248,7 +248,7 @@ ethoko restore my-project:2026-02-02 --output ./restored
 
 ### Diff
 
-Compare a local compilation artifacts with an existing compilation artifact and print the contracts for which differences have been found.
+Compare local compilation artifacts with an existing compilation artifact and print the contracts where differences are found.
 
 ```bash
 ethoko diff my-project:2026-02-02
@@ -256,18 +256,16 @@ ethoko diff my-project:2026-02-02
 ethoko diff my-project@b5e41181986a
 ```
 
-If not setup in the configuration or need to be overriden, the path to the compilation artifact can be provided
+If not set up in the configuration or need to be overridden, the path to the compilation artifact can be provided:
 
 ```bash
 # e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
 ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
-## Using the exported artifacts in scripts
+## Using exported artifacts in a deployment script
 
-The exported artifacts can be used as any JSON files in scripts for various purposes, e.g. deployment, verification, etc... Adapt the example below to your own deployment tooling.
-
-Below is an example of a deployment script with the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin for deploying a released smart contract.
+Exported artifacts are plain JSON files and can be imported into any script. The example below uses the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin — adapt it to your own deployment tooling.
 
 ```ts
 import { deployScript } from "../rocketh/deploy.js";
@@ -291,7 +289,7 @@ export default deployScript(
 );
 ```
 
-## Using the typings in a Typescript environment
+## Using the typings in a TypeScript environment
 
 The typings are exposed in order to help the developer retrieve easily and safely a contract artifact (ABI, bytecode, etc...).
 
@@ -328,7 +326,7 @@ In case there are no projects or the projects have not been pulled, the generate
 
 ### Retrieve input and outputs compilation artifacts
 
-The input and contract outputs compilation artifacts of a tag can be retrieved using the `project("my-project").tag("2026-02-02").{getInputCompilationArtifact, getContractOutputCompilationArtifact}` methods.
+The input and contract output compilation artifacts of a tag can be retrieved using the `getInputCompilationArtifact` and `getContractOutputCompilationArtifact` methods on the result of `project("my-project").tag("2026-02-02")`.
 
 The input compilation artifact contains the sources and settings used for compilation. There is one output compilation artifact per contract, each containing the ABI, bytecode and metadata for the contract.
 
