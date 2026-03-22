@@ -4,6 +4,40 @@ Configuration of Ethoko can be done through two configuration files:
 - Global configuration file: located at `~/.ethoko/config.json`, it will host the main project definitions, define the path for the pulled artifacts and include any global settings. The global configuration itself is optional.
 - Local configuration file: located at `ethoko.config.json` in the root of your repository or any parent directory, it will override the global configuration for the specific project. It is meant for refinement of the configuration for a specific project or to specify a local project hosted directly in the directory. The local configuration file is optional. If both global and local configuration files are present, the local configuration will take precedence over the global one.
 
+## How the two configs are merged
+
+When both files are present, Ethoko merges them with the following rules:
+
+- **Scalar fields** (`pulledArtifactsPath`, `debug`, etc.): the local value takes precedence over the global one.
+- **`projects` array**: the two arrays are merged by project name. If the same project name appears in both configs, the local definition takes priority and the global one is discarded. Projects defined only in one config are included as-is. Local projects appear before global projects in the merged list.
+
+A typical setup therefore looks like:
+
+```json
+// ~/.ethoko/config.json — defines shared projects accessible from any repository
+{
+  "projects": [
+    {
+      "name": "my-project",
+      "storage": {
+        "type": "aws",
+        "awsRegion": "us-east-1",
+        "awsBucketName": "my-artifacts-bucket"
+      }
+    }
+  ]
+}
+```
+
+```json
+// ethoko.config.json — adds repository-specific settings
+{
+  "compilationOutputPath": "./artifacts"
+}
+```
+
+In this example, the effective configuration has `my-project` available with the AWS storage defined globally, and `compilationOutputPath` set to `./artifacts` from the local config. All other settings use their defaults.
+
 
 ## Global configuration
 
@@ -11,7 +45,7 @@ Configuration of Ethoko can be done through two configuration files:
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | `pulledArtifactsPath`   | The path where artifacts pulled by Ethoko CLI commands are stored locally.                                                                                                                                                    | `~/.ethoko/pulled-artifacts`         |
   | `projects`               | The projects global configuration for Ethoko. See [Project and Storage Configuration](#project-and-storage-configuration) for more details.                                                                                                                                              | None    |
-  | `debug`                 | Enables debug mode for all Ethoko CLI commands.                                                     
+  | `debug`                 | Enables debug mode for all Ethoko CLI commands.                                                                                                                                                                                                                    | `false`           |
 
 ## Local configuration
 
@@ -149,9 +183,12 @@ This storage is compatible with sharing through version control (commit the stor
 
 Default configuration example:
 
-```ts
-storageConfiguration: {
-  type: "filesystem",
+```json
+{
+  "name": "my-project",
+  "storage": {
+    "type": "filesystem"
+  }
 }
 ```
 
@@ -165,4 +202,3 @@ Local filesystem configuration variables:
 | ------ | ------------------------------------------------------------------ | --------------------------------------------- |
 | `type` | Storage provider type for local filesystem storage.                | Must be `"filesystem"`                             |
 | `path` | Directory where Ethoko stores artifact versions for filesystem storage. | `"ethoko-storage"` (within project directory) |
-

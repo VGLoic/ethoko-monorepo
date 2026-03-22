@@ -4,7 +4,7 @@
         <source srcset="images/ethoko-logo-light.svg" media="(prefers-color-scheme: light)">
         <img alt="Ethoko Logo" src="images/ethoko-logo-light.svg" />
     </picture>
-<div>
+</p>
 <p align="center">
     <strong>Warehouse for smart-contract compilation artifacts.</strong>
 </p>
@@ -84,6 +84,14 @@ While the local configuration file will refine the configuration for a specific 
 ```
 
 Check out the full [configuration reference in the docs](docs/external/CONFIGURATION.md).
+
+### Projects, tags and IDs
+
+A developer will interact with a list of **projects**, e.g. `my-project`, each of them gathering many compilation artifacts. A project is defined by its name and storage backend.
+
+Each artifact is uniquely identified by its **ID**, e.g. `b5e41181986a`, which is the hash of the compilation artifact content. The ID is automatically generated when pushing an artifact to Ethoko and can be used to retrieve it later.
+
+Finally, a **tag**, e.g. `2026-02-02` or `v1.2.3`, can be associated to a compilation artifact when pushed.
 
 ### Commands
 
@@ -195,6 +203,37 @@ Output JSON for scripting:
 ethoko inspect my-project:2026-02-02 --json
 ```
 
+#### Config
+
+Display the effective configuration — the result of merging the global and local config files. Useful to verify which projects are available and where values come from.
+
+```bash
+ethoko config
+```
+
+Each project is labelled with its source: `[global]`, `[local]`, or `[local - overrides global]` when both configs define the same project name.
+
+#### Init
+
+Initialize the Ethoko configuration through an interactive wizard. It guides you through:
+
+- Adding projects (name, storage backend, and whether to store the config globally or locally)
+- Detecting and setting the compilation output path (`./artifacts` for Hardhat, `./out` for Foundry)
+- Adding the relevant paths to `.gitignore`
+
+```bash
+ethoko init
+```
+
+If you need to add another project or change the local config file path:
+
+```bash
+ethoko init --config ./path/to/ethoko.config.json
+```
+
+> [!NOTE]
+> Running `ethoko init` again will let you add more projects to an existing configuration without overwriting it.
+
 #### Restore
 
 Original compilation artifacts are never lost and can be restored from a locally pulled artifact to a local directory.
@@ -226,7 +265,7 @@ ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 
 ### Using the exported artifacts in scripts
 
-The exported artifacts can be used as any JSON files in scripts in for various purposes, e.g. deployment, verification, etc...
+The exported artifacts can be used as any JSON files in scripts for various purposes, e.g. deployment, verification, etc... Adapt the example below to your own deployment tooling.
 
 Below is an example of a deployment script with the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin for deploying a released smart contract.
 
@@ -292,14 +331,6 @@ In case there are no projects or the projects have not been pulled, the generate
 The input and contract outputs compilation artifacts of a tag can be retrieved using the `project("doubtful-project").tag("2026-02-02").{getInputCompilationArtifact, getContractOutputCompilationArtifact}` methods.
 
 The input compilation artifact contains the sources and settings used for compilation. There is one output compilation artifact per contract, each containing the ABI, bytecode and metadata for the contract.
-
-### Projects, tags and IDs
-
-A unique **ID**, e.g. `b5e41181986a`, is derived for each compilation artifact. The ID is based on the content of the artifact.
-
-A **tag**, e.g. `2026-02-02` or `v1.2.3`, can be associated to a compilation artifact when pushed.
-
-A **project**, e.g. `doubtful-project`, will gather many compilation artifacts.
 
 ## Integration examples
 
