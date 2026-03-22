@@ -120,7 +120,7 @@ If not setup in the local configuration with `compilationOutputPath` or need to 
 ethoko push my-project --artifact-path ./path/to/artifacts
 ```
 
-> [!NOTE]
+> [!NOTE]  
 > Ethoko will try to read the compilation artifact from the configured or provided path. If multiple choices are possible, it will ask the user to select one of them. One can avoid this prompt by providing the full path to the compilation artifact or ensure there is only one compilation artifact in the provided path.
 
 #### Pull
@@ -177,7 +177,7 @@ Once the artifacts have been pulled, one can generate the TypeScript typings bas
 ethoko typings
 ```
 
-> [!NOTE]
+> [!NOTE]  
 > If no projects have been pulled, one can still generate the default typings using this command. It may be helpful for those who do not care about the scripts involving Ethoko but want to be unblocked in case of missing files.
 
 #### List artifacts
@@ -231,7 +231,7 @@ If you need to add another project or change the local config file path:
 ethoko init --config ./path/to/ethoko.config.json
 ```
 
-> [!NOTE]
+> [!NOTE]  
 > Running `ethoko init` again will let you add more projects to an existing configuration without overwriting it.
 
 #### Restore
@@ -243,7 +243,7 @@ ethoko restore my-project@b5e41181986a --output ./restored
 ethoko restore my-project:2026-02-02 --output ./restored
 ```
 
-> [!NOTE]
+> [!NOTE]  
 > The artifact must be pulled locally before restoring, and the output directory must be empty unless the `--force` flag is used.
 
 #### Diff
