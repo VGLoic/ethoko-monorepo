@@ -1,8 +1,44 @@
 # Ethoko Configuration Reference
 
 Configuration of Ethoko can be done through two configuration files:
-- Global configuration file: located at `~/.ethoko/config.json`, it will host the main project definitions, define the path for the pulled artifacts and include any global settings. The global configuration itself is optional.
-- Local configuration file: located at `ethoko.config.json` in the root of your repository or any parent directory, it will override the global configuration for the specific project. It is meant for refinement of the configuration for a specific project or to specify a local project hosted directly in the directory. The local configuration file is optional. If both global and local configuration files are present, the local configuration will take precedence over the global one.
+- Global configuration file: located at `~/.ethoko/config.json`. Hosts the main project definitions, the pulled-artifacts path, and any global settings.
+- Local configuration file: located at `ethoko.config.json` at the root of your repository or any parent directory. Overrides the global configuration for the specific project, or defines a local project hosted directly in the directory.
+
+Both files are optional. When both are present, the local configuration takes precedence over the global one.
+
+## How the two configs are merged
+
+When both files are present, Ethoko merges them with the following rules:
+
+- **Scalar fields** (`pulledArtifactsPath`, `debug`, etc.): the local value takes precedence over the global one.
+- **`projects` array**: the two arrays are merged by project name. If the same project name appears in both configs, the local definition takes priority and the global one is discarded. Projects defined only in one config are included as-is. Local projects appear before global projects in the merged list.
+
+A typical setup therefore looks like:
+
+```json
+// ~/.ethoko/config.json — defines shared projects accessible from any repository
+{
+  "projects": [
+    {
+      "name": "my-project",
+      "storage": {
+        "type": "aws",
+        "awsRegion": "us-east-1",
+        "awsBucketName": "my-artifacts-bucket"
+      }
+    }
+  ]
+}
+```
+
+```json
+// ethoko.config.json — adds repository-specific settings
+{
+  "compilationOutputPath": "./artifacts"
+}
+```
+
+In this example, the effective configuration has `my-project` available with the AWS storage defined globally, and `compilationOutputPath` set to `./artifacts` from the local config. All other settings use their defaults.
 
 
 ## Global configuration
@@ -10,18 +46,18 @@ Configuration of Ethoko can be done through two configuration files:
 | Name                    | Description                                                                                                                                                                                                                                                                                                                 | Default value     |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | `pulledArtifactsPath`   | The path where artifacts pulled by Ethoko CLI commands are stored locally.                                                                                                                                                    | `~/.ethoko/pulled-artifacts`         |
-  | `projects`               | The projects global configuration for Ethoko. See [Project and Storage Configuration](#project-and-storage-configuration) for more details.                                                                                                                                              | None    |
-  | `debug`                 | Enables debug mode for all Ethoko CLI commands.                                                     
+| `projects`              | The projects global configuration for Ethoko. See [Project and Storage Configuration](#project-and-storage-configuration) for more details. | None    |
+| `debug`                 | Enables debug mode for all Ethoko CLI commands.                                                                                             | `false` |
 
 ## Local configuration
 
 | Name                    | Description                                                                                                                                                                                                                                                                                                                 | Default value     |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
 | `compilationOutputPath` | The optional path where compilation artifacts generated by your development environment are located, e.g. `artifacts` for Hardhat projects or `out` for Foundry. It is used by default in CLI commands to locate compilation artifacts. The `push` and `diff` commands allow overriding it with the `--artifact-path` flag. | None              |
-| `pulledArtifactsPath`   | It is recommended to let the global configuration define this path. Setting a path here will override the global configuration for any command run with this local config. If set, it is recommended to add this directory to `.gitignore` to avoid committing pulled artifacts.                                                                                                                                                    | None         |
-  | `typingsPath`           | The path where TypeScript typings generated by Ethoko CLI commands are stored locally. It is recommended to add this directory to `.gitignore` to avoid committing generated typings.                                                                                                                                       | `.ethoko-typings` |
-  | `projects`               | The local projects configuration for Ethoko. See [Project and Storage Configuration](#project-and-storage-configuration) for more details.                                                                                                                                              | None    |
-  | `debug`                 | Enables debug mode for Ethoko CLI commands.                                                                                                                                                                                                                                                                                 | `false`           |
+| `pulledArtifactsPath`   | The path where artifacts pulled by Ethoko CLI commands are stored locally. Overrides the global `pulledArtifactsPath` when set. It is recommended to define this in the global configuration instead; if set locally, add the directory to `.gitignore`.                                                                                                                                                    | None         |
+| `typingsPath`           | The path where TypeScript typings generated by Ethoko CLI commands are stored locally. It is recommended to add this directory to `.gitignore` to avoid committing generated typings. | `.ethoko-typings` |
+| `projects`              | The local projects configuration for Ethoko. See [Project and Storage Configuration](#project-and-storage-configuration) for more details.                                            | None              |
+| `debug`                 | Enables debug mode for Ethoko CLI commands.                                                                                                                                           | `false`           |
 
 
 ## Project and storage configuration
@@ -48,11 +84,11 @@ The configuration requires:
 - `awsRegion`: AWS region where the S3 bucket is located
 - `awsBucketName`: Name of the S3 bucket
 
-Default configuration example:
+Minimum required configuration:
 
 ```json
 {
-  "project": "my-project",
+  "name": "my-project",
   "storage": {
     "type": "aws",
     "awsRegion": "us-east-1",
@@ -80,7 +116,7 @@ aws_secret_access_key = YOUR_SECRET_ACCESS_KEY
 
 ```json
 {
-  "project": "my-project",
+  "name": "my-project",
   "storage": {
     "type": "aws",
     "awsRegion": "us-east-1",
@@ -100,7 +136,7 @@ Alternatively, provide explicit static credentials (for example in CI):
 
 ```json
 {
-  "project": "my-project",
+  "name": "my-project",
   "storage": {
     "type": "aws",
     "awsRegion": "us-east-1",
@@ -118,7 +154,7 @@ Optionally, in the case of static credentials, you can assume an IAM role using 
 - `awsRoleSessionName`: Optional role session name (default: `ethoko-hardhat-session`)
 - `awsRoleDurationSeconds`: Optional session duration in seconds (900-43200)
 
-When `awsRoleArn` is provided, Ethoko assumes the role using the access key and secret key, and uses the temporary credentials for S3 operations. The credentials are cached in memory for the duration of the task.
+When `awsRoleArn` is provided, Ethoko assumes the role using the access key and secret key, and uses the temporary credentials for S3 operations. The credentials are cached in memory for the duration of the CLI command invocation.
 
 When `awsAccessKeyId` and `awsSecretAccessKey` are omitted, Ethoko relies on the default credential provider chain.
 
@@ -136,8 +172,8 @@ Below is the full list of configuration variables for AWS S3 storage:
 | `awsProfile`             | AWS profile name to use from local AWS config/credentials files. Can not be used with static credentials.                                           | None                       |
 | `awsAccessKeyId`         | Static AWS access key ID, typically used in CI or dedicated environments. Can not be used with `awsProfile`.                                        | None                       |
 | `awsSecretAccessKey`     | Static AWS secret access key paired with `awsAccessKeyId`. Can not be used with `awsProfile`.                                                       | None                       |
-| `awsRoleArn`             | ARN of the IAM role to assume. Can be used only with static credentials.                                                                            | None                       |
-| `awsRoleExternalId`      | Optional external ID for cross-account IAM role assumption. Can be used only with static credentials.                                               | None                       |
+| `awsRoleArn`             | ARN of the IAM role to assume using the provided static credentials (`awsAccessKeyId` / `awsSecretAccessKey`). To assume a role via the default credential chain, use `role_arn` in your AWS config file instead. | None |
+| `awsRoleExternalId`      | Optional external ID for cross-account IAM role assumption. Applies only when using in-config static credentials with `awsRoleArn`.                                                                               | None |
 | `awsRoleSessionName`     | Optional role session name when assuming a role. Can be used only with static credentials and role set.                                             | `"ethoko-hardhat-session"` |
 | `awsRoleDurationSeconds` | Optional session duration in seconds when assuming a role. Accepted range: `900` to `43200`. Can be used only with static credentials and role set. | None                       |
 
@@ -147,11 +183,14 @@ The local filesystem provider stores artifacts in a local directory, making it a
 
 This storage is compatible with sharing through version control (commit the storage directory) or a shared drive.
 
-Default configuration example:
+Minimal configuration example:
 
-```ts
-storageConfiguration: {
-  type: "filesystem",
+```json
+{
+  "name": "my-project",
+  "storage": {
+    "type": "filesystem"
+  }
 }
 ```
 
@@ -164,5 +203,4 @@ Local filesystem configuration variables:
 | Name   | Description                                                        | Default value                                 |
 | ------ | ------------------------------------------------------------------ | --------------------------------------------- |
 | `type` | Storage provider type for local filesystem storage.                | Must be `"filesystem"`                             |
-| `path` | Directory where Ethoko stores artifact versions for filesystem storage. | `"ethoko-storage"` (within project directory) |
-
+| `path` | Directory where Ethoko stores artifact versions for filesystem storage. | `"ethoko-storage"` (relative to the directory containing `ethoko.config.json`, or the current working directory if no local config is present) |
