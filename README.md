@@ -91,6 +91,8 @@ Each artifact is uniquely identified by its **ID**, e.g. `b5e41181986a`, which i
 
 Finally, a **tag**, e.g. `2026-02-02` or `v1.2.3`, can be associated to a compilation artifact when pushed.
 
+Ethoko commands will use the syntax `PROJECT[:TAG|@ID]` to refer to a specific artifact of a project, e.g. `my-project` for the project, `my-project:2026-02-02` for a specific tag, or `my-project@b5e41181986a` for a specific ID.
+
 ## Commands
 
 Run `ethoko --help` for a full list of available commands and options. Use the `--help` flag with any command to get more details about its usage, e.g. `ethoko push --help`.
