@@ -362,6 +362,31 @@ Don't use Ethoko when
 - you don't care about transparency and reproducibility of your deployments or scripts,
 - you are perfectly fine with your process.
 
+### What is the difference between Ethoko and Etherscan or Sourcify?
+
+Etherscan and Sourcify are both great tools for verifying smart contracts after deployment. They allow you to upload your source code and metadata to make it publicly available and verifiable.
+
+While they enable a great transparency and trust in the deployed contracts, they are not designed to be used as a source of compilation artifacts for development, deployment or scripting purposes. They are more focused on the post-deployment phase.
+
+Ethoko is meant to be used as a source of truth for compilation artifacts during the development and operation processes. It allows you to store and share your compilation artifacts in a safe and transparent way, and to build scripts or automation on top of them.
+
+As such, Ethoko can be used in complement to Etherscan and Sourcify. You can push your compilation artifacts to Ethoko for your internal use, and then verify your contracts on Etherscan or Sourcify for public transparency.
+
+To be fully transparent, Ethoko is not about transparency to the public but rather an organization and safety tool for teams.
+
+### I work with Foundry, should I use Ethoko?
+
+You can! I would say you should. Although Foundry is amazing for development and testing, it may not be the best fit for everybody for deployment and operations.
+
+Ethoko can help you there by decoupling the compilation process from the deployment process:
+- As a smart contract developer, you will be able to fully benefit from Foundry's speed and ease of use for testing and compilation. Once done, push your artifacts with Ethoko.
+- As an operator, you can pull the compilation artifacts with Ethoko and choose the way to use them for your deployment or other scripts. You will not need to care about compilation as you will only work with previously pushed static artifacts.
+
+
+### Where does the name "Ethoko" come from?
+
+Ethoko comes from a contraction of the Japanese word *倉庫* ("Soko") which means "warehouse" and the boring *Eth* prefix to attach it to the Ethereum ecosystem.
+
 ## Contributing
 
 Thank you for your interest in contributing to Ethoko! Please see our [contributing guidelines](CONTRIBUTING.md) for more information.
