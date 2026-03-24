@@ -65,32 +65,14 @@ export async function listPulledArtifacts(
       );
     }
 
-    const artifactsPromises = tagsResult.value.map((metadata) =>
-      pulledArtifactStore
-        .retrieveArtifactId(project, metadata.tag)
-        .then((artifactId) => ({
-          metadata,
-          artifactId,
-        })),
-    );
-    const artifactsResults = await toAsyncResult(
-      Promise.all(artifactsPromises),
-      { debug: opts.debug },
-    );
-    if (!artifactsResults.success) {
-      throw new CliError(
-        `Error retrieving the content for project "${project}", please force pull the project to restore it or run with debug mode for more info`,
-      );
-    }
-
-    for (const { metadata, artifactId } of artifactsResults.value) {
+    for (const { lastModifiedAt, id, tag } of tagsResult.value) {
       items.push({
         project,
-        id: artifactId,
-        tag: metadata.tag,
-        lastModifiedAt: metadata.lastModifiedAt,
+        id,
+        tag,
+        lastModifiedAt,
       });
-      idsAlreadyVisited.add(artifactId);
+      idsAlreadyVisited.add(id);
     }
 
     const idsResult = await toAsyncResult(
