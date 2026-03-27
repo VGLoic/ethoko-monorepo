@@ -303,29 +303,11 @@ export class PulledArtifactStore {
   }
 
   /**
-   * Returns the total size in bytes of all files under a project directory.
-   * Returns 0 if the project directory does not exist.
-   */
-  public async getProjectSize(project: string): Promise<number> {
-    return this.getDirSize(this.projectPath(project));
-  }
-
-  /**
    * Returns the total size in bytes of all files under an artifact ID directory.
    * Returns 0 if the directory does not exist.
    */
   public async getIdSize(project: string, id: string): Promise<number> {
     return this.getDirSize(this.idPath(project, id));
-  }
-
-  /**
-   * Deletes all artifacts for a project.
-   */
-  public async deleteProject(project: string): Promise<void> {
-    await fs.rm(this.projectPath(project).resolvedPath, {
-      recursive: true,
-      force: true,
-    });
   }
 
   /**

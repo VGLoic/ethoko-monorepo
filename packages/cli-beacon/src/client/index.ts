@@ -14,3 +14,10 @@ export {
   type ExportContractArtifactResult,
 } from "./export-contract-artifact";
 export { restore, type RestoreResult } from "./restore";
+export {
+  pruneArtifactById,
+  pruneArtifactByTag,
+  pruneProjectArtifacts,
+  pruneOrphanedAndUntaggedArtifacts,
+  type PruneResult,
+} from "./prune";
