@@ -50,7 +50,11 @@ export function registerPruneCommand(
 
       if (!artifactKey) {
         logger.intro("Pruning orphaned and untagged artifacts");
-        await pruneOrphanedAndUntaggedArtifacts(store, config, {
+        const configuredProjects = new Set([
+          ...config.localProjectNames,
+          ...config.globalProjectNames,
+        ]);
+        await pruneOrphanedAndUntaggedArtifacts(store, configuredProjects, {
           logger,
           dryRun,
           debug,

@@ -1,4 +1,3 @@
-import { EthokoCliConfig } from "@/config";
 import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
@@ -12,7 +11,7 @@ export type PruneResult = {
 }[];
 export async function pruneOrphanedAndUntaggedArtifacts(
   store: PulledArtifactStore,
-  config: EthokoCliConfig,
+  configuredProjects: Set<string>,
   opts: {
     dryRun: boolean;
     debug: boolean;
@@ -31,7 +30,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   const orphanedProjects: string[] = [];
   const configuredStoredProjects: string[] = [];
   for (const p of storedProjectsResult.value) {
-    if (config.localProjectNames.has(p) || config.globalProjectNames.has(p)) {
+    if (configuredProjects.has(p)) {
       configuredStoredProjects.push(p);
     } else {
       orphanedProjects.push(p);
