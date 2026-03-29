@@ -263,6 +263,20 @@ If not set up in the configuration or need to be overridden, the path to the com
 ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
+### Prune
+
+Prune pulled artifacts that are no longer needed, either by ID, tag, project, or all orphaned and untagged artifacts.
+
+```bash
+# Prune a specific artifact by ID or tag
+ethoko prune my-project@b5e41181986a
+ethoko prune my-project:2026-02-02
+# Prune all artifacts of a project
+ethoko prune my-project
+# Prune all orphaned and untagged artifacts
+ethoko prune
+```
+
 ## Using exported artifacts in a deployment script
 
 Exported artifacts are plain JSON files and can be imported into any script. The example below uses the [hardhat-deploy](https://github.com/wighawag/hardhat-deploy) plugin — adapt it to your own deployment tooling.
