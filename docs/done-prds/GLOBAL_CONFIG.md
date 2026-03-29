@@ -7,7 +7,7 @@
 | Phase 1 | Foundation (global config discovery, `~` path expansion, config validation) | ✅ Complete (commit `10673b9`) |
 | Phase 2 | Core Global Features (global pulled artifacts path, global projects, merge logic) | ✅ Complete (commit `10673b9`) |
 | Phase 3 | User Experience (`ethoko init` rework, `ethoko config`) | ✅ Complete (commit `381ecf0`) |
-| Phase 4 | Cache Management (`ethoko prune`) | ⬜ Not Started |
+| Phase 4 | Cache Management (`ethoko prune`) | ✅ Complete (see notes) |
 | Phase 5 | Advanced Features (XDG support) | ⬜ Not Started |
 
 ---
@@ -891,13 +891,18 @@ ethoko init
 
 ### Phase 4: Cache Management
 
-**4.1 `ethoko prune` Command**
+**4.1 `ethoko prune` Command** ✅ Complete
 
-- Remove orphaned artifacts (not referenced by any config)
-- Prune by project, tag, or ID
-- `--dry-run` mode to preview removals
-- `--yes` flag for CI/automation (except for `--all`)
-- `--all` requires typed confirmation as a safety guard
+Implemented in `packages/cli-beacon/src/commands/prune.ts` and `src/client/prune.ts`. E2E tests in `test/e2e/prune.e2e.test.ts`.
+
+| Feature | Status | Notes |
+|---------|--------|-------|
+| Remove orphaned artifacts | ✅ | Also removes untagged artifacts from configured projects (broader than spec) |
+| Prune by project, tag, or ID | ✅ | Full `PROJECT`, `PROJECT:TAG`, `PROJECT@ID` syntax |
+| `--dry-run` mode | ✅ | |
+| `--silent` flag | ✅ | Bonus — suppresses output |
+| `--yes` flag (skip confirmations) | ➖ Omitted | No interactive confirmation prompts were implemented; flag unnecessary |
+| `--all` flag (nuclear option) | ➖ Omitted | Not implemented; can be added as a future enhancement |
 
 ### Phase 5: Advanced Features (Future)
 

@@ -54,9 +54,11 @@ export class PulledArtifactStore {
    * @returns The list of project names.
    */
   public async listProjects(): Promise<string[]> {
-    const entries = await fs.readdir(this.rootPath.resolvedPath, {
-      withFileTypes: true,
-    });
+    const entries = await fs
+      .readdir(this.rootPath.resolvedPath, {
+        withFileTypes: true,
+      })
+      .catch(() => []);
     return entries
       .filter((entry) => entry.isDirectory())
       .map((entry) => entry.name);
@@ -100,6 +102,7 @@ export class PulledArtifactStore {
   public async listTags(project: string): Promise<
     {
       tag: string;
+      id: string;
       lastModifiedAt: string;
     }[]
   > {
@@ -112,14 +115,22 @@ export class PulledArtifactStore {
         tags.push(entry.name.replace(".json", ""));
       }
     }
-    const statsPromises = tags.map((tag) =>
+    const statsAndIdsPromises = tags.map((tag) =>
       fs
         .stat(this.tagPath(project, tag).resolvedPath)
-        .then((stat) => ({ tag, stat })),
+        .then((stat) => ({ tag, stat }))
+        .then(({ tag, stat }) =>
+          this.retrieveArtifactId(project, tag).then((id) => ({
+            tag,
+            id,
+            stat,
+          })),
+        ),
     );
-    const allStats = await Promise.all(statsPromises);
-    return allStats.map(({ tag, stat }) => ({
+    const statAndIds = await Promise.all(statsAndIdsPromises);
+    return statAndIds.map(({ tag, id, stat }) => ({
       tag,
+      id,
       lastModifiedAt: stat.mtime.toISOString(),
     }));
   }
@@ -292,6 +303,31 @@ export class PulledArtifactStore {
   }
 
   /**
+   * Returns the total size in bytes of all files under an artifact ID directory.
+   * Returns 0 if the directory does not exist.
+   */
+  public async getIdSize(project: string, id: string): Promise<number> {
+    return this.getDirSize(this.idPath(project, id));
+  }
+
+  /**
+   * Deletes a specific artifact ID directory.
+   */
+  public async deleteId(project: string, id: string): Promise<void> {
+    await fs.rm(this.idPath(project, id).resolvedPath, {
+      recursive: true,
+      force: true,
+    });
+  }
+
+  /**
+   * Deletes a specific tag file.
+   */
+  public async deleteTag(project: string, tag: string): Promise<void> {
+    await fs.rm(this.tagPath(project, tag).resolvedPath, { force: true });
+  }
+
+  /**
    * Ensures that the root path for store exists by creating it if necessary.
    */
   public async ensureSetup(): Promise<void> {
@@ -381,6 +417,28 @@ export class PulledArtifactStore {
       } else if (entry.isFile() && entry.name.endsWith(".json")) {
         files.push(entryPath);
       }
+    }
+  }
+
+  private async getDirSize(dirPath: AbsolutePath): Promise<number> {
+    try {
+      const entries = await fs.readdir(dirPath.resolvedPath, {
+        recursive: true,
+        withFileTypes: true,
+      });
+      const sizes = await Promise.all(
+        entries
+          .filter((e) => e.isFile())
+          .map((e) =>
+            fs
+              .stat(path.join(e.parentPath, e.name))
+              .then((s) => s.size)
+              .catch(() => 0),
+          ),
+      );
+      return sizes.reduce((sum, s) => sum + s, 0);
+    } catch {
+      return 0;
     }
   }
 

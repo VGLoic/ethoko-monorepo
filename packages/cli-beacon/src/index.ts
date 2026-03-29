@@ -11,6 +11,7 @@ import { registerPushCommand } from "./commands/push.js";
 import { registerRestoreCommand } from "./commands/restore.js";
 import { registerTypingsCommand } from "./commands/typings.js";
 import { registerConfigCommand } from "./commands/config.js";
+import { registerPruneCommand } from "./commands/prune.js";
 import { registerUninstallCommand } from "./commands/uninstall.js";
 import { registerUpgradeCommand } from "./commands/upgrade.js";
 import { VERSION } from "./version.js";
@@ -33,6 +34,7 @@ const getConfig = async () =>
 
 registerInitCommand(program);
 registerConfigCommand(program, getConfig);
+registerPruneCommand(program, getConfig);
 registerPushCommand(program, getConfig);
 registerPullCommand(program, getConfig);
 registerDiffCommand(program, getConfig);
