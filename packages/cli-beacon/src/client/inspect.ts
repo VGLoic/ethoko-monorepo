@@ -2,6 +2,9 @@ import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-st
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
+import { pull } from "./pull";
+import { CommandLogger } from "@/ui";
+import { StorageProvider } from "@/storage-provider";
 
 export type InspectResult = {
   project: string;
@@ -42,8 +45,9 @@ export async function inspectArtifact(
     project: string;
     search: { type: "tag"; tag: string } | { type: "id"; id: string };
   },
+  storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
-  opts: { debug: boolean },
+  opts: { debug: boolean; logger: CommandLogger },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
     pulledArtifactStore.ensureProjectSetup(artifact.project),
@@ -55,23 +59,75 @@ export async function inspectArtifact(
     );
   }
 
-  let artifactId: string;
+  let pulledArtifactId: string | null = null;
   if (artifact.search.type === "id") {
-    artifactId = artifact.search.id;
-  } else {
-    const artifactIdResult = await toAsyncResult(
-      pulledArtifactStore.retrieveArtifactId(
-        artifact.project,
-        artifact.search.tag,
-      ),
+    const hasIdResult = await toAsyncResult(
+      pulledArtifactStore.hasId(artifact.project, artifact.search.id),
       { debug: opts.debug },
     );
-    if (!artifactIdResult.success) {
+    if (!hasIdResult.success) {
       throw new CliError(
-        `The artifact ${artifact.project}:${artifact.search.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
+        "Error checking for artifact ID in pulled artifact store, is the script not allowed to read from the filesystem? Run with debug mode for more info",
       );
     }
-    artifactId = artifactIdResult.value;
+    if (hasIdResult.value) {
+      pulledArtifactId = artifact.search.id;
+    }
+  } else {
+    const hasTagResult = await toAsyncResult(
+      pulledArtifactStore.hasTag(artifact.project, artifact.search.tag),
+      { debug: opts.debug },
+    );
+    if (!hasTagResult.success) {
+      throw new CliError(
+        "Error checking for artifact tag in pulled artifact store, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+      );
+    }
+    if (hasTagResult.value) {
+      const artifactIdResult = await toAsyncResult(
+        pulledArtifactStore.retrieveArtifactId(
+          artifact.project,
+          artifact.search.tag,
+        ),
+        { debug: opts.debug },
+      );
+      if (!artifactIdResult.success) {
+        throw new CliError(
+          `The artifact ${artifact.project}:${artifact.search.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
+        );
+      }
+      pulledArtifactId = artifactIdResult.value;
+    }
+  }
+
+  let artifactId: string;
+  if (pulledArtifactId) {
+    artifactId = pulledArtifactId;
+  } else {
+    await pull(
+      artifact.project,
+      artifact.search,
+      storageProvider,
+      pulledArtifactStore,
+      { force: false, debug: opts.debug, logger: opts.logger },
+    );
+    if (artifact.search.type === "id") {
+      artifactId = artifact.search.id;
+    } else {
+      const artifactIdResult = await toAsyncResult(
+        pulledArtifactStore.retrieveArtifactId(
+          artifact.project,
+          artifact.search.tag,
+        ),
+        { debug: opts.debug },
+      );
+      if (!artifactIdResult.success) {
+        throw new CliError(
+          `Failed to retrieve artifact ID for ${artifact.project}:${artifact.search.tag} after pulling. Please ensure the pull was successful and try again. Run with debug mode for more info`,
+        );
+      }
+      artifactId = artifactIdResult.value;
+    }
   }
 
   const artifactsResult = await toAsyncResult(

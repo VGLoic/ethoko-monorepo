@@ -16,7 +16,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     storageProviderTest.scoped({ storageProviderFactory });
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
-      "%s artifacts - inspect artifact by tag",
+      "%s artifacts - inspect pulled artifact by tag",
       async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
         const tag = TEST_CONSTANTS.TAGS.V1;
@@ -49,8 +49,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const inspectResult = await inspectArtifact(
           { project, search: { type: "tag", tag } },
+          storageProvider,
           pulledArtifactStore,
-          { debug: false },
+          { debug: false, logger },
         );
 
         expect(inspectResult.project).toBe(project);
@@ -70,7 +71,50 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest.for(ARTIFACTS_STRATEGIES)(
-      "%s artifacts - inspect artifact by ID",
+      "%s artifacts - inspect non pulled artifact by tag",
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
+        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+        const tag = TEST_CONSTANTS.TAGS.V1;
+
+        await pulledArtifactStore.ensureProjectSetup(project);
+
+        const artifactId = await push(
+          artifactFixture.folderPath,
+          project,
+          tag,
+          storageProvider,
+          {
+            force: false,
+            debug: true,
+            logger,
+          },
+        );
+
+        const inspectResult = await inspectArtifact(
+          { project, search: { type: "tag", tag } },
+          storageProvider,
+          pulledArtifactStore,
+          { debug: false, logger },
+        );
+
+        expect(inspectResult.project).toBe(project);
+        expect(inspectResult.tag).toBe(tag);
+        expect(inspectResult.id).toBe(artifactId);
+        expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
+        expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
+        const fullyQualifiedPathsResult = inspectResult.contractsBySource
+          .map((c) =>
+            c.contracts.map((contract) => `${c.sourcePath}:${contract}`),
+          )
+          .flat();
+        expect(new Set(fullyQualifiedPathsResult)).toEqual(
+          new Set(artifactFixture.fullyQualifiedContractPaths),
+        );
+      },
+    );
+
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - inspect pulled artifact by ID",
       async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
@@ -102,8 +146,51 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const inspectResult = await inspectArtifact(
           { project, search: { type: "id", id: artifactId } },
+          storageProvider,
           pulledArtifactStore,
-          { debug: false },
+          { debug: false, logger },
+        );
+
+        expect(inspectResult.project).toBe(project);
+        expect(inspectResult.tag).toBe(null);
+        expect(inspectResult.id).toBe(artifactId);
+        expect(inspectResult.contractsBySource.length).toBeGreaterThan(0);
+        expect(inspectResult.sourceFiles.length).toBeGreaterThan(0);
+        const fullyQualifiedPathsResult = inspectResult.contractsBySource
+          .map((c) =>
+            c.contracts.map((contract) => `${c.sourcePath}:${contract}`),
+          )
+          .flat();
+        expect(new Set(fullyQualifiedPathsResult)).toEqual(
+          new Set(artifactFixture.fullyQualifiedContractPaths),
+        );
+      },
+    );
+
+    storageProviderTest.for(ARTIFACTS_STRATEGIES)(
+      "%s artifacts - inspect non pulled artifact by ID",
+      async ([, artifactFixture], { storageProvider, pulledArtifactStore }) => {
+        const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
+
+        await pulledArtifactStore.ensureProjectSetup(project);
+
+        const artifactId = await push(
+          artifactFixture.folderPath,
+          project,
+          undefined,
+          storageProvider,
+          {
+            force: false,
+            debug: false,
+            logger,
+          },
+        );
+
+        const inspectResult = await inspectArtifact(
+          { project, search: { type: "id", id: artifactId } },
+          storageProvider,
+          pulledArtifactStore,
+          { debug: false, logger },
         );
 
         expect(inspectResult.project).toBe(project);
@@ -124,7 +211,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
     storageProviderTest(
       "inspect non-existent artifact returns error",
-      async ({ pulledArtifactStore }) => {
+      async ({ pulledArtifactStore, storageProvider }) => {
         const project = createTestProjectName(TEST_CONSTANTS.PROJECTS.DEFAULT);
 
         await pulledArtifactStore.ensureProjectSetup(project);
@@ -132,9 +219,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await expect(
           inspectArtifact(
             { project, search: { type: "tag", tag: "non-existent-tag" } },
+            storageProvider,
             pulledArtifactStore,
             {
               debug: false,
+              logger,
             },
           ),
         ).rejects.toThrow();
