@@ -1,32 +1,34 @@
 import { describe, expect, test } from "vitest";
-import { ArtifactKeySchema } from "./parse-artifact-key";
+import { ProjectOrArtifactKeySchema } from "./parse-project-or-artifact-key";
 
-describe("ArtifactKeySchema", () => {
+describe("ProjectOrArtifactKeySchema", () => {
   test("should parse valid artifact key with tag", () => {
-    expect(ArtifactKeySchema.safeParse("my-project:latest")).toEqual({
+    expect(ProjectOrArtifactKeySchema.safeParse("my-project:latest")).toEqual({
       success: true,
       data: {
         project: "my-project",
-        artifact: { type: "tag", tag: "latest" },
+        type: "tag",
+        tag: "latest",
       },
     });
   });
   test("should parse valid artifact key with id", () => {
-    expect(ArtifactKeySchema.safeParse("my-project@12345")).toEqual({
+    expect(ProjectOrArtifactKeySchema.safeParse("my-project@12345")).toEqual({
       success: true,
       data: {
         project: "my-project",
-        artifact: { type: "id", id: "12345" },
+        type: "id",
+        id: "12345",
       },
     });
   });
 
   test("should parse valid artifact key with project only", () => {
-    expect(ArtifactKeySchema.safeParse("my-project")).toEqual({
+    expect(ProjectOrArtifactKeySchema.safeParse("my-project")).toEqual({
       success: true,
       data: {
         project: "my-project",
-        artifact: null,
+        type: "project",
       },
     });
   });
@@ -48,7 +50,7 @@ describe("ArtifactKeySchema", () => {
 
   INVALID_KEYS.forEach((key) => {
     test(`should fail to parse invalid artifact key: ${key}`, () => {
-      expect(ArtifactKeySchema.safeParse(key).success).toBe(false);
+      expect(ProjectOrArtifactKeySchema.safeParse(key).success).toBe(false);
     });
   });
 });

@@ -6,7 +6,7 @@ import { CliError, push } from "@/client/index.js";
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
-import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -41,14 +41,20 @@ export function registerPushCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ArtifactKeySchema.transform(
-        (artifactKey) => {
-          if (artifactKey.artifact?.type === "id") {
+      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
+        (projectOrArtifactKey) => {
+          if (projectOrArtifactKey.type === "id") {
             return z.NEVER;
           }
+          if (projectOrArtifactKey.type === "project") {
+            return {
+              project: projectOrArtifactKey.project,
+              tag: undefined,
+            };
+          }
           return {
-            project: artifactKey.project,
-            tag: artifactKey.artifact?.tag,
+            project: projectOrArtifactKey.project,
+            tag: projectOrArtifactKey.tag,
           };
         },
       ).safeParse(projectArg);

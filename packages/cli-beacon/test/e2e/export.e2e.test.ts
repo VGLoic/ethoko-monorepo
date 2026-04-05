@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { describe, expect } from "vitest";
-import { pull, push, exportContractArtifact } from "@/client/index";
+import { pullArtifact, push, exportContractArtifact } from "@/client/index";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -45,9 +45,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             );
 
             if (!artifactAlreadyPulled) {
-              await pull(
-                project,
-                { type: "tag", tag },
+              await pullArtifact(
+                { project, type: "tag", tag },
                 storageProvider,
                 pulledArtifactStore,
                 {
@@ -61,7 +60,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             const exportFixture = artifactFixture.exportExpectedResult;
 
             const exportResult = await exportContractArtifact(
-              { project, search: { type: "tag", tag } },
+              { project, type: "tag", tag },
               exportFixture.name,
               storageProvider,
               pulledArtifactStore,
@@ -122,9 +121,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
               },
             );
 
-            await pull(
-              project,
-              { type: "id", id: artifactId },
+            await pullArtifact(
+              { project, type: "id", id: artifactId },
               storageProvider,
               pulledArtifactStore,
               {
@@ -137,7 +135,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             const exportFixture = artifactFixture.exportExpectedResult;
 
             const exportResult = await exportContractArtifact(
-              { project, search: { type: "id", id: artifactId } },
+              { project, type: "id", id: artifactId },
               exportFixture.name,
               storageProvider,
               pulledArtifactStore,
@@ -185,7 +183,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         await expect(
           exportContractArtifact(
-            { project, search: { type: "tag", tag: "non-existent-tag" } },
+            { project, type: "tag", tag: "non-existent-tag" },
             "Counter",
             storageProvider,
             pulledArtifactStore,
@@ -220,9 +218,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           },
         );
 
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           {
@@ -234,7 +231,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         await expect(
           exportContractArtifact(
-            { project, search: { type: "id", id: artifactId } },
+            { project, type: "id", id: artifactId },
             "NonExistentContract",
             storageProvider,
             pulledArtifactStore,

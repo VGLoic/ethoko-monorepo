@@ -2,14 +2,14 @@ import { Command } from "commander";
 import { CommandLogger } from "@/ui";
 import { toAsyncResult } from "@/utils/result";
 import { PulledArtifactStore } from "@/pulled-artifact-store";
-import { ArtifactKeySchema } from "./utils/parse-artifact-key";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
 import type { EthokoCliConfig } from "../config";
 import {
   CliError,
-  pruneArtifactById,
-  pruneArtifactByTag,
+  pruneArtifact,
   pruneOrphanedAndUntaggedArtifacts,
   pruneProjectArtifacts,
+  PruneResult,
 } from "@/client";
 
 type GetConfig = () => Promise<EthokoCliConfig>;
@@ -77,83 +77,45 @@ export function registerPruneCommand(
         return;
       }
 
-      const parsedKeyResult = ArtifactKeySchema.safeParse(artifactKey);
+      const parsedKeyResult = ProjectOrArtifactKeySchema.safeParse(artifactKey);
       if (!parsedKeyResult.success) {
         logger.error(
-          `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG|@ID]`,
+          `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT OR PROJECT[:TAG|@ID]`,
         );
         process.exitCode = 1;
         return;
       }
 
-      if (!parsedKeyResult.data.artifact) {
+      let pruneResultPromise: Promise<PruneResult>;
+      if (parsedKeyResult.data.type === "project") {
         logger.intro(
-          `Pruning all artifacts for project "${parsedKeyResult.data.project}"`,
+          `Pruning artifacts for project "${parsedKeyResult.data.project}"`,
         );
-        await pruneProjectArtifacts(store, parsedKeyResult.data.project, {
-          logger,
-          dryRun,
-          debug,
-        })
-          .then((prunedArtifacts) => {
-            displayPrunedArtifacts(prunedArtifacts, logger, dryRun);
-            logger.outro();
-          })
-          .catch((error) => {
-            if (error instanceof CliError) {
-              logger.error(error.message);
-            } else {
-              logger.error(
-                "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-              );
-              console.error(error);
-            }
-            process.exitCode = 1;
-          });
-        return;
-      }
-
-      if (parsedKeyResult.data.artifact.type === "tag") {
-        logger.intro(
-          `Pruning "${parsedKeyResult.data.project}:${parsedKeyResult.data.artifact.tag}"`,
-        );
-        await pruneArtifactByTag(
-          store,
+        pruneResultPromise = pruneProjectArtifacts(
           parsedKeyResult.data.project,
-          parsedKeyResult.data.artifact.tag,
+          store,
           {
             logger,
             dryRun,
             debug,
           },
-        )
-          .then((prunedArtifacts) => {
-            displayPrunedArtifacts(prunedArtifacts, logger, dryRun);
-            logger.outro();
-          })
-          .catch((error) => {
-            if (error instanceof CliError) {
-              logger.error(error.message);
-            } else {
-              logger.error(
-                "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-              );
-              console.error(error);
-            }
-            process.exitCode = 1;
-          });
-        return;
+        );
+      } else {
+        logger.intro(
+          `Pruning artifact "${parsedKeyResult.data.project}${
+            parsedKeyResult.data.type === "tag"
+              ? `:${parsedKeyResult.data.tag}`
+              : `@${parsedKeyResult.data.id}`
+          }"`,
+        );
+        pruneResultPromise = pruneArtifact(parsedKeyResult.data, store, {
+          logger,
+          dryRun,
+          debug,
+        });
       }
 
-      logger.intro(
-        `Pruning "${parsedKeyResult.data.project}@${parsedKeyResult.data.artifact.id}"`,
-      );
-      await pruneArtifactById(
-        store,
-        parsedKeyResult.data.project,
-        parsedKeyResult.data.artifact.id,
-        { logger, dryRun, debug },
-      )
+      await pruneResultPromise
         .then((prunedArtifacts) => {
           displayPrunedArtifacts(prunedArtifacts, logger, dryRun);
           logger.outro();

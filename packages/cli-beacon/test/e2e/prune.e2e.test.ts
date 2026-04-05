@@ -1,11 +1,11 @@
 import { describe, expect } from "vitest";
 import {
   CliError,
-  pruneArtifactById,
-  pruneArtifactByTag,
+  pruneArtifact,
   pruneOrphanedAndUntaggedArtifacts,
   pruneProjectArtifacts,
-  pull,
+  pullArtifact,
+  pullProject,
   push,
 } from "@/client/index";
 import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
@@ -40,9 +40,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "tag", tag },
+        await pullArtifact(
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
@@ -80,9 +79,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "tag", tag },
+        await pullArtifact(
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
@@ -112,9 +110,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
@@ -146,9 +143,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
@@ -204,15 +200,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(project, null, storageProvider, pulledArtifactStore, {
+        await pullProject(project, storageProvider, pulledArtifactStore, {
           force: false,
           debug: false,
           logger,
         });
 
         const result = await pruneProjectArtifacts(
-          pulledArtifactStore,
           project,
+          pulledArtifactStore,
           {
             dryRun: false,
             debug: false,
@@ -245,17 +241,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
         );
 
         const result = await pruneProjectArtifacts(
-          pulledArtifactStore,
           project,
+          pulledArtifactStore,
           {
             dryRun: true,
             debug: false,
@@ -272,7 +267,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     // ── pruneArtifactById ────────────────────────────────────────────────────
 
     storageProviderTest(
-      "pruneArtifactById - deletes artifact",
+      "pruneArtifact - by ID - deletes artifact",
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id");
         await pulledArtifactStore.ensureProjectSetup(project);
@@ -283,18 +278,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifactById(
+        const result = await pruneArtifact(
+          { project, type: "id", id: artifactId },
           pulledArtifactStore,
-          project,
-          artifactId,
           { dryRun: false, debug: false, logger },
         );
 
@@ -307,7 +300,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifactById - dry run does not delete",
+      "pruneArtifact - by ID - dry run does not delete",
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
@@ -318,18 +311,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "id", id: artifactId },
+        await pullArtifact(
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifactById(
+        const result = await pruneArtifact(
+          { project, type: "id", id: artifactId },
           pulledArtifactStore,
-          project,
-          artifactId,
           { dryRun: true, debug: false, logger },
         );
 
@@ -340,17 +331,21 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifactById - throws CliError when ID not found",
+      "pruneArtifact - by ID - throws CliError when ID not found",
       async ({ pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id-missing");
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifactById(pulledArtifactStore, project, "nonexistentid", {
-            dryRun: false,
-            debug: false,
-            logger,
-          }),
+          pruneArtifact(
+            { project, type: "id", id: "nonexistentid" },
+            pulledArtifactStore,
+            {
+              dryRun: false,
+              debug: false,
+              logger,
+            },
+          ),
         ).rejects.toThrow(CliError);
       },
     );
@@ -358,7 +353,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     // ── pruneArtifactByTag ───────────────────────────────────────────────────
 
     storageProviderTest(
-      "pruneArtifactByTag - deletes artifact",
+      "pruneArtifact - by tag - deletes artifact",
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-tag");
         await pulledArtifactStore.ensureProjectSetup(project);
@@ -370,18 +365,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "tag", tag },
+        await pullArtifact(
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifactByTag(
+        const result = await pruneArtifact(
+          { project, type: "tag", tag },
           pulledArtifactStore,
-          project,
-          tag,
           { dryRun: false, debug: false, logger },
         );
 
@@ -394,7 +387,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifactByTag - dry run does not delete",
+      "pruneArtifact - by tag - dry run does not delete",
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-tag-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
@@ -406,18 +399,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           storageProvider,
           { force: false, debug: false, logger },
         );
-        await pull(
-          project,
-          { type: "tag", tag },
+        await pullArtifact(
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifactByTag(
+        const result = await pruneArtifact(
+          { project, type: "tag", tag },
           pulledArtifactStore,
-          project,
-          tag,
           { dryRun: true, debug: false, logger },
         );
 
@@ -428,17 +419,21 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifactByTag - throws CliError when tag not found",
+      "pruneArtifact - by tag - throws CliError when tag not found",
       async ({ pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-tag-missing");
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifactByTag(pulledArtifactStore, project, "nonexistent-tag", {
-            dryRun: false,
-            debug: false,
-            logger,
-          }),
+          pruneArtifact(
+            { project, type: "tag", tag: "nonexistent-tag" },
+            pulledArtifactStore,
+            {
+              dryRun: false,
+              debug: false,
+              logger,
+            },
+          ),
         ).rejects.toThrow(CliError);
       },
     );

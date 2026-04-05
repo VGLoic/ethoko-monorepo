@@ -2,7 +2,7 @@ export { CliError } from "./error";
 export { generateDiffWithTargetRelease, type Difference } from "./diff";
 export { generateArtifactsSummariesAndTypings } from "./generate-typings";
 export { inspectArtifact, type InspectResult } from "./inspect";
-export { pull, type PullResult } from "./pull";
+export { pullProject, pullArtifact, type PullResult } from "./pull";
 export { push } from "./push";
 export {
   listPulledArtifacts,
@@ -15,8 +15,7 @@ export {
 } from "./export-contract-artifact";
 export { restore, type RestoreResult } from "./restore";
 export {
-  pruneArtifactById,
-  pruneArtifactByTag,
+  pruneArtifact,
   pruneProjectArtifacts,
   pruneOrphanedAndUntaggedArtifacts,
   type PruneResult,

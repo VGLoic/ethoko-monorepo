@@ -6,6 +6,7 @@ import { CliError } from "./error";
 import { CommandLogger } from "@/ui";
 import { AbsolutePath, RelativePath } from "@/utils/path";
 import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 export type RestoreResult = {
   project: string;
@@ -16,10 +17,7 @@ export type RestoreResult = {
 };
 
 export async function restore(
-  artifact: {
-    project: string;
-    search: { type: "tag"; tag: string } | { type: "id"; id: string };
-  },
+  artifactKey: ArtifactKey,
   outputPath: AbsolutePath,
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
@@ -27,7 +25,7 @@ export async function restore(
 ): Promise<RestoreResult> {
   const spinner1 = opts.logger.createSpinner("Identifying artifact...");
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -38,8 +36,7 @@ export async function restore(
   }
 
   const artifactId = await retrieveOrPullArtifact(
-    artifact.project,
-    artifact.search,
+    artifactKey,
     storageProvider,
     pulledArtifactStore,
     { debug: opts.debug, logger: opts.logger },
@@ -117,7 +114,7 @@ export async function restore(
 
   const spinner3 = opts.logger.createSpinner("Listing original content...");
   const originalContentResult = await toAsyncResult(
-    storageProvider.listOriginalContent(artifact.project, artifactId),
+    storageProvider.listOriginalContent(artifactKey.project, artifactId),
     { debug: opts.debug },
   );
   if (!originalContentResult.success) {
@@ -142,7 +139,7 @@ export async function restore(
     originalContentPaths.map(async (relativePath) => {
       const downloadResult = await toAsyncResult(
         storageProvider.downloadOriginalContent(
-          artifact.project,
+          artifactKey.project,
           artifactId,
           relativePath,
         ),
@@ -184,8 +181,8 @@ export async function restore(
   );
 
   return {
-    project: artifact.project,
-    tag: artifact.search.type === "tag" ? artifact.search.tag : null,
+    project: artifactKey.project,
+    tag: artifactKey.type === "tag" ? artifactKey.tag : null,
     id: artifactId,
     filesRestored: downloadResults,
     outputPath,
