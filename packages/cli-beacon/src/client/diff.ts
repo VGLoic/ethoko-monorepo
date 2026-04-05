@@ -15,6 +15,7 @@ import {
 import { AbsolutePath } from "@/utils/path";
 import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
 import { StorageProvider } from "@/storage-provider";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 function buildInfoPathToSuccessText(paths: OriginalBuildInfoPaths): string {
   if (paths.format === "hardhat-v3") {
@@ -144,10 +145,7 @@ export type Difference = {
  */
 export async function generateDiffWithTargetRelease(
   artifactPath: AbsolutePath,
-  artifact: {
-    project: string;
-    search: { type: "tag"; tag: string } | { type: "id"; id: string };
-  },
+  artifactKey: ArtifactKey,
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; logger: CommandLogger; isCI?: boolean },
@@ -158,7 +156,7 @@ export async function generateDiffWithTargetRelease(
     "Checking artifact existence locally...",
   );
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -169,8 +167,7 @@ export async function generateDiffWithTargetRelease(
   }
 
   const artifactId = await retrieveOrPullArtifact(
-    artifact.project,
-    artifact.search,
+    artifactKey,
     storageProvider,
     pulledArtifactStore,
     { debug: opts.debug, logger: opts.logger },
@@ -264,7 +261,7 @@ export async function generateDiffWithTargetRelease(
 
   const spinner4 = opts.logger.createSpinner("Reading target artifact...");
   const contractListResult = await toAsyncResult(
-    pulledArtifactStore.listContractArtifacts(artifact.project, artifactId),
+    pulledArtifactStore.listContractArtifacts(artifactKey.project, artifactId),
     { debug: opts.debug },
   );
   if (!contractListResult.success) {
@@ -284,7 +281,7 @@ export async function generateDiffWithTargetRelease(
     Promise.all(
       commonContracts.map((contract) =>
         pulledArtifactStore.retrieveContractOutputArtifact(
-          artifact.project,
+          artifactKey.project,
           artifactId,
           contract.sourceName,
           contract.contractName,

@@ -63,7 +63,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           const outputPath = tempOutputDir.join("absolute-path-test");
           const result = await restore(
-            { project, search: { type: "tag", tag } },
+            { project, type: "tag", tag },
             outputPath,
             storageProvider,
             pulledArtifactStore,
@@ -111,7 +111,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           await expect(
             restore(
-              { project, search: { type: "tag", tag } },
+              { project, type: "tag", tag },
               outputPath,
               storageProvider,
               pulledArtifactStore,
@@ -153,7 +153,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
 
           const result = await restore(
-            { project, search: { type: "tag", tag } },
+            { project, type: "tag", tag },
             outputPath,
             storageProvider,
             pulledArtifactStore,
@@ -176,7 +176,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           await expect(
             restore(
-              { project, search: { type: "tag", tag: "non-existing-tag" } },
+              { project, type: "tag", tag: "non-existing-tag" },
               outputPath,
               storageProvider,
               pulledArtifactStore,
@@ -195,7 +195,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             restore(
               {
                 project: "non-existent-project",
-                search: { type: "tag", tag: TEST_CONSTANTS.TAGS.V1 },
+                type: "tag",
+                tag: TEST_CONSTANTS.TAGS.V1,
               },
               outputPath,
               storageProvider,
@@ -237,8 +238,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             if (!artifactAlreadyPulled) {
               await pull(
-                project,
-                { type: "tag", tag },
+                { project, type: "tag", tag },
                 storageProvider,
                 pulledArtifactStore,
                 {
@@ -251,7 +251,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             const outputPath = tempOutputDir.join(`${tag}-tag-test`);
             const result = await restore(
-              { project, search: { type: "tag", tag } },
+              { project, type: "tag", tag },
               outputPath,
               storageProvider,
               pulledArtifactStore,
@@ -306,8 +306,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             if (!artifactAlreadyPulled) {
               await pull(
-                project,
-                { type: "id", id: artifactId },
+                { project, type: "id", id: artifactId },
                 storageProvider,
                 pulledArtifactStore,
                 {
@@ -320,7 +319,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             const outputPath = tempOutputDir.join(`${artifactId}-id-test`);
             const result = await restore(
-              { project, search: { type: "id", id: artifactId } },
+              { project, type: "id", id: artifactId },
               outputPath,
               storageProvider,
               pulledArtifactStore,

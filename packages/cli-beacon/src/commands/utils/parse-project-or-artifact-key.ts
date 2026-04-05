@@ -1,15 +1,15 @@
 import z from "zod";
 
-export const ArtifactKeySchema = z
+export const ProjectOrArtifactKeySchema = z
   .string(
-    "The artifact argument must be a string in the format PROJECT[:TAG|@ID]",
+    "The artifact argument must be a string in the format PROJECT or PROJECT[:TAG|@ID]",
   )
   .min(
     1,
-    "The artifact argument cannot be empty. Provide a valid artifact key in the format PROJECT[:TAG|@ID]",
+    "The artifact argument cannot be empty. Provide a valid artifact key in the format PROJECT or PROJECT[:TAG|@ID]",
   )
   .transform((str, ctx) => {
-    const result = parseArtifactKey(str);
+    const result = parseProjectOrArtifactKey(str);
     if (!result.success) {
       ctx.addIssue({
         code: "custom",
@@ -20,16 +20,26 @@ export const ArtifactKeySchema = z
     return result.key;
   });
 
-function parseArtifactKey(key: string):
+type ProjectOrArtifactKey =
+  | {
+      project: string;
+      type: "project";
+    }
+  | {
+      project: string;
+      type: "tag";
+      tag: string;
+    }
+  | {
+      project: string;
+      type: "id";
+      id: string;
+    };
+
+function parseProjectOrArtifactKey(key: string):
   | {
       success: true;
-      key: {
-        project: string;
-        artifact:
-          | { type: "id"; id: string }
-          | { type: "tag"; tag: string }
-          | null;
-      };
+      key: ProjectOrArtifactKey;
     }
   | { success: false; error: string } {
   const hasTagDelimiter = key.includes(":");
@@ -73,7 +83,7 @@ function parseArtifactKey(key: string):
     }
     return {
       success: true,
-      key: { project, artifact: { type: "tag", tag } },
+      key: { project, type: "tag", tag },
     };
   }
 
@@ -101,7 +111,7 @@ function parseArtifactKey(key: string):
     }
     return {
       success: true,
-      key: { project, artifact: { type: "id", id } },
+      key: { project, type: "id", id },
     };
   }
 
@@ -114,7 +124,7 @@ function parseArtifactKey(key: string):
   }
   return {
     success: true,
-    key: { project, artifact: null },
+    key: { project, type: "project" },
   };
 }
 

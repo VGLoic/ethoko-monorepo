@@ -15,8 +15,7 @@ export {
 } from "./export-contract-artifact";
 export { restore, type RestoreResult } from "./restore";
 export {
-  pruneArtifactById,
-  pruneArtifactByTag,
+  pruneArtifact,
   pruneProjectArtifacts,
   pruneOrphanedAndUntaggedArtifacts,
   type PruneResult,

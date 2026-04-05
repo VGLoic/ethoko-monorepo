@@ -46,8 +46,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(hasArtifact).toBe(true);
 
         const pullResult = await pull(
-          project,
-          { type: "id", id: artifactId },
+          { project, type: "id", id: artifactId },
           storageProvider,
           pulledArtifactStore,
           {
@@ -129,8 +128,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(hasId).toBe(true);
 
         const pullResult = await pull(
-          project,
-          { type: "tag", tag },
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           {
@@ -185,8 +183,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         });
 
         const pullResult = await pull(
-          project,
-          null,
+          { project, type: "project" },
           storageProvider,
           pulledArtifactStore,
           { force: false, debug: false, logger },
@@ -277,8 +274,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           logger,
         });
         await pull(
-          project,
-          { type: "tag", tag },
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           {
@@ -289,8 +285,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         const result1 = await pull(
-          project,
-          { type: "tag", tag },
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           {
@@ -302,8 +297,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(result1.pulledTags).toHaveLength(0);
 
         const result2 = await pull(
-          project,
-          { type: "tag", tag },
+          { project, type: "tag", tag },
           storageProvider,
           pulledArtifactStore,
           {
@@ -325,8 +319,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         await expect(
           pull(
-            project,
-            { tag: "non-existent-tag", type: "tag" },
+            { project, type: "tag", tag: "non-existent-tag" },
             storageProvider,
             pulledArtifactStore,
             {

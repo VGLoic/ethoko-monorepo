@@ -7,7 +7,7 @@ import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-sto
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
-import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { createStorageProvider } from "./utils/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -41,15 +41,12 @@ export function registerInspectCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ArtifactKeySchema.transform(
-        (artifactKey) => {
-          if (!artifactKey.artifact) {
+      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
+        (projectOrArtifactKey) => {
+          if (projectOrArtifactKey.type === "project") {
             return z.NEVER;
           }
-          return {
-            project: artifactKey.project,
-            search: artifactKey.artifact,
-          };
+          return projectOrArtifactKey;
         },
       ).safeParse(projectArg);
       if (!artifactKeyParsingResult.success) {
@@ -88,7 +85,7 @@ export function registerInspectCommand(
 
       if (!optsParsingResult.data.json) {
         logger.intro(
-          `Inspecting artifact "${projectConfig.name}:${artifactKeyParsingResult.data.search.type === "tag" ? artifactKeyParsingResult.data.search.tag : artifactKeyParsingResult.data.search.id}"`,
+          `Inspecting artifact "${projectConfig.name}${artifactKeyParsingResult.data.type === "tag" ? `:${artifactKeyParsingResult.data.tag}` : `@${artifactKeyParsingResult.data.id}`}"`,
         );
       }
 
@@ -102,10 +99,7 @@ export function registerInspectCommand(
       );
 
       await inspectArtifact(
-        {
-          project: projectConfig.name,
-          search: artifactKeyParsingResult.data.search,
-        },
+        artifactKeyParsingResult.data,
         storageProvider,
         pulledArtifactStore,
         {

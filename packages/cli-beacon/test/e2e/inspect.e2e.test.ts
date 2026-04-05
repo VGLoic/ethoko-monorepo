@@ -45,8 +45,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             if (!artifactAlreadyPulled) {
               await pull(
-                project,
-                { type: "tag", tag },
+                { project, type: "tag", tag },
                 storageProvider,
                 pulledArtifactStore,
                 {
@@ -58,7 +57,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             }
 
             const inspectResult = await inspectArtifact(
-              { project, search: { type: "tag", tag } },
+              { project, type: "tag", tag },
               storageProvider,
               pulledArtifactStore,
               { debug: false, logger },
@@ -106,8 +105,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             if (!artifactAlreadyPulled) {
               await pull(
-                project,
-                { type: "id", id: artifactId },
+                { project, type: "id", id: artifactId },
                 storageProvider,
                 pulledArtifactStore,
                 {
@@ -119,7 +117,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             }
 
             const inspectResult = await inspectArtifact(
-              { project, search: { type: "id", id: artifactId } },
+              { project, type: "id", id: artifactId },
               storageProvider,
               pulledArtifactStore,
               { debug: false, logger },
@@ -152,7 +150,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         await expect(
           inspectArtifact(
-            { project, search: { type: "tag", tag: "non-existent-tag" } },
+            { project, type: "tag", tag: "non-existent-tag" },
             storageProvider,
             pulledArtifactStore,
             {

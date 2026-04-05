@@ -2,6 +2,7 @@ import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-sto
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import { CommandLogger } from "@/ui";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 export type PruneResult = {
   project: string;
@@ -172,8 +173,8 @@ export async function pruneOrphanedAndUntaggedArtifacts(
 }
 
 export async function pruneProjectArtifacts(
-  store: PulledArtifactStore,
   project: string,
+  store: PulledArtifactStore,
   opts: {
     dryRun: boolean;
     debug: boolean;
@@ -267,10 +268,31 @@ export async function pruneProjectArtifacts(
   return artifactsWithSize;
 }
 
-export async function pruneArtifactById(
+export async function pruneArtifact(
+  artifactKey: ArtifactKey,
   store: PulledArtifactStore,
+  opts: {
+    dryRun: boolean;
+    debug: boolean;
+    logger: CommandLogger;
+  },
+): Promise<PruneResult> {
+  if (artifactKey.type === "id") {
+    return pruneArtifactById(artifactKey.project, artifactKey.id, store, opts);
+  } else {
+    return pruneArtifactByTag(
+      artifactKey.project,
+      artifactKey.tag,
+      store,
+      opts,
+    );
+  }
+}
+
+async function pruneArtifactById(
   project: string,
   id: string,
+  store: PulledArtifactStore,
   opts: {
     dryRun: boolean;
     debug: boolean;
@@ -321,10 +343,10 @@ export async function pruneArtifactById(
   return [artifactWithSize];
 }
 
-export async function pruneArtifactByTag(
-  store: PulledArtifactStore,
+async function pruneArtifactByTag(
   project: string,
   tag: string,
+  store: PulledArtifactStore,
   opts: {
     dryRun: boolean;
     debug: boolean;
@@ -372,9 +394,12 @@ export async function pruneArtifactByTag(
     return [artifactWithSize];
   }
 
-  const deleteResult = await toAsyncResult(store.deleteId(project, id), {
-    debug: opts.debug,
-  });
+  const deleteResult = await toAsyncResult(
+    Promise.all([store.deleteId(project, id), store.deleteTag(project, tag)]),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!deleteResult.success) {
     throw new CliError(
       `Failed to delete the artifact "${project}:${tag}". Run with debug for more details. File an issue if the problem persists.`,

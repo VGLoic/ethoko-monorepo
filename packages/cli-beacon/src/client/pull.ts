@@ -3,6 +3,7 @@ import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-st
 import { StorageProvider } from "../storage-provider";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 export type PullResult = {
   remoteTags: string[];
@@ -31,15 +32,14 @@ export type PullResult = {
  * @param opts.debug Enable debug mode
  * @param opts.logger The CommandLogger instance to use for logging and prompting the user during the pull process
  * @returns An object with the remote tags and IDs, pulled tags and IDs, and failed tags and IDs
- *
  */
 export async function pull(
-  project: string,
-  search: { type: "tag"; tag: string } | { type: "id"; id: string } | null,
+  projectOrArtifactKey: ArtifactKey | { project: string; type: "project" },
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { force: boolean; debug: boolean; logger: CommandLogger },
 ): Promise<PullResult> {
+  const project = projectOrArtifactKey.project;
   // Step 1: Set up pulled artifact store
   const ensureResult = await toAsyncResult(
     pulledArtifactStore.ensureProjectSetup(project),
@@ -61,13 +61,16 @@ export async function pull(
   let idsToDownload: string[];
   let remoteTags: string[] = [];
   let remoteIds: string[] = [];
-  if (search) {
-    if (search.type === "tag") {
+  if (
+    projectOrArtifactKey.type === "tag" ||
+    projectOrArtifactKey.type === "id"
+  ) {
+    if (projectOrArtifactKey.type === "tag") {
       const spinner2 = opts.logger.createSpinner(
-        `Checking existence of artifact "${project}:${search.tag}" remotely...`,
+        `Checking existence of artifact "${project}:${projectOrArtifactKey.tag}" remotely...`,
       );
       const hasTagResult = await toAsyncResult(
-        storageProvider.hasArtifactByTag(project, search.tag),
+        storageProvider.hasArtifactByTag(project, projectOrArtifactKey.tag),
         { debug: opts.debug },
       );
       if (!hasTagResult.success) {
@@ -79,22 +82,22 @@ export async function pull(
       if (!hasTagResult.value) {
         spinner2.fail("The tag does not exist remotely");
         throw new CliError(
-          `The artifact "${project}:${search.tag}" does not exist remotely`,
+          `The artifact "${project}:${projectOrArtifactKey.tag}" does not exist remotely`,
         );
       }
-      tagsToDownload = [search.tag];
+      tagsToDownload = [projectOrArtifactKey.tag];
       idsToDownload = [];
-      remoteTags = [search.tag];
+      remoteTags = [projectOrArtifactKey.tag];
       remoteIds = [];
       spinner2.succeed(
-        `Artifact "${project}:${search.tag}" identified remotely`,
+        `Artifact "${project}:${projectOrArtifactKey.tag}" identified remotely`,
       );
-    } else if (search.type === "id") {
+    } else if (projectOrArtifactKey.type === "id") {
       const spinner2 = opts.logger.createSpinner(
-        `Checking existence of artifact "${project}@${search.id}" remotely...`,
+        `Checking existence of artifact "${project}@${projectOrArtifactKey.id}" remotely...`,
       );
       const hasIdResult = await toAsyncResult(
-        storageProvider.hasArtifactById(project, search.id),
+        storageProvider.hasArtifactById(project, projectOrArtifactKey.id),
         { debug: opts.debug },
       );
       if (!hasIdResult.success) {
@@ -105,19 +108,21 @@ export async function pull(
       }
       if (!hasIdResult.value) {
         spinner2.fail("The ID does not exist remotely");
-        throw new CliError(`The ID "${search.id}" does not exist remotely`);
+        throw new CliError(
+          `The ID "${projectOrArtifactKey.id}" does not exist remotely`,
+        );
       }
       spinner2.succeed(
-        `Artifact "${project}@${search.id}" identified remotely`,
+        `Artifact "${project}@${projectOrArtifactKey.id}" identified remotely`,
       );
 
       tagsToDownload = [];
-      idsToDownload = [search.id];
+      idsToDownload = [projectOrArtifactKey.id];
       remoteTags = [];
-      remoteIds = [search.id];
+      remoteIds = [projectOrArtifactKey.id];
     } else {
       throw new CliError(
-        `The tag or ID "${search satisfies never}" does not exist remotely`,
+        `The tag or ID "${projectOrArtifactKey satisfies never}" does not exist remotely`,
       );
     }
   } else {

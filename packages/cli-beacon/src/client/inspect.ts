@@ -5,6 +5,7 @@ import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
 import { CommandLogger } from "@/ui";
 import { StorageProvider } from "@/storage-provider";
 import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 export type InspectResult = {
   project: string;
@@ -41,16 +42,13 @@ export type InspectResult = {
  * @throws CliError if the artifact cannot be found or read.
  */
 export async function inspectArtifact(
-  artifact: {
-    project: string;
-    search: { type: "tag"; tag: string } | { type: "id"; id: string };
-  },
+  artifactKey: ArtifactKey,
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; logger: CommandLogger },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifact.project),
+    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -62,8 +60,7 @@ export async function inspectArtifact(
   // @dev `retrieveOrPullArtifact` will throw a `CliError` if it fails
   // so we don't need to handle the error case here
   const artifactId = await retrieveOrPullArtifact(
-    artifact.project,
-    artifact.search,
+    artifactKey,
     storageProvider,
     pulledArtifactStore,
     { debug: opts.debug, logger: opts.logger },
@@ -71,8 +68,14 @@ export async function inspectArtifact(
 
   const artifactsResult = await toAsyncResult(
     Promise.all([
-      pulledArtifactStore.retrieveInputArtifact(artifact.project, artifactId),
-      pulledArtifactStore.listContractArtifacts(artifact.project, artifactId),
+      pulledArtifactStore.retrieveInputArtifact(
+        artifactKey.project,
+        artifactId,
+      ),
+      pulledArtifactStore.listContractArtifacts(
+        artifactKey.project,
+        artifactId,
+      ),
     ]),
     { debug: opts.debug },
   );
@@ -105,8 +108,8 @@ export async function inspectArtifact(
           };
 
   return {
-    project: artifact.project,
-    tag: artifact.search.type === "tag" ? artifact.search.tag : null,
+    project: artifactKey.project,
+    tag: artifactKey.type === "tag" ? artifactKey.tag : null,
     id: inputArtifact.id,
     origin,
     compiler: compilerSettings,

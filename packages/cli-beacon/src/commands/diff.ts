@@ -11,7 +11,7 @@ import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-sto
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
-import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { AbsolutePath, generateAbsolutePathSchema } from "@/utils/path.js";
 import { createStorageProvider } from "./utils/storage-provider";
 
@@ -46,15 +46,12 @@ export function registerDiffCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ArtifactKeySchema.transform(
+      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
         (artifactKey) => {
-          if (!artifactKey.artifact) {
+          if (artifactKey.type === "project") {
             return z.NEVER;
           }
-          return {
-            project: artifactKey.project,
-            search: artifactKey.artifact,
-          };
+          return artifactKey;
         },
       ).safeParse(projectArg);
       if (!artifactKeyParsingResult.success) {
@@ -76,9 +73,9 @@ export function registerDiffCommand(
       }
       logger.intro(
         `Comparing with artifact "${artifactKeyParsingResult.data.project}:${
-          artifactKeyParsingResult.data.search.type === "id"
-            ? artifactKeyParsingResult.data.search.id
-            : artifactKeyParsingResult.data.search.tag
+          artifactKeyParsingResult.data.type === "id"
+            ? artifactKeyParsingResult.data.id
+            : artifactKeyParsingResult.data.tag
         }"`,
       );
 
@@ -128,10 +125,7 @@ export function registerDiffCommand(
 
       await generateDiffWithTargetRelease(
         finalArtifactPath,
-        {
-          project: artifactKeyParsingResult.data.project,
-          search: artifactKeyParsingResult.data.search,
-        },
+        artifactKeyParsingResult.data,
         storageProvider,
         pulledArtifactStore,
         {

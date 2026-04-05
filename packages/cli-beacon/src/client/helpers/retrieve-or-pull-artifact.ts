@@ -4,6 +4,7 @@ import { CommandLogger } from "@/ui";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "../error";
 import { pull } from "../pull";
+import { ArtifactKey } from "@/utils/artifact-key";
 
 /**
  * Retrieve an artifact ID from the pulled artifact store if it exists, otherwise pull the artifact and then retrieve the ID.
@@ -15,15 +16,14 @@ import { pull } from "../pull";
  * @returns The artifact ID of the retrieved or pulled artifact.
  */
 export async function retrieveOrPullArtifact(
-  project: string,
-  search: { type: "tag"; tag: string } | { type: "id"; id: string },
+  artifactKey: ArtifactKey,
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; logger: CommandLogger },
 ): Promise<string> {
-  if (search.type === "id") {
+  if (artifactKey.type === "id") {
     const hasIdResult = await toAsyncResult(
-      pulledArtifactStore.hasId(project, search.id),
+      pulledArtifactStore.hasId(artifactKey.project, artifactKey.id),
       { debug: opts.debug },
     );
     if (!hasIdResult.success) {
@@ -32,11 +32,11 @@ export async function retrieveOrPullArtifact(
       );
     }
     if (hasIdResult.value) {
-      return search.id;
+      return artifactKey.id;
     }
   } else {
     const hasTagResult = await toAsyncResult(
-      pulledArtifactStore.hasTag(project, search.tag),
+      pulledArtifactStore.hasTag(artifactKey.project, artifactKey.tag),
       { debug: opts.debug },
     );
     if (!hasTagResult.success) {
@@ -46,34 +46,40 @@ export async function retrieveOrPullArtifact(
     }
     if (hasTagResult.value) {
       const artifactIdResult = await toAsyncResult(
-        pulledArtifactStore.retrieveArtifactId(project, search.tag),
+        pulledArtifactStore.retrieveArtifactId(
+          artifactKey.project,
+          artifactKey.tag,
+        ),
         { debug: opts.debug },
       );
       if (!artifactIdResult.success) {
         throw new CliError(
-          `The artifact ${project}:${search.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
+          `The artifact ${artifactKey.project}:${artifactKey.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
         );
       }
       return artifactIdResult.value;
     }
   }
 
-  await pull(project, search, storageProvider, pulledArtifactStore, {
+  await pull(artifactKey, storageProvider, pulledArtifactStore, {
     force: false,
     debug: opts.debug,
     logger: opts.logger,
   });
 
-  if (search.type === "id") {
-    return search.id;
+  if (artifactKey.type === "id") {
+    return artifactKey.id;
   }
   const artifactIdResult = await toAsyncResult(
-    pulledArtifactStore.retrieveArtifactId(project, search.tag),
+    pulledArtifactStore.retrieveArtifactId(
+      artifactKey.project,
+      artifactKey.tag,
+    ),
     { debug: opts.debug },
   );
   if (!artifactIdResult.success) {
     throw new CliError(
-      `Failed to retrieve artifact ID for ${project}:${search.tag} after pulling. Please ensure the pull was successful and try again. Run with debug mode for more info`,
+      `Failed to retrieve artifact ID for ${artifactKey.project}:${artifactKey.tag} after pulling. Please ensure the pull was successful and try again. Run with debug mode for more info`,
     );
   }
   return artifactIdResult.value;

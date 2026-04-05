@@ -8,7 +8,7 @@ import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-sto
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
-import { ArtifactKeySchema } from "./utils/parse-artifact-key.js";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -42,15 +42,12 @@ export function registerRestoreCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ArtifactKeySchema.transform(
-        (artifactKey) => {
-          if (!artifactKey.artifact) {
+      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
+        (projectOrArtifactKey) => {
+          if (projectOrArtifactKey.type === "project") {
             return z.NEVER;
           }
-          return {
-            project: artifactKey.project,
-            search: artifactKey.artifact,
-          };
+          return projectOrArtifactKey;
         },
       ).safeParse(projectArg);
       if (!artifactKeyParsingResult.success) {
@@ -72,7 +69,7 @@ export function registerRestoreCommand(
       }
 
       logger.intro(
-        `Restoring artifact "${artifactKeyParsingResult.data.project}:${artifactKeyParsingResult.data.search.type === "id" ? artifactKeyParsingResult.data.search.id : artifactKeyParsingResult.data.search.tag}"`,
+        `Restoring artifact "${artifactKeyParsingResult.data.project}${artifactKeyParsingResult.data.type === "id" ? `@${artifactKeyParsingResult.data.id}` : `:${artifactKeyParsingResult.data.tag}`}"`,
       );
 
       const optsParsingResult = z
@@ -112,10 +109,7 @@ export function registerRestoreCommand(
       );
 
       await restore(
-        {
-          project: artifactKeyParsingResult.data.project,
-          search: artifactKeyParsingResult.data.search,
-        },
+        artifactKeyParsingResult.data,
         optsParsingResult.data.output,
         storageProvider,
         pulledArtifactStore,
