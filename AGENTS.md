@@ -4,13 +4,13 @@ Guidelines for AI coding agents working in the Ethoko monorepo.
 
 ## Project Overview
 
-Ethoko is a warehouse for smart-contract compilation artifacts. It enables teams to version, store, and share smart-contract compilation artifacts, decoupling compilation from deployment.
+Ethoko is a warehouse for smart-contract compilation artifacts. It enables teams to version, store, and share smart-contract compilation artifacts, decoupling compilation from operation.
 **Monorepo Structure:**
 
 - `packages/cli-beacon`: Standalone CLI for Ethoko artifact management (main package)
-- `packages/eslint-config`: Shared ESLint configurations
-- `packages/typescript-config`: Shared TypeScript configurations
 - `apps/*`: Integration examples with different frameworks (e.g., Foundry and Hardhat)
+
+## Documentation
 
 CLI delivery strategy overview: `docs/CLI_DELIVERY.md`
 Configuration strategy overview: `docs/CONFIG.md`
@@ -19,74 +19,13 @@ Configuration strategy overview: `docs/CONFIG.md`
 
 **Package Manager:** pnpm 9.0.0 (required)
 **Build Tool:** Turborepo
-**Node Version:** >=18 (use `nvm use`)
+**Node Version:** `nvm use`
 
-### Commands
-
-```bash
-# Root level
-pnpm build              # Build all packages
-pnpm test:unit          # Run all unit tests
-pnpm test:e2e:core      # Run E2E tests for @ethoko/cli-beacon
-pnpm test:e2e:apps      # Run E2E tests for integration apps
-pnpm lint               # Lint all packages
-pnpm format             # Format all packages
-pnpm check-types        # Typecheck all packages
-
-# Package-specific (from package directory)
-cd packages/cli-beacon
-pnpm build              # Build using tsup
-pnpm lint               # ESLint with max 0 warnings
-pnpm test:e2e           # Run E2E tests (uses Vitest)
-
-# Run single test file
-pnpm vitest run test/e2e/push-pull.e2e.test.ts
-
-# Run single test by name pattern
-pnpm vitest run -t "test name pattern"
-```
-
-**Test Framework:** Vitest with global setup, 60s timeout, located in `test/**/*.e2e.test.ts` for `packages/cli-beacon` and `e2e-test/*.e2e.test.ts` for integration apps `apps/`.
+## Test
 
 ### E2E Test Pattern for `@ethoko/cli-beacon`
 
-E2E tests use a fixture-based pattern with Vitest's `test.extend()` for automatic setup/cleanup:
-
-**Structure:**
-
-```typescript
-import {
-  STORAGE_PROVIDER_STRATEGIES,
-  storageProviderTest,
-} from "@test/helpers/storage-provider-test";
-
-describe.for(STORAGE_PROVIDER_STRATEGIES)(
-  "Test Suite Name (%s)", // %s = storage provider name
-  ([, storageProviderFactory]) => {
-    // Scope the storage provider factory for all tests in this suite
-    storageProviderTest.scoped({ storageProviderFactory });
-
-    // Simple test
-    storageProviderTest(
-      "test name",
-      async ({ storageProvider, pulledArtifactStore }) => {
-        // Test implementation - fixtures auto-cleanup on completion
-      },
-    );
-
-    // Parameterized test
-    storageProviderTest.for([
-      ["Case 1", data1],
-      ["Case 2", data2],
-    ] as const)(
-      "test: %s",
-      async ([name, data], { storageProvider, pulledArtifactStore }) => {
-        // Test implementation
-      },
-    );
-  },
-);
-```
+**Test Framework:** Vitest with global setup, 60s timeout, located in `test/**/*.e2e.test.ts`.
 
 **Key Points:**
 
@@ -96,7 +35,14 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 - Use `storageProviderTest.for()` instead of `describe.each()` for parameterized tests
 - Always use `as const` on test data arrays for better type inference
 
-**Build Dependencies:** Turborepo manages task dependencies. `lint`, `check-types`, and `test` depend on `build` completing first.
+### E2E Test Pattern for integration apps in `apps/`
+
+**Test Framework:** Vitest with global setup, 60s timeout, located in `e2e-test/*.e2e.test.ts`.
+
+**Key Points:**
+
+- All tests run with the filesystem provider.
+- All tests use the same `setup.ts`, `compilation-targets.ts` and `helpers/` for utilites.
 
 ## Validation Workflow
 
@@ -122,21 +68,6 @@ If any check fails, **immediately fix the issue** before proceeding with additio
 
 ## Code Style Guidelines
 
-### TypeScript Configuration
-
-**Base Config:** All packages extend `@ethoko/typescript-config/node-base.json`
-
-Key compiler options:
-
-- **Strict mode enabled:** All strict TypeScript checks
-- **Module:** NodeNext (ESM + CJS dual output)
-- **Target:** ES2022
-- **Lib:** ES2022
-- **noUncheckedIndexedAccess:** true (array/object access returns `T | undefined`)
-- **noUnusedParameters:** true
-- **noUnusedLocals:** true
-- **isolatedModules:** true
-
 ### Import Style
 
 ```typescript
@@ -155,27 +86,6 @@ import { S3BucketProvider } from "./storage-provider/s3-bucket-provider";
 ```
 
 **Order:** Built-in modules → External packages → Internal modules
-
-### Formatting
-
-**Formatter:** Prettier (default config, empty `.prettierrc.json`)
-
-- Always run `pnpm format` before committing
-- For Solidity files: use `prettier-plugin-solidity`
-
-### ESLint Configuration
-
-**Base:** `@ethoko/eslint-config/base` which includes:
-
-- `@eslint/js` recommended rules
-- `typescript-eslint` recommended rules
-- `eslint-config-prettier` (disables conflicting rules)
-- `eslint-plugin-turbo` (for monorepo-specific rules)
-- `eslint-plugin-only-warn` (converts all errors to warnings)
-
-**Max Warnings:** 0 (treat warnings as errors in CI)
-
-**Ignored Paths:** `dist/**`
 
 ### Naming Conventions
 
@@ -246,9 +156,9 @@ type Result<T> =
 
 ### Error Handling
 
-**Use custom error classes for CLI methods:**
+**Use custom error classes for CLI client methods:**
 
-All CLI methods (packages/cli-beacon/src/client/\*) MUST throw `CliError` class instance.
+All CLI client methods (packages/cli-beacon/src/client/\*) MUST throw `CliError` class instance.
 
 ```typescript
 export class CliError extends Error {
@@ -273,8 +183,6 @@ if (!ensureResult.success) {
 ```
 
 **Use standard `Error` for internal methods:**
-
-Internal methods can directly throw `Error` instances, no further wrapping is needed for now.
 
 **Use result wrappers for async operations:**
 
@@ -350,7 +258,7 @@ console.error(
 );
 ```
 
-## File Organization
+## @package/cli-beacon File Organization
 
 ```
 packages/cli-beacon/
@@ -374,10 +282,9 @@ packages/cli-beacon/
 ## Best Practices
 
 1. **Always validate user input with Zod** before processing
-2. **Use async/await** over raw promises
 3. **Prefer explicit return types** for public functions
 4. **Use `opts` pattern** for function options (better than multiple params)
-5. **Handle both ScriptError and unexpected errors** in all task handlers
+5. **Handle both CliError and unexpected errors** in all task handlers
 6. **Use descriptive variable names** - clarity over brevity
 7. **Comment complex algorithms** but keep code self-documenting
 8. **Use TypeScript's strict null checks** - avoid `!` assertions
@@ -388,8 +295,6 @@ packages/cli-beacon/
 
 - Commit messages should be concise and descriptive
 - Run the complete validation workflow (see "Validation Workflow" section) before committing
-- Generated files in `.ethoko/` and `.ethoko-typings/` are gitignored
-- Build outputs (`dist/`, `.next/`, etc.) are gitignored
 
 ## Plan Mode
 
