@@ -4,7 +4,7 @@ import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-st
 import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 
-import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
 import { StorageProvider } from "@/storage-provider";
 import { ArtifactKey } from "@/utils/artifact-key";
 import { EthokoContractOutputArtifact } from "@/ethoko-artifacts/v0";

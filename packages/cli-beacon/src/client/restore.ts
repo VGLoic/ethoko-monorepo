@@ -5,7 +5,7 @@ import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import { CommandLogger } from "@/ui";
 import { AbsolutePath, RelativePath } from "@/utils/path";
-import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
 import { ArtifactKey } from "@/utils/artifact-key";
 
 export type RestoreResult = {

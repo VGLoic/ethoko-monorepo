@@ -2,8 +2,8 @@ import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { StorageProvider } from "@/storage-provider";
 import { CommandLogger } from "@/ui";
 import { toAsyncResult } from "@/utils/result";
-import { CliError } from "../error";
-import { pullArtifact } from "../pull";
+import { CliError } from "./error";
+import { pullArtifact } from "./pull";
 import { ArtifactKey } from "@/utils/artifact-key";
 
 /**

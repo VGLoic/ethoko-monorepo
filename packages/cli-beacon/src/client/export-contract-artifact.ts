@@ -4,7 +4,7 @@ import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 import { ContractMetadataSchema } from "@/solc-artifacts/v0.8.33/contract-metadata-json";
 import z from "zod";
-import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
 import { StorageProvider } from "@/storage-provider/storage-provider.interface";
 import { ArtifactKey } from "@/utils/artifact-key";
 

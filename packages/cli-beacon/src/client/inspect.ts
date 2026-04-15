@@ -4,7 +4,7 @@ import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
 import { CommandLogger } from "@/ui";
 import { StorageProvider } from "@/storage-provider";
-import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
+import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
 import { ArtifactKey } from "@/utils/artifact-key";
 
 export type InspectResult = {
