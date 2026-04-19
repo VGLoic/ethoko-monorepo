@@ -54,7 +54,7 @@ export type ExportContractArtifactResult = {
 };
 
 /**
- * Export a locally pulled contract artifact
+ * Read a locally pulled contract artifact and export its content
  * @param artifactKey Project, ID and optionally tag of the artifact
  * @param shortOrFullyQualifiedContractName either contract name, either fully qualified path of the contract, e.g. `counter` or `src/Counter.sol:Counter`
  * @param pulledArtifactStore Pulled artifact store

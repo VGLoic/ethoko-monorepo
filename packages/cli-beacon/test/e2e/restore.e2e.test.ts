@@ -2,7 +2,7 @@ import fs from "fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect } from "vitest";
-import { pullArtifact, restore } from "@/client";
+import { pullArtifact } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -14,6 +14,7 @@ import { deriveAllAbsolutePathsInDirectory } from "@test/helpers/derive-all-path
 import { CommandLogger } from "@/ui";
 import { AbsolutePath } from "@/utils/path";
 import { runPushCommand } from "@/commands/push";
+import { runRestoreCommand } from "@/commands/restore";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Restore E2E Tests (%s)",
@@ -58,12 +59,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
 
           const outputPath = tempOutputDir.join("absolute-path-test");
-          const result = await restore(
+          const result = await runRestoreCommand(
             { project, type: "tag", tag },
             outputPath,
-            storageProvider,
-            pulledArtifactStore,
-            { force: false, debug: false, logger },
+            {
+              storageProvider,
+              pulledArtifactStore,
+              logger,
+            },
+            { force: false, debug: false },
           );
 
           expect(result.filesRestored.length).toBeGreaterThan(0);
@@ -101,12 +105,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
 
           await expect(
-            restore(
+            runRestoreCommand(
               { project, type: "tag", tag },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow(/not empty|overwrite/);
         },
@@ -138,12 +145,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             "content",
           );
 
-          const result = await restore(
+          const result = await runRestoreCommand(
             { project, type: "tag", tag },
             outputPath,
-            storageProvider,
-            pulledArtifactStore,
-            { force: true, debug: false, logger },
+            {
+              storageProvider,
+              pulledArtifactStore,
+              logger,
+            },
+            { force: true, debug: false },
           );
 
           expect(result.filesRestored.length).toBeGreaterThan(0);
@@ -161,12 +171,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           await pulledArtifactStore.ensureProjectSetup(project);
 
           await expect(
-            restore(
+            runRestoreCommand(
               { project, type: "tag", tag: "non-existing-tag" },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow();
         },
@@ -178,16 +191,19 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           const outputPath = tempOutputDir.join("invalid-project-test");
 
           await expect(
-            restore(
+            runRestoreCommand(
               {
                 project: "non-existent-project",
                 type: "tag",
                 tag: TEST_CONSTANTS.TAGS.V1,
               },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow();
         },
@@ -231,12 +247,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             }
 
             const outputPath = tempOutputDir.join(`${tag}-tag-test`);
-            const result = await restore(
+            const result = await runRestoreCommand(
               { project, type: "tag", tag },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             );
 
             expect(result.project).toBe(project);
@@ -294,12 +313,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             }
 
             const outputPath = tempOutputDir.join(`${artifactId}-id-test`);
-            const result = await restore(
+            const result = await runRestoreCommand(
               { project, type: "id", id: artifactId },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             );
 
             expect(result.project).toBe(project);

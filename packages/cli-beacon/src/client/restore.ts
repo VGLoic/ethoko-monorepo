@@ -5,8 +5,7 @@ import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import { CommandLogger } from "@/ui";
 import { AbsolutePath, RelativePath } from "@/utils/path";
-import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactKey } from "@/utils/artifact-key";
 
 export type RestoreResult = {
   project: string;
@@ -16,32 +15,34 @@ export type RestoreResult = {
   outputPath: AbsolutePath;
 };
 
+/**
+ * Restore original compilation artifacts to an input local destination
+ * @param artifactKey Project, ID and optionally tag of the artifact
+ * @param outputPath The local path where the artifacts will be restored
+ * @param storageProvider The storage provider
+ * @param pulledArtifactStore Pulled artifact store
+ * @param opts Options
+ * @param opts.force Whether or not the method should overwrite the output dir if existing
+ * @param opts.debug Debug mode
+ * @param opts.logger Command logger
+ * @throws CliError in case of error
+ */
 export async function restore(
-  artifactKey: ArtifactKey,
+  artifactKey: ResolvedArtifactKey,
   outputPath: AbsolutePath,
   storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { force: boolean; debug: boolean; logger: CommandLogger },
 ): Promise<RestoreResult> {
-  const spinner1 = opts.logger.createSpinner("Identifying artifact...");
   const ensureResult = await toAsyncResult(
     pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
-    spinner1.fail("Failed to setup pulled artifact store");
     throw new CliError(
       "Error setting up pulled artifact store, is the script not allowed to write to the filesystem? Run with debug mode for more info",
     );
   }
-
-  const artifactId = await retrieveOrPullArtifact(
-    artifactKey,
-    storageProvider,
-    pulledArtifactStore,
-    { debug: opts.debug, logger: opts.logger },
-  );
-  spinner1.succeed("Artifact identified");
 
   const spinner2 = opts.logger.createSpinner("Checking output directory...");
   const outputStatResult = await toAsyncResult(
@@ -114,7 +115,7 @@ export async function restore(
 
   const spinner3 = opts.logger.createSpinner("Listing original content...");
   const originalContentResult = await toAsyncResult(
-    storageProvider.listOriginalContent(artifactKey.project, artifactId),
+    storageProvider.listOriginalContent(artifactKey.project, artifactKey.id),
     { debug: opts.debug },
   );
   if (!originalContentResult.success) {
@@ -140,7 +141,7 @@ export async function restore(
       const downloadResult = await toAsyncResult(
         storageProvider.downloadOriginalContent(
           artifactKey.project,
-          artifactId,
+          artifactKey.id,
           relativePath,
         ),
         { debug: opts.debug },
@@ -182,8 +183,8 @@ export async function restore(
 
   return {
     project: artifactKey.project,
-    tag: artifactKey.type === "tag" ? artifactKey.tag : null,
-    id: artifactId,
+    tag: artifactKey.tag,
+    id: artifactKey.id,
     filesRestored: downloadResults,
     outputPath,
   };
