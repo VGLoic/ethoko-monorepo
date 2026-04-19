@@ -1,21 +1,21 @@
 import { Command } from "commander";
 import { z } from "zod";
-import { CommandLogger } from "@/ui/index.js";
-import { CliError, push } from "@/client/index.js";
+import { CommandLogger } from "@/ui";
+import {
+  CliError,
+  lookForCandidateArtifacts,
+  mapCandidateArtifactToEthokoArtifact,
+} from "@/client";
 
-import type { EthokoCliConfig } from "../config";
-import { createStorageProvider } from "./utils/storage-provider.js";
-import { toAsyncResult } from "@/utils/result.js";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import type { EthokoCliConfig } from "@/config";
+import { toAsyncResult } from "@/utils/result";
 import {
   generateAbsolutePathSchema,
   AbsolutePath,
   RelativePath,
-} from "@/utils/path.js";
-import {
-  lookForCandidateArtifacts,
-  mapCandidateArtifactToEthokoArtifact,
-} from "@/client/candidate-artifact";
+} from "@/utils/path";
+import { createStorageProvider } from "./utils/storage-provider";
+import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
@@ -218,26 +218,73 @@ export async function runPushCommand(
     }
   }
 
-  const artifactId = await push(
-    artifact.project,
-    artifact.tag,
-    candidateArtifact,
-    dependencies.storageProvider,
-    {
-      force: opts.force,
-      debug: opts.debug,
-      logger: dependencies.logger,
-    },
+  const tagExistenceSpinner = dependencies.logger.createSpinner(
+    "Checking if tag exists...",
   );
+  if (!artifact.tag) {
+    tagExistenceSpinner.succeed(
+      "No tag provided, skipping tag existence check",
+    );
+  } else {
+    const hasTagResult = await toAsyncResult(
+      dependencies.storageProvider.hasArtifactByTag(
+        artifact.project,
+        artifact.tag,
+      ),
+      { debug: opts.debug },
+    );
+    if (!hasTagResult.success) {
+      tagExistenceSpinner.fail("Failed to check tag existence");
+      throw new CliError(
+        `Error checking if the tag "${artifact.tag}" exists on the storage, please check the storage configuration or run with debug mode for more info`,
+      );
+    }
+    if (hasTagResult.value) {
+      if (!opts.force) {
+        tagExistenceSpinner.fail("Tag already exists");
+        throw new CliError(
+          `The tag "${artifact.tag}" already exists on the storage. Please, make sure to use a different tag.`,
+        );
+      } else {
+        tagExistenceSpinner.warn(
+          `Tag "${artifact.tag}" already exists, forcing push`,
+        );
+      }
+    } else {
+      tagExistenceSpinner.succeed("Tag is available");
+    }
+  }
+
+  const uploadSpinner = dependencies.logger.createSpinner(
+    "Uploading artifact...",
+  );
+  const pushResult = await toAsyncResult(
+    dependencies.storageProvider.uploadArtifact(
+      artifact.project,
+      candidateArtifact.inputArtifact,
+      candidateArtifact.outputContractArtifacts,
+      artifact.tag,
+      candidateArtifact.originalContent,
+    ),
+    { debug: opts.debug },
+  );
+
+  if (!pushResult.success) {
+    uploadSpinner.fail("Failed to upload artifact");
+    throw new CliError(
+      `Error pushing the artifact "${artifact.project}${artifact.tag ? `:${artifact.tag}` : `@:${candidateArtifact.inputArtifact.id}`}" to the storage, please check the storage configuration or run with debug mode for more info`,
+    );
+  }
+  uploadSpinner.succeed("Artifact uploaded successfully");
 
   displayPushResult(
     dependencies.logger,
     artifact.project,
     artifact.tag,
-    artifactId,
+    candidateArtifact.inputArtifact.id,
   );
 
-  return artifactId;
+  return candidateArtifact.inputArtifact.id;
 }
 
 function displayPushResult(

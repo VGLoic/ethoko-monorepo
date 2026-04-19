@@ -8,7 +8,6 @@ export {
 } from "./generate-typings";
 export { inspectArtifact, type InspectResult } from "./inspect";
 export { pullProject, pullArtifact, type PullResult } from "./pull";
-export { push } from "./push";
 export {
   listPulledArtifacts,
   type ListArtifactsResult,
