@@ -1,5 +1,5 @@
 import fs from "node:fs/promises";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { StorageProvider } from "@/storage-provider";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";

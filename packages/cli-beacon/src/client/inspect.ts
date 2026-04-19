@@ -1,4 +1,4 @@
-import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "../pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";

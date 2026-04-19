@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { z } from "zod";
 import { LOG_COLORS, CommandLogger } from "@/ui/index.js";
 import { CliError, restore, type RestoreResult } from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";

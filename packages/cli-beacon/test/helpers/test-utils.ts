@@ -1,6 +1,6 @@
 import crypto from "crypto";
 import { S3BucketProvider } from "@/storage-provider/s3-bucket-provider";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { TestSession } from "./test-session";
 
 export function createTestProjectName(baseName: string): string {

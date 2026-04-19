@@ -3,7 +3,7 @@ import fs from "fs/promises";
 // The ideal would be to work only with the path but it does not work right now with tsup (and NPM package) AND Bun (and binaries)
 // There is a plan to migrate everything to Bun in the future, and rely on Bun's file loading capabilities, but in the meantime we need to support both environments
 import typingsTemplate from "../../templates/typings.txt";
-import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "../pulled-artifact-store";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { AbsolutePath } from "@/utils/path";
