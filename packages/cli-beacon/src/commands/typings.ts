@@ -7,6 +7,8 @@ import {
   generateEmptyTypings,
   generateProjectTypings,
   generateTagTypings,
+  pullArtifact,
+  pullProject,
 } from "@/client/index.js";
 import { PulledArtifactStore } from "@/pulled-artifact-store";
 
@@ -14,6 +16,8 @@ import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
 import { createStorageProvider } from "./utils/storage-provider";
+import { StorageProvider } from "@/storage-provider";
+import { AbsolutePath } from "@/utils/path";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -129,22 +133,21 @@ export function registerTypingsCommand(
       if (parsingResult.data.empty) {
         logger.intro("Generating empty typings");
         promise = generateEmptyTypings(
-          pulledArtifactStore,
           config.typingsPath,
+          pulledArtifactStore,
           {
             debug: parsingResult.data.debug,
-            logger,
           },
         );
       } else if (parsingResult.data.all) {
         logger.intro("Generating typings for all pulled artifacts");
         promise = generateAllPulledArtifactsTypings(
           config.typingsPath,
-          pulledArtifactStore,
           {
-            debug: parsingResult.data.debug,
+            pulledArtifactStore,
             logger,
           },
+          { debug: parsingResult.data.debug },
         );
       } else if (projectOrArtifactKey) {
         const projectConfig = config.getProjectConfig(
@@ -165,30 +168,30 @@ export function registerTypingsCommand(
           logger.intro(
             `Generating typings for project "${projectOrArtifactKey.project}"`,
           );
-          promise = generateProjectTypings(
+          promise = runProjectTypingsCommand(
             projectOrArtifactKey.project,
-            storageProvider,
-            pulledArtifactStore,
             config.typingsPath,
             {
-              debug: parsingResult.data.debug,
+              storageProvider,
+              pulledArtifactStore,
               logger,
             },
+            { debug: parsingResult.data.debug },
           );
         } else if (projectOrArtifactKey.type === "tag") {
           logger.intro(
             `Generating typings for artifact "${projectOrArtifactKey.project}:${projectOrArtifactKey.tag}"`,
           );
-          promise = generateTagTypings(
+          promise = runTagTypingsCommand(
             projectOrArtifactKey.project,
             projectOrArtifactKey.tag,
-            storageProvider,
-            pulledArtifactStore,
             config.typingsPath,
             {
-              debug: parsingResult.data.debug,
+              storageProvider,
+              pulledArtifactStore,
               logger,
             },
+            { debug: parsingResult.data.debug },
           );
         } else {
           logger.error(
@@ -221,4 +224,92 @@ export function registerTypingsCommand(
           process.exitCode = 1;
         });
     });
+}
+
+async function runProjectTypingsCommand(
+  project: string,
+  typingsPath: AbsolutePath,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { debug: boolean },
+): Promise<void> {
+  const hasProjectResult = await toAsyncResult(
+    dependencies.pulledArtifactStore
+      .listProjects()
+      .then((projects) => projects.includes(project)),
+    opts,
+  );
+  if (!hasProjectResult.success) {
+    throw new CliError(
+      `Error checking the existence of the project "${project}". Is the script not allowed to read from the filesystem? Run with debug mode for more info`,
+    );
+  }
+  if (!hasProjectResult.value) {
+    const pullSpinner = dependencies.logger.createSpinner(
+      `Project "${project}" not found locally, pulling...`,
+    );
+    await pullProject(
+      project,
+      dependencies.storageProvider,
+      dependencies.pulledArtifactStore,
+      {
+        force: false,
+        debug: opts.debug,
+        logger: dependencies.logger,
+      },
+    ).catch((err) => {
+      pullSpinner.fail("Failed to pull project");
+      throw err;
+    });
+    pullSpinner.succeed(`Project "${project}" pulled successfully`);
+  }
+  await generateProjectTypings(
+    project,
+    typingsPath,
+    {
+      storageProvider: dependencies.storageProvider,
+      pulledArtifactStore: dependencies.pulledArtifactStore,
+      logger: dependencies.logger,
+    },
+    opts,
+  );
+}
+
+async function runTagTypingsCommand(
+  project: string,
+  tag: string,
+  typingsPath: AbsolutePath,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { debug: boolean },
+): Promise<void> {
+  const hasTagResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.hasTag(project, tag),
+    { debug: opts.debug },
+  );
+  if (!hasTagResult.success) {
+    throw new CliError(
+      `Error checking the existence of the tag "${tag}" for project "${project}". Is the script not allowed to read from the filesystem? Run with debug mode for more info`,
+    );
+  }
+  if (!hasTagResult.value) {
+    const pullSpinner = dependencies.logger.createSpinner(
+      `Artifact "${project}:${tag}" not found locally, pulling...`,
+    );
+    // REMIND ME: migrate approach here
+    await pullArtifact(
+      { project, type: "tag", tag },
+      dependencies.storageProvider,
+      dependencies.pulledArtifactStore,
+      { force: false, debug: opts.debug, logger: dependencies.logger },
+    );
+    pullSpinner.succeed(`Artifact "${project}:${tag}" pulled successfully`);
+  }
+  await generateTagTypings(project, tag, typingsPath, dependencies, opts);
 }

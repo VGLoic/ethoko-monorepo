@@ -178,7 +178,10 @@ export async function runRestoreCommand(
         debug: opts.debug,
         logger: dependencies.logger,
       },
-    );
+    ).catch((err) => {
+      pullSpinner.fail("Fail to pull artifact");
+      throw err;
+    });
     pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
     resolvedArtifactKey = {
       project: artifactKey.project,

@@ -209,7 +209,10 @@ async function runDiffCommand(
         debug: opts.debug,
         logger: dependencies.logger,
       },
-    );
+    ).catch((err) => {
+      pullSpinner.fail("Failed to pull artifact");
+      throw err;
+    });
     pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
     resolvedArtifactKey = {
       project: artifactKey.project,
