@@ -179,12 +179,14 @@ export async function runExportCommand(
     );
     const pulledArtifact = await pullArtifact(
       artifactKey,
-      dependencies.storageProvider,
-      dependencies.pulledArtifactStore,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: dependencies.logger,
+      },
       {
         force: false,
         debug: opts.debug,
-        logger: dependencies.logger,
       },
     ).catch((err) => {
       pullSpinner.fail("Failed to pull artifact");

@@ -236,12 +236,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             if (!artifactAlreadyPulled) {
               await pullArtifact(
                 { project, type: "tag", tag },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }
@@ -302,12 +300,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             if (!artifactAlreadyPulled) {
               await pullArtifact(
                 { project, type: "id", id: artifactId },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }

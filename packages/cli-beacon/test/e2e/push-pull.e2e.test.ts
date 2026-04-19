@@ -43,12 +43,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const pullResult = await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
+          { storageProvider, pulledArtifactStore, logger },
           {
             force: false,
             debug: false,
-            logger,
           },
         );
 
@@ -120,12 +118,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const pullResult = await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
+          { storageProvider, pulledArtifactStore, logger },
           {
             force: false,
             debug: false,
-            logger,
           },
         );
 
@@ -179,9 +175,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const pullResult = await pullProject(
           project,
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         expect(pullResult.pulledTags).toHaveLength(2);
@@ -262,23 +257,19 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
+          { storageProvider, pulledArtifactStore, logger },
           {
             force: false,
             debug: false,
-            logger,
           },
         );
 
         const result1 = await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
+          { storageProvider, pulledArtifactStore, logger },
           {
             force: false,
             debug: false,
-            logger,
           },
         );
         expect(result1.tag).toEqual(tag);
@@ -286,12 +277,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
         const result2 = await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
+          { storageProvider, pulledArtifactStore, logger },
           {
             force: true,
             debug: false,
-            logger,
           },
         );
         expect(result2.tag).toEqual(tag);
@@ -309,12 +298,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await expect(
           pullArtifact(
             { project, type: "tag", tag: "non-existent-tag" },
-            storageProvider,
-            pulledArtifactStore,
+            { storageProvider, pulledArtifactStore, logger },
             {
               force: false,
               debug: false,
-              logger,
             },
           ),
         ).rejects.toThrow();

@@ -44,9 +44,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -91,9 +90,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -124,9 +122,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -159,9 +156,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -212,11 +208,14 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { storageProvider, logger },
           { force: false, debug: false },
         );
-        await pullProject(project, storageProvider, pulledArtifactStore, {
-          force: false,
-          debug: false,
-          logger,
-        });
+        await pullProject(
+          project,
+          { storageProvider, pulledArtifactStore, logger },
+          {
+            force: false,
+            debug: false,
+          },
+        );
 
         const result = await runPruneCommand(
           { type: "specific", artifactKey: { type: "project", project } },
@@ -256,9 +255,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -294,9 +292,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -332,9 +329,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -390,9 +386,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(
@@ -423,9 +418,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         await pullArtifact(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
         const result = await runPruneCommand(

@@ -24,23 +24,26 @@ export type PullResult = {
  * The method returns an object containing the list of remote tags and IDs, the list of successfully pulled tags and IDs, and the list of tags and IDs that failed to be pulled.
  * @throws CliError if there is an error setting up the pulled artifact store, fetching the remote artifacts, checking the pulled artifact store, or downloading the artifacts. The error messages are meant to be user-friendly and can be directly shown to the user.
  * @param project The project to pull artifacts for
- * @param storageProvider The storage provider used to access remote artifacts
- * @param pulledArtifactStore The pulled artifact store used to persist pulled artifacts
+ * @param dependencies.storageProvider The storage provider used to access remote artifacts
+ * @param dependencies.pulledArtifactStore The pulled artifact store used to persist pulled artifacts
+ * @param dependencies.logger The CommandLogger instance to use for logging and prompting the user during the pull process
  * @param opts Options for the pull command
  * @param opts.force Force the pull to skip checking existing pulled artifacts
  * @param opts.debug Enable debug mode
- * @param opts.logger The CommandLogger instance to use for logging and prompting the user during the pull process
  * @returns An object with the remote tags and IDs, pulled tags and IDs, and failed tags and IDs
  */
 export async function pullProject(
   project: string,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { force: boolean; debug: boolean },
 ): Promise<PullResult> {
   // Step 1: Set up pulled artifact store
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(project),
+    dependencies.pulledArtifactStore.ensureProjectSetup(project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -49,64 +52,57 @@ export async function pullProject(
     );
   }
   if (opts.debug) {
-    opts.logger.message(
-      `Pulled artifact store set up at ${pulledArtifactStore.rootPath}`,
+    dependencies.logger.message(
+      `Pulled artifact store set up at ${dependencies.pulledArtifactStore.rootPath}`,
     );
   }
 
   // Step 2: Fetch remote artifacts
-  const spinner2 = opts.logger.createSpinner(
-    "Checking for remote artifacts...",
-  );
   const remoteListingResult = await toAsyncResult(
     Promise.all([
-      storageProvider.listTags(project),
-      storageProvider.listIds(project),
+      dependencies.storageProvider.listTags(project),
+      dependencies.storageProvider.listIds(project),
     ]),
     { debug: opts.debug },
   );
   if (!remoteListingResult.success) {
-    spinner2.fail("Failed to fetch remote artifacts");
     throw new CliError(
       "Error interacting with the storage, please check the configuration or run with debug mode for more info",
     );
   }
   const [remoteTags, remoteIds] = remoteListingResult.value;
-  spinner2.succeed("Remote artifacts checked");
 
   if (opts.debug) {
-    opts.logger.message(`Remote tags: ${remoteTags.join(", ")}`);
-    opts.logger.message(`Remote IDs: ${remoteIds.join(", ")}`);
+    dependencies.logger.message(`Remote tags: ${remoteTags.join(", ")}`);
+    dependencies.logger.message(`Remote IDs: ${remoteIds.join(", ")}`);
   }
 
   const tagsToDownload = remoteTags;
   const idsToDownload = remoteIds;
 
   if (opts.debug) {
-    opts.logger.message(`Tags to download: ${tagsToDownload.join(", ")}`);
-    opts.logger.message(`IDs to download: ${idsToDownload.join(", ")}`);
+    dependencies.logger.message(
+      `Tags to download: ${tagsToDownload.join(", ")}`,
+    );
+    dependencies.logger.message(`IDs to download: ${idsToDownload.join(", ")}`);
   }
 
   // Step 3: Check pulled artifact store
-  const spinner3 = opts.logger.createSpinner(
-    "Checking already pulled artifacts...",
-  );
   let filteredTagsToDownload: string[] = [];
   let filteredIdsToDownload: string[] = [];
   if (opts.force) {
     filteredTagsToDownload = tagsToDownload;
     filteredIdsToDownload = idsToDownload;
-    spinner3.succeed("Pulled artifact store check skipped (force mode)");
   } else {
     const localListingResult = await toAsyncResult(
       Promise.all([
-        pulledArtifactStore
+        dependencies.pulledArtifactStore
           .listTags(project)
           .then(
             (tagMetadatas) =>
               new Set(tagMetadatas.map((metadata) => metadata.tag)),
           ),
-        pulledArtifactStore
+        dependencies.pulledArtifactStore
           .listIds(project)
           .then(
             (idMetadatas) =>
@@ -116,7 +112,6 @@ export async function pullProject(
       { debug: opts.debug },
     );
     if (!localListingResult.success) {
-      spinner3.fail("Failed to check pulled artifacts");
       throw new CliError(
         "Error checking pulled artifacts, is the script not allowed to read from the filesystem? Run with debug mode for more info",
       );
@@ -128,7 +123,10 @@ export async function pullProject(
       (tag) => !localTags.has(tag),
     );
     filteredIdsToDownload = idsToDownload.filter((id) => !localIds.has(id));
-    spinner3.succeed("Checked already pulled artifacts");
+  }
+
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
   }
 
   // Step 4: Download artifacts
@@ -136,8 +134,6 @@ export async function pullProject(
     filteredTagsToDownload.length === 0 &&
     filteredIdsToDownload.length === 0
   ) {
-    const spinner4 = opts.logger.createSpinner("Checking for updates...");
-    spinner4.succeed("All artifacts are up to date");
     return {
       remoteTags,
       remoteIds,
@@ -148,16 +144,16 @@ export async function pullProject(
     };
   }
 
-  const missingArtifactCount =
-    filteredTagsToDownload.length + filteredIdsToDownload.length;
-  const spinner4 = opts.logger.createSpinner(
-    `Downloading ${missingArtifactCount} missing artifact${missingArtifactCount > 1 ? "s" : ""}...`,
-  );
+  // const missingArtifactCount =
+  //   filteredTagsToDownload.length + filteredIdsToDownload.length;
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
 
   const tagsPromises: Promise<{ tag: string; id: string }>[] =
     filteredTagsToDownload.map(async (tag) => {
       const downloadResult = await toAsyncResult(
-        storageProvider.downloadArtifactByTag(project, tag),
+        dependencies.storageProvider.downloadArtifactByTag(project, tag),
         { debug: opts.debug },
       );
       if (!downloadResult.success) {
@@ -165,7 +161,7 @@ export async function pullProject(
       }
 
       const createResult = await toAsyncResult(
-        pulledArtifactStore.createArtifact(
+        dependencies.pulledArtifactStore.createArtifact(
           project,
           downloadResult.value.id,
           tag,
@@ -189,14 +185,19 @@ export async function pullProject(
   const failedTags: string[] = [];
   for (const settlement of tagsSettlements) {
     if (settlement.status === "fulfilled") {
+      if (opts.debug) {
+        // REMIND ME TO ADD DEBUG LOG
+      }
       pulledTags.push(settlement.value.tag);
       pulledIds.push(settlement.value.id);
     } else {
       // We know that the only possible error is PullTagError, we check for safety but we don't want any other error to be silently ignored
       if (settlement.reason instanceof PullTagError) {
+        if (opts.debug) {
+          // REMIND ME TO ADD DEBUG LOG
+        }
         failedTags.push(settlement.reason.tag);
       } else {
-        spinner4.fail("Failed to download artifacts");
         throw new CliError(
           "Unexpected error while pulling tags, please fill an issue",
         );
@@ -209,10 +210,14 @@ export async function pullProject(
     (id) => !pulledIds.includes(id),
   );
 
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
+
   const idsPromises: Promise<{ id: string }>[] = filteredIdsToDownload.map(
     async (id) => {
       const downloadResult = await toAsyncResult(
-        storageProvider.downloadArtifactById(project, id),
+        dependencies.storageProvider.downloadArtifactById(project, id),
         { debug: opts.debug },
       );
       if (!downloadResult.success) {
@@ -220,7 +225,7 @@ export async function pullProject(
       }
 
       const createResult = await toAsyncResult(
-        pulledArtifactStore.createArtifact(project, id, null, {
+        dependencies.pulledArtifactStore.createArtifact(project, id, null, {
           input: downloadResult.value.input,
           outputs: downloadResult.value.contractOutputArtifacts,
         }),
@@ -238,13 +243,18 @@ export async function pullProject(
   const failedIds: string[] = [];
   for (const settlement of idsSettlements) {
     if (settlement.status === "fulfilled") {
+      if (opts.debug) {
+        // REMIND ME TO ADD DEBUG LOG
+      }
       pulledIds.push(settlement.value.id);
     } else {
+      if (opts.debug) {
+        // REMIND ME TO ADD DEBUG LOG
+      }
       // We know that the only possible error is PullIdError, we check for safety but we don't want any other error to be silently ignored
       if (settlement.reason instanceof PullIdError) {
         failedIds.push(settlement.reason.id);
       } else {
-        spinner4.fail("Failed to download artifacts");
         throw new CliError(
           "Unexpected error while pulling IDs, please fill an issue",
         );
@@ -252,17 +262,10 @@ export async function pullProject(
     }
   }
 
-  const totalPulled = pulledTags.length + pulledIds.length;
-  const totalFailed = failedTags.length + failedIds.length;
-
-  if (totalFailed > 0) {
-    spinner4.fail(
-      `Downloaded ${totalPulled} artifact${totalPulled > 1 ? "s" : ""}, ${totalFailed} failed`,
-    );
-  } else {
-    spinner4.succeed(
-      `Downloaded ${totalPulled} artifact${totalPulled > 1 ? "s" : ""} successfully`,
-    );
+  if (opts.debug) {
+    // const totalPulled = pulledTags.length + pulledIds.length;
+    // const totalFailed = failedTags.length + failedIds.length;
+    // REMIND ME TO ADD DEBUG LOG
   }
 
   return {
@@ -279,19 +282,22 @@ export async function pullProject(
  * Pull a specific artifact by tag or ID, it consists of the same four steps as pullProject but without the need to fetch and filter the list of remote artifacts, since we already know which artifact we want to pull. The method returns an object containing the list of remote tags and IDs (which will contain only the pulled artifact), the list of successfully pulled tags and IDs, and the list of tags and IDs that failed to be pulled.
  * @throws CliError if there is an error setting up the pulled artifact store, checking the pulled artifact store, verifying the existence of the artifact remotely, or downloading the artifact. The error messages are meant to be user-friendly and can be directly shown to the user.
  * @param artifactKey The key of the artifact to pull, which should specify the project and either a tag or an ID
- * @param storageProvider The storage provider used to access remote artifacts
- * @param pulledArtifactStore The store used to manage pulled artifacts locally
+ * @param dependencies.storageProvider The storage provider used to access remote artifacts
+ * @param dependencies.pulledArtifactStore The store used to manage pulled artifacts locally
+ * @param dependencies.logger The CommandLogger instance to use for logging and prompting the user during the pull process
  * @param opts Options for the pull command
  * @param opts.force Force the pull to skip checking existing pulled artifacts
  * @param opts.debug Enable debug mode
- * @param opts.logger The CommandLogger instance to use for logging and prompting the user during the pull process
  * @returns An object with the remote tags and IDs, pulled tags and IDs, and failed tags and IDs
  */
 export async function pullArtifact(
   artifactKey: ArtifactKey,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { force: boolean; debug: boolean },
 ): Promise<{
   tag: string | null;
   id: string;
@@ -299,7 +305,7 @@ export async function pullArtifact(
 }> {
   // Step 1: Set up pulled artifact store
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -308,8 +314,8 @@ export async function pullArtifact(
     );
   }
   if (opts.debug) {
-    opts.logger.message(
-      `Pulled artifact store set up at ${pulledArtifactStore.rootPath}`,
+    dependencies.logger.message(
+      `Pulled artifact store set up at ${dependencies.pulledArtifactStore.rootPath}`,
     );
   }
 
@@ -317,16 +323,14 @@ export async function pullArtifact(
     return await pullArtifactByTag(
       artifactKey.project,
       artifactKey.tag,
-      storageProvider,
-      pulledArtifactStore,
+      dependencies,
       opts,
     );
   } else if (artifactKey.type === "id") {
     return await pullArtifactById(
       artifactKey.project,
       artifactKey.id,
-      storageProvider,
-      pulledArtifactStore,
+      dependencies,
       opts,
     );
   } else {
@@ -339,13 +343,16 @@ export async function pullArtifact(
 async function pullArtifactById(
   project: string,
   id: string,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { force: boolean; debug: boolean },
 ): Promise<{ tag: null; id: string; pulled: boolean }> {
   // Check if already pulled
   const hasAlreadyPulledResult = await toAsyncResult(
-    pulledArtifactStore.hasId(project, id),
+    dependencies.pulledArtifactStore.hasId(project, id),
     { debug: opts.debug },
   );
   if (!hasAlreadyPulledResult.success) {
@@ -357,7 +364,7 @@ async function pullArtifactById(
   // If already pulled and not force, skip
   if (hasAlreadyPulledResult.value && !opts.force) {
     if (opts.debug) {
-      opts.logger.message(
+      dependencies.logger.message(
         `Artifact "${project}@${id}" already pulled, skipping`,
       );
     }
@@ -366,7 +373,7 @@ async function pullArtifactById(
 
   // Verify existence remotely
   const hasRemoteResult = await toAsyncResult(
-    storageProvider.hasArtifactById(project, id),
+    dependencies.storageProvider.hasArtifactById(project, id),
     { debug: opts.debug },
   );
   if (!hasRemoteResult.success) {
@@ -380,9 +387,13 @@ async function pullArtifactById(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
+
   // Download artifact
   const downloadResult = await toAsyncResult(
-    storageProvider.downloadArtifactById(project, id),
+    dependencies.storageProvider.downloadArtifactById(project, id),
     { debug: opts.debug },
   );
   if (!downloadResult.success) {
@@ -391,8 +402,12 @@ async function pullArtifactById(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
+
   const createResult = await toAsyncResult(
-    pulledArtifactStore.createArtifact(project, id, null, {
+    dependencies.pulledArtifactStore.createArtifact(project, id, null, {
       input: downloadResult.value.input,
       outputs: downloadResult.value.contractOutputArtifacts,
     }),
@@ -402,6 +417,9 @@ async function pullArtifactById(
     throw new CliError(
       `Error saving the artifact "${project}@${id}" locally, is the script not allowed to write to the filesystem? Run with debug mode for more info`,
     );
+  }
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
   }
 
   return {
@@ -414,13 +432,16 @@ async function pullArtifactById(
 async function pullArtifactByTag(
   project: string,
   tag: string,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { force: boolean; debug: boolean },
 ): Promise<{ tag: string; id: string; pulled: boolean }> {
   // Check if already pulled
   const hasAlreadyPulledResult = await toAsyncResult(
-    pulledArtifactStore.hasTag(project, tag),
+    dependencies.pulledArtifactStore.hasTag(project, tag),
     { debug: opts.debug },
   );
   if (!hasAlreadyPulledResult.success) {
@@ -428,16 +449,19 @@ async function pullArtifactByTag(
       "Error checking pulled artifacts, is the script not allowed to read from the filesystem? Run with debug mode for more info",
     );
   }
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
 
   // If already pulled and not force, skip
   if (hasAlreadyPulledResult.value && !opts.force) {
     const artifactIdResult = await toAsyncResult(
-      pulledArtifactStore.retrieveArtifactId(project, tag),
+      dependencies.pulledArtifactStore.retrieveArtifactId(project, tag),
       { debug: opts.debug },
     );
     if (artifactIdResult.success) {
       if (opts.debug) {
-        opts.logger.message(
+        dependencies.logger.message(
           `Artifact "${project}:${tag}" already pulled, skipping`,
         );
       }
@@ -448,7 +472,7 @@ async function pullArtifactByTag(
       };
     } else {
       if (opts.debug) {
-        opts.logger.message(
+        dependencies.logger.message(
           `Artifact "${project}:${tag}" already pulled but failed to retrieve the associated ID, pulling again. Run with debug mode for more info`,
         );
       }
@@ -457,7 +481,7 @@ async function pullArtifactByTag(
 
   // Verify existence remotely
   const hasRemoteResult = await toAsyncResult(
-    storageProvider.hasArtifactByTag(project, tag),
+    dependencies.storageProvider.hasArtifactByTag(project, tag),
     { debug: opts.debug },
   );
   if (!hasRemoteResult.success) {
@@ -471,9 +495,13 @@ async function pullArtifactByTag(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
+
   // Download artifact
   const downloadResult = await toAsyncResult(
-    storageProvider.downloadArtifactByTag(project, tag),
+    dependencies.storageProvider.downloadArtifactByTag(project, tag),
     { debug: opts.debug },
   );
   if (!downloadResult.success) {
@@ -483,16 +511,25 @@ async function pullArtifactByTag(
   }
 
   const createResult = await toAsyncResult(
-    pulledArtifactStore.createArtifact(project, downloadResult.value.id, tag, {
-      input: downloadResult.value.input,
-      outputs: downloadResult.value.contractOutputArtifacts,
-    }),
+    dependencies.pulledArtifactStore.createArtifact(
+      project,
+      downloadResult.value.id,
+      tag,
+      {
+        input: downloadResult.value.input,
+        outputs: downloadResult.value.contractOutputArtifacts,
+      },
+    ),
     { debug: opts.debug },
   );
   if (!createResult.success) {
     throw new CliError(
       `Error saving the artifact "${project}:${tag}" locally, is the script not allowed to write to the filesystem? Run with debug mode for more info`,
     );
+  }
+
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
   }
 
   return {

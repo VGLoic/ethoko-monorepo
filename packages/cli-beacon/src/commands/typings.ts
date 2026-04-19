@@ -253,12 +253,14 @@ async function runProjectTypingsCommand(
     );
     await pullProject(
       project,
-      dependencies.storageProvider,
-      dependencies.pulledArtifactStore,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: dependencies.logger,
+      },
       {
         force: false,
         debug: opts.debug,
-        logger: dependencies.logger,
       },
     ).catch((err) => {
       pullSpinner.fail("Failed to pull project");
@@ -305,9 +307,12 @@ async function runTagTypingsCommand(
     // REMIND ME: migrate approach here
     await pullArtifact(
       { project, type: "tag", tag },
-      dependencies.storageProvider,
-      dependencies.pulledArtifactStore,
-      { force: false, debug: opts.debug, logger: dependencies.logger },
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: dependencies.logger,
+      },
+      { force: false, debug: opts.debug },
     );
     pullSpinner.succeed(`Artifact "${project}:${tag}" pulled successfully`);
   }

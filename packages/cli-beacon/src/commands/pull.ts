@@ -99,12 +99,14 @@ export function registerPullCommand(
         );
         pullPromise = pullArtifact(
           artifactKeyParsingResult.data,
-          storageProvider,
-          pulledArtifactStore,
+          {
+            storageProvider,
+            pulledArtifactStore,
+            logger,
+          },
           {
             force: optsParsingResult.data.force,
             debug: optsParsingResult.data.debug,
-            logger,
           },
         ).then((result) => ({
           remoteTags: [tag],
@@ -121,12 +123,14 @@ export function registerPullCommand(
         );
         pullPromise = pullArtifact(
           artifactKeyParsingResult.data,
-          storageProvider,
-          pulledArtifactStore,
+          {
+            storageProvider,
+            pulledArtifactStore,
+            logger,
+          },
           {
             force: optsParsingResult.data.force,
             debug: optsParsingResult.data.debug,
-            logger,
           },
         ).then((result) => ({
           remoteTags: [],
@@ -142,12 +146,14 @@ export function registerPullCommand(
         );
         pullPromise = pullProject(
           artifactKeyParsingResult.data.project,
-          storageProvider,
-          pulledArtifactStore,
+          {
+            storageProvider,
+            pulledArtifactStore,
+            logger,
+          },
           {
             force: optsParsingResult.data.force,
             debug: optsParsingResult.data.debug,
-            logger,
           },
         );
       } else {
