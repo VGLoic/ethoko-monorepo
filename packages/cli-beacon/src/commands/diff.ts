@@ -205,7 +205,7 @@ async function runDiffCommand(
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: dependencies.logger.toDebugLogger(),
       },
       {
         force: false,
@@ -228,7 +228,7 @@ async function runDiffCommand(
     candidateArtifact,
     {
       pulledArtifactStore: dependencies.pulledArtifactStore,
-      logger: dependencies.logger,
+      logger: dependencies.logger.toDebugLogger(),
     },
     { debug: opts.debug },
   );

@@ -1,10 +1,10 @@
-import { CommandLogger } from "@/ui";
-import { PulledArtifactStore } from "../pulled-artifact-store";
-import { toAsyncResult, toResult } from "../utils/result";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
+import { toAsyncResult, toResult } from "@/utils/result";
 import { CliError } from "./error";
 import { ContractMetadataSchema } from "@/solc-artifacts/v0.8.33/contract-metadata-json";
 import z from "zod";
 import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { DebugLogger } from "@/utils/debug-logger";
 
 type ContractBytecode = {
   functionDebugData?: unknown;
@@ -67,7 +67,7 @@ export async function exportContractArtifact(
   shortOrFullyQualifiedContractName: string,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<ExportContractArtifactResult> {
@@ -94,7 +94,9 @@ export async function exportContractArtifact(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Contract list retrieved successfully: ${contractListResult.value.map((c) => `\n${c.sourceName} - ${c.contractName}`).join("")}`,
+    );
   }
 
   const contracts = contractListResult.value;
@@ -146,7 +148,9 @@ export async function exportContractArtifact(
     targetContract = matchingContract;
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Target contract determined to be ${targetContract.sourceName}:${targetContract.contractName}`,
+    );
   }
 
   const contractArtifactResult = await toAsyncResult(
@@ -164,7 +168,9 @@ export async function exportContractArtifact(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Contract artifact retrieved successfully for contract ${targetContract.sourceName}:${targetContract.contractName}: ${JSON.stringify(contractArtifactResult.value, null, 2)}`,
+    );
   }
 
   const contractArtifact = contractArtifactResult.value;
@@ -179,7 +185,9 @@ export async function exportContractArtifact(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Contract metadata parsed successfully for contract ${targetContract.sourceName}:${targetContract.contractName}: ${JSON.stringify(metadataParsingResult.value, null, 2)}`,
+    );
   }
 
   const sourcesWithMissingContent = Object.entries(
@@ -216,6 +224,11 @@ export async function exportContractArtifact(
         }
         metadataParsingResult.value.sources[sourcePath].content =
           inputSource.content;
+        if (opts.debug) {
+          dependencies.logger.debug(
+            `Source ${sourcePath} content resolved successfully from artifact input for artifact ${deriveDisplayArtifactName(artifactKey)}`,
+          );
+        }
       }
     }
   }

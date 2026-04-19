@@ -182,7 +182,7 @@ export async function runExportCommand(
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: dependencies.logger.toDebugLogger(),
       },
       {
         force: false,
@@ -205,7 +205,7 @@ export async function runExportCommand(
     shortOrFullyQualifiedContractName,
     {
       pulledArtifactStore: dependencies.pulledArtifactStore,
-      logger: dependencies.logger,
+      logger: dependencies.logger.toDebugLogger(),
     },
     { debug: opts.debug },
   );
@@ -238,9 +238,11 @@ export async function runExportCommand(
     dependencies.logger.success(
       `Exported contract artifact for ${contractIdentifier} from ${artifactLabel} to ${opts.output.resolvedPath}`,
     );
+  } else {
+    if (!dependencies.logger.silent) {
+      console.log(JSON.stringify(exportResult, null, 2));
+    }
   }
-
-  console.log(JSON.stringify(exportResult, null, 2));
 
   return exportResult;
 }

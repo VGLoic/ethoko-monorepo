@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { describe, expect } from "vitest";
-import { listPulledArtifacts, pullArtifact, pullProject } from "@/client/index";
+import { listPulledArtifacts } from "@/client/index";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -11,6 +11,7 @@ import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import { deriveAllAbsolutePathsInDirectory } from "@test/helpers/derive-all-paths-in-directory";
 import { CommandLogger } from "@/ui";
 import { runPushCommand } from "@/commands/push";
+import { runPullCommand } from "@/commands/pull";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Push-Pull E2E Tests (%s)",
@@ -41,7 +42,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
         expect(hasArtifact).toBe(true);
 
-        const pullResult = await pullArtifact(
+        const pullResult = await runPullCommand(
           { project, type: "id", id: artifactId },
           { storageProvider, pulledArtifactStore, logger },
           {
@@ -50,11 +51,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           },
         );
 
-        expect(pullResult.id).toEqual(artifactId);
-        expect(pullResult.pulled).toBe(true);
+        expect(pullResult.pulledIds[0]).toEqual(artifactId);
+        expect(pullResult.pulledIds.length).toBe(1);
 
         const listArtifactsResult = await listPulledArtifacts(
-          { pulledArtifactStore, logger },
+          { pulledArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,
           },
@@ -116,7 +117,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(hasTag).toBe(true);
         expect(hasId).toBe(true);
 
-        const pullResult = await pullArtifact(
+        const pullResult = await runPullCommand(
           { project, type: "tag", tag },
           { storageProvider, pulledArtifactStore, logger },
           {
@@ -125,12 +126,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           },
         );
 
-        expect(pullResult.tag).toEqual(tag);
-        expect(pullResult.id).toEqual(artifactId);
-        expect(pullResult.pulled).toBe(true);
+        expect(pullResult.pulledTags[0]).toEqual(tag);
+        expect(pullResult.pulledIds[0]).toEqual(artifactId);
+        expect(pullResult.pulledTags.length).toBe(1);
+        expect(pullResult.pulledIds.length).toBe(1);
 
         const listArtifactsResult = await listPulledArtifacts(
-          { pulledArtifactStore, logger },
+          { pulledArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,
           },
@@ -173,8 +175,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: true, debug: false },
         );
 
-        const pullResult = await pullProject(
-          project,
+        const pullResult = await runPullCommand(
+          { project, type: "project" },
           { storageProvider, pulledArtifactStore, logger },
           { force: false, debug: false },
         );
@@ -184,7 +186,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags).toContain(tag2);
 
         const listArtifactsResult = await listPulledArtifacts(
-          { pulledArtifactStore, logger },
+          { pulledArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,
           },
@@ -255,7 +257,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { storageProvider, logger },
           { force: false, debug: false },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "tag", tag },
           { storageProvider, pulledArtifactStore, logger },
           {
@@ -264,7 +266,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           },
         );
 
-        const result1 = await pullArtifact(
+        const result1 = await runPullCommand(
           { project, type: "tag", tag },
           { storageProvider, pulledArtifactStore, logger },
           {
@@ -272,10 +274,9 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             debug: false,
           },
         );
-        expect(result1.tag).toEqual(tag);
-        expect(result1.pulled).toBe(false);
+        expect(result1.pulledTags.length).toBe(0);
 
-        const result2 = await pullArtifact(
+        const result2 = await runPullCommand(
           { project, type: "tag", tag },
           { storageProvider, pulledArtifactStore, logger },
           {
@@ -283,8 +284,8 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             debug: false,
           },
         );
-        expect(result2.tag).toEqual(tag);
-        expect(result2.pulled).toBe(true);
+        expect(result2.pulledTags[0]).toEqual(tag);
+        expect(result2.pulledTags.length).toBe(1);
       },
     );
 
@@ -296,7 +297,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pullArtifact(
+          runPullCommand(
             { project, type: "tag", tag: "non-existent-tag" },
             { storageProvider, pulledArtifactStore, logger },
             {

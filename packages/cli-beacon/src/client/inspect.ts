@@ -2,8 +2,8 @@ import { PulledArtifactStore } from "../pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
-import { CommandLogger } from "@/ui";
 import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export type InspectResult = {
   project: string;
@@ -43,7 +43,7 @@ export async function inspectArtifact(
   artifactKey: ResolvedArtifactKey,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<InspectResult> {
@@ -77,7 +77,9 @@ export async function inspectArtifact(
   }
   const [inputArtifact, contractList] = artifactsResult.value;
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Pulled artifact retrieved successfully for artifact "${artifactKey.project}@${artifactKey.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
+    );
   }
 
   const compilerSettings = deriveCompilerSettings(inputArtifact);

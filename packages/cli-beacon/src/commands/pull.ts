@@ -129,11 +129,20 @@ export async function runPullCommand(
     debug: boolean;
   },
 ): Promise<PullResult> {
+  const debugLogger = dependencies.logger.toDebugLogger();
   let pullPromise: Promise<PullResult>;
   if (target.type === "tag") {
     const tag = target.tag;
     dependencies.logger.intro(`Pulling artifact "${target.project}:${tag}"`);
-    pullPromise = pullArtifact(target, dependencies, opts).then((result) => ({
+    pullPromise = pullArtifact(
+      target,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    ).then((result) => ({
       remoteTags: [tag],
       remoteIds: [result.id],
       pulledTags: result.pulled ? [tag] : [],
@@ -144,7 +153,15 @@ export async function runPullCommand(
   } else if (target.type === "id") {
     const id = target.id;
     dependencies.logger.intro(`Pulling artifact "${target.project}@${id}"`);
-    pullPromise = pullArtifact(target, dependencies, opts).then((result) => ({
+    pullPromise = pullArtifact(
+      target,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    ).then((result) => ({
       remoteTags: [],
       remoteIds: [id],
       pulledTags: [],
@@ -156,7 +173,15 @@ export async function runPullCommand(
     dependencies.logger.intro(
       `Pulling artifacts for project "${target.project}"`,
     );
-    pullPromise = pullProject(target.project, dependencies, opts);
+    pullPromise = pullProject(
+      target.project,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    );
   } else {
     throw new CliError(`Unknown artifact key type: ${target satisfies never}`);
   }

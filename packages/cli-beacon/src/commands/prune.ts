@@ -129,12 +129,16 @@ export async function runPruneCommand(
     dryRun: boolean;
   },
 ): Promise<PruneResult> {
+  const debugLogger = dependencies.logger.toDebugLogger();
   let pruneResult: PruneResult;
   if (target.type === "all") {
     dependencies.logger.intro("Pruning orphaned and untagged artifacts");
     pruneResult = await pruneOrphanedAndUntaggedArtifacts(
       target.projects,
-      dependencies,
+      {
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
       opts,
     );
   } else if (target.artifactKey.type === "project") {
@@ -143,7 +147,10 @@ export async function runPruneCommand(
     );
     pruneResult = await pruneProjectArtifacts(
       target.artifactKey.project,
-      dependencies,
+      {
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
       opts,
     );
   } else {
@@ -154,7 +161,14 @@ export async function runPruneCommand(
           : `@${target.artifactKey.id}`
       }"`,
     );
-    pruneResult = await pruneArtifact(target.artifactKey, dependencies, opts);
+    pruneResult = await pruneArtifact(
+      target.artifactKey,
+      {
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    );
   }
 
   displayPrunedArtifacts(pruneResult, dependencies.logger, opts.dryRun);

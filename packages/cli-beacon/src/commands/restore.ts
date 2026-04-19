@@ -174,7 +174,7 @@ export async function runRestoreCommand(
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: dependencies.logger.toDebugLogger(),
       },
       {
         force: false,
@@ -198,7 +198,7 @@ export async function runRestoreCommand(
     {
       pulledArtifactStore: dependencies.pulledArtifactStore,
       storageProvider: dependencies.storageProvider,
-      logger: dependencies.logger,
+      logger: dependencies.logger.toDebugLogger(),
     },
     {
       force: opts.force,

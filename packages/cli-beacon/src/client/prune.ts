@@ -1,8 +1,8 @@
 import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
-import { CommandLogger } from "@/ui";
 import { ArtifactKey } from "@/utils/artifact-key";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export type PruneResult = {
   project: string;
@@ -14,7 +14,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   configuredProjects: Set<string>,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: {
     dryRun: boolean;
@@ -43,7 +43,22 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     }
   }
   if (opts.debug) {
-    // REMIND ME: Add debug log
+    dependencies.logger.debug(
+      `Identified ${orphanedProjects.length} orphaned project(s) and ${configuredStoredProjects.length} configured project(s) with stored artifacts.`,
+    );
+
+    if (orphanedProjects.length > 0) {
+      dependencies.logger.debug(
+        `Orphaned projects: ${orphanedProjects.join(", ")}`,
+      );
+    }
+    if (configuredStoredProjects.length > 0) {
+      dependencies.logger.debug(
+        `Configured projects with stored artifacts: ${configuredStoredProjects.join(
+          ", ",
+        )}`,
+      );
+    }
   }
 
   const artifactsToPrune = [];
@@ -66,7 +81,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
       hasOrphanedArtifactsError = true;
       if (opts.debug) {
         const reason = settlement.reason as ProjectError;
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to list artifacts for an orphaned project "${reason.project}". Error: ${reason.error}`,
         );
       }
@@ -79,7 +94,9 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Identified ${artifactsToPrune.length} artifact(s) to prune from orphaned projects.`,
+    );
   }
 
   // Retrieve all untagged artifacts for configured projects
@@ -100,7 +117,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
       hasUntaggedArtifactsError = true;
       if (opts.debug) {
         const reason = settlement.reason as ProjectError;
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to list untagged artifacts for a configured project "${reason.project}". Error: ${reason.error}`,
         );
       }
@@ -113,7 +130,9 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Identified ${artifactsToPrune.length} artifact(s) to prune from orphaned projects and untagged artifacts from configured projects.`,
+    );
   }
 
   const artifactsWithSizeSettlements = await Promise.allSettled(
@@ -131,7 +150,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     } else {
       hasGetSizeError = true;
       if (opts.debug) {
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to get size for an artifact "${settlement.reason.project}@${settlement.reason.id}". Error: ${settlement.reason.error}`,
         );
       }
@@ -144,7 +163,12 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Retrieved size for all artifacts to prune. Total size to be freed: ${artifactsWithSize.reduce(
+        (acc, a) => acc + a.size,
+        0,
+      )} bytes.`,
+    );
   }
   if (opts.dryRun) {
     return artifactsWithSize;
@@ -186,7 +210,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to delete an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -205,7 +229,7 @@ export async function pruneProjectArtifacts(
   project: string,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: {
     dryRun: boolean;
@@ -243,7 +267,7 @@ export async function pruneProjectArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to get size for an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -256,7 +280,12 @@ export async function pruneProjectArtifacts(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Retrieved size for all artifacts in project "${project}". Total size to be freed: ${artifactsWithSize.reduce(
+        (acc, a) => acc + a.size,
+        0,
+      )} bytes.`,
+    );
   }
 
   if (opts.dryRun) {
@@ -299,7 +328,7 @@ export async function pruneProjectArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Failed to delete an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -311,7 +340,12 @@ export async function pruneProjectArtifacts(
     );
   }
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Deleted all artifacts for project "${project}". Total size freed: ${artifactsWithSize.reduce(
+        (acc, a) => acc + a.size,
+        0,
+      )} bytes.`,
+    );
   }
 
   return artifactsWithSize;
@@ -321,7 +355,7 @@ export async function pruneArtifact(
   artifactKey: ArtifactKey,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: {
     dryRun: boolean;
@@ -350,7 +384,7 @@ async function pruneArtifactById(
   id: string,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: {
     dryRun: boolean;
@@ -392,7 +426,9 @@ async function pruneArtifactById(
   };
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Retrieved size for the artifact "${project}@${id}": ${artifactWithSize.size} bytes.`,
+    );
   }
 
   if (opts.dryRun) {
@@ -412,7 +448,9 @@ async function pruneArtifactById(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Deleted the artifact "${project}@${id}". Size freed: ${artifactWithSize.size} bytes.`,
+    );
   }
 
   return [artifactWithSize];
@@ -423,7 +461,7 @@ async function pruneArtifactByTag(
   tag: string,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: {
     dryRun: boolean;
@@ -459,7 +497,9 @@ async function pruneArtifactByTag(
   }
   const id = idResult.value;
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Retrieved ID for the artifact "${project}:${tag}": ${id}.`,
+    );
   }
 
   const sizeResult = await toAsyncResult(
@@ -481,7 +521,9 @@ async function pruneArtifactByTag(
   };
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Retrieved size for the artifact "${project}:${tag}": ${artifactWithSize.size} bytes.`,
+    );
   }
 
   if (opts.dryRun) {
@@ -504,7 +546,9 @@ async function pruneArtifactByTag(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Deleted the artifact "${project}:${tag}". Size freed: ${artifactWithSize.size} bytes.`,
+    );
   }
 
   return [artifactWithSize];

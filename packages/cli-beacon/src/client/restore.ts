@@ -3,9 +3,9 @@ import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { StorageProvider } from "@/storage-provider";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
-import { CommandLogger } from "@/ui";
 import { AbsolutePath, RelativePath } from "@/utils/path";
 import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export type RestoreResult = {
   project: string;
@@ -21,7 +21,7 @@ export type RestoreResult = {
  * @param outputPath The local path where the artifacts will be restored
  * @param dependencies.storageProvider The storage provider
  * @param dependencies.pulledArtifactStore Pulled artifact store
- * @param dependencies.logger Command logger
+ * @param dependencies.logger Debug logger
  * @param opts Options
  * @param opts.force Whether or not the method should overwrite the output dir if existing
  * @param opts.debug Debug mode
@@ -33,7 +33,7 @@ export async function restore(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { force: boolean; debug: boolean },
 ): Promise<RestoreResult> {
@@ -76,7 +76,9 @@ export async function restore(
       );
     }
     if (opts.debug) {
-      // REMIND ME: ADD DEBUG LOG
+      dependencies.logger.debug(
+        `Output directory "${outputPath}" is not empty. Overwriting due to --force flag`,
+      );
     }
     if (outputEntriesResult.value.length > 0 && opts.force) {
       const removeResult = await toAsyncResult(
@@ -102,7 +104,7 @@ export async function restore(
     );
   }
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(`Output directory "${outputPath}" is ready`);
   }
   const mkdirOutputResult = await toAsyncResult(
     fs.mkdir(outputPath.resolvedPath, { recursive: true }),
@@ -115,7 +117,9 @@ export async function restore(
   }
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Output directory "${outputPath}" created successfully`,
+    );
   }
 
   const originalContentResult = await toAsyncResult(
@@ -137,7 +141,9 @@ export async function restore(
     );
   }
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Found ${originalContentPaths.length} original content files for artifact "${artifactKey.project}@${artifactKey.id}"`,
+    );
   }
 
   const downloadResults = await Promise.all(
@@ -178,7 +184,9 @@ export async function restore(
       }
 
       if (opts.debug) {
-        // REMIND ME: ADD DEBUG LOG
+        dependencies.logger.debug(
+          `Original content file "${relativePath}" restored successfully`,
+        );
       }
 
       return relativePath;
@@ -186,7 +194,9 @@ export async function restore(
   );
 
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `All original content files for artifact "${artifactKey.project}@${artifactKey.id}" restored successfully`,
+    );
   }
 
   return {

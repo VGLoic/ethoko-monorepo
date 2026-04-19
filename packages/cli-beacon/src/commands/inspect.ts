@@ -155,7 +155,7 @@ export async function runInspectCommand(
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: dependencies.logger.toDebugLogger(),
       },
       {
         force: false,
@@ -177,7 +177,7 @@ export async function runInspectCommand(
     resolvedArtifactKey,
     {
       pulledArtifactStore: dependencies.pulledArtifactStore,
-      logger: dependencies.logger,
+      logger: dependencies.logger.toDebugLogger(),
     },
     { debug: opts.debug },
   );

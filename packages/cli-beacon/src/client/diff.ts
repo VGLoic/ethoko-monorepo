@@ -1,10 +1,10 @@
 import { createHash } from "node:crypto";
-import { CommandLogger } from "@/ui";
 import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { toAsyncResult, toResult } from "@/utils/result";
 import { ResolvedArtifactKey } from "@/utils/artifact-key";
 import { EthokoContractOutputArtifact } from "@/ethoko-artifacts/v0";
 import { CliError } from "./error";
+import { DebugLogger } from "@/utils/debug-logger";
 
 /**
  * This script generates the differences between the given artifact and an already pushed artifact.
@@ -96,7 +96,7 @@ export async function generateDiffWithTargetRelease(
   },
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<Difference[]> {
@@ -122,7 +122,9 @@ export async function generateDiffWithTargetRelease(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Candidate contract hashes generated successfully: ${[...candidateContractHashesResult.value.entries()].map(([key, hash]) => `\n${key}: ${hash}`).join("")}`,
+    );
   }
 
   const targetContractsResult = await toAsyncResult(
@@ -148,7 +150,9 @@ export async function generateDiffWithTargetRelease(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Target contract artifacts retrieved successfully: ${targetContractsResult.value.map((c) => `\n${c.sourceName} - ${c.contract}`).join("")}`,
+    );
   }
 
   const targetContractHashesResult = toResult(
@@ -161,7 +165,9 @@ export async function generateDiffWithTargetRelease(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD LOGGER
+    dependencies.logger.debug(
+      `Target contract hashes generated successfully: ${[...targetContractHashesResult.value.entries()].map(([key, hash]) => `\n${key}: ${hash}`).join("")}`,
+    );
   }
 
   const differences: Difference[] = [];
@@ -195,6 +201,12 @@ export async function generateDiffWithTargetRelease(
         status: "removed",
       });
     }
+  }
+
+  if (opts.debug) {
+    dependencies.logger.debug(
+      `Differences calculated successfully: ${differences.map((d) => `\n${d.path} - ${d.name}: ${d.status}`).join("")}`,
+    );
   }
 
   return differences;

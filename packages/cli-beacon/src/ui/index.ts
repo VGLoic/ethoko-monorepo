@@ -1,5 +1,6 @@
 import { styleText } from "node:util";
 import * as clackPrompts from "@clack/prompts";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export const LOG_COLORS = {
   log: "cyan",
@@ -146,5 +147,29 @@ export class CommandLogger {
       output: process.stderr,
     });
     return this;
+  }
+
+  /**
+   * Maps the CommandLogger to a DebugLogger by prefixing messages with [DEBUG].
+   * @returns A DebugLogger instance that uses this CommandLogger for logging debug messages.
+   */
+  public toDebugLogger(): DebugLogger {
+    return new CommandDebugLogger(this);
+  }
+}
+
+/**
+ * A DebugLogger implementation that uses CommandLogger to log debug messages.
+ * It prefixes the messages with [DEBUG] to differentiate them from regular logs.
+ */
+class CommandDebugLogger implements DebugLogger {
+  private logger: CommandLogger;
+
+  constructor(logger: CommandLogger) {
+    this.logger = logger;
+  }
+
+  debug(message: string): void {
+    this.logger.message(`[DEBUG] ${message}`);
   }
 }

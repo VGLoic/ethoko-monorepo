@@ -1,7 +1,7 @@
-import { CommandLogger } from "@/ui";
-import { PulledArtifactStore } from "../pulled-artifact-store";
-import { toAsyncResult } from "../utils/result";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
+import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export type ListArtifactsResult = Array<ArtifactItem>;
 
@@ -28,7 +28,7 @@ export type ArtifactItem = {
 export async function listPulledArtifacts(
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<ListArtifactsResult> {
@@ -56,7 +56,9 @@ export async function listPulledArtifacts(
     );
   }
   if (opts.debug) {
-    // REMIND ME: ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Projects retrieved successfully: ${projectsResult.value.join(", ")}`,
+    );
   }
 
   const items: ArtifactItem[] = [];
@@ -99,12 +101,16 @@ export async function listPulledArtifacts(
     for (const metadata of idsResult.value) {
       if (idsAlreadyVisited.has(metadata.id)) {
         if (opts.debug) {
-          // REMIND ME: ADD DEBUG LOG
+          dependencies.logger.debug(
+            `Skipping already visited ID "${metadata.id}" for project "${project}"`,
+          );
         }
         continue;
       }
       if (opts.debug) {
-        // REMIND ME: ADD DEBUG LOG
+        dependencies.logger.debug(
+          `Adding ID "${metadata.id}" for project "${project}"`,
+        );
       }
       items.push({
         project: project,

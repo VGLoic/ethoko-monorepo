@@ -1,4 +1,4 @@
-import { CommandLogger } from "@/ui";
+import { DebugLogger } from "@/utils/debug-logger";
 import { PulledArtifactStore } from "../pulled-artifact-store";
 import { StorageProvider } from "../storage-provider";
 import { toAsyncResult } from "../utils/result";
@@ -26,7 +26,7 @@ export type PullResult = {
  * @param project The project to pull artifacts for
  * @param dependencies.storageProvider The storage provider used to access remote artifacts
  * @param dependencies.pulledArtifactStore The pulled artifact store used to persist pulled artifacts
- * @param dependencies.logger The CommandLogger instance to use for logging and prompting the user during the pull process
+ * @param dependencies.logger The DebugLogger instance to use for debug logging during the pull process
  * @param opts Options for the pull command
  * @param opts.force Force the pull to skip checking existing pulled artifacts
  * @param opts.debug Enable debug mode
@@ -37,7 +37,7 @@ export async function pullProject(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { force: boolean; debug: boolean },
 ): Promise<PullResult> {
@@ -52,7 +52,7 @@ export async function pullProject(
     );
   }
   if (opts.debug) {
-    dependencies.logger.message(
+    dependencies.logger.debug(
       `Pulled artifact store set up at ${dependencies.pulledArtifactStore.rootPath}`,
     );
   }
@@ -73,18 +73,16 @@ export async function pullProject(
   const [remoteTags, remoteIds] = remoteListingResult.value;
 
   if (opts.debug) {
-    dependencies.logger.message(`Remote tags: ${remoteTags.join(", ")}`);
-    dependencies.logger.message(`Remote IDs: ${remoteIds.join(", ")}`);
+    dependencies.logger.debug(`Remote tags: ${remoteTags.join(", ")}`);
+    dependencies.logger.debug(`Remote IDs: ${remoteIds.join(", ")}`);
   }
 
   const tagsToDownload = remoteTags;
   const idsToDownload = remoteIds;
 
   if (opts.debug) {
-    dependencies.logger.message(
-      `Tags to download: ${tagsToDownload.join(", ")}`,
-    );
-    dependencies.logger.message(`IDs to download: ${idsToDownload.join(", ")}`);
+    dependencies.logger.debug(`Tags to download: ${tagsToDownload.join(", ")}`);
+    dependencies.logger.debug(`IDs to download: ${idsToDownload.join(", ")}`);
   }
 
   // Step 3: Check pulled artifact store
@@ -126,7 +124,12 @@ export async function pullProject(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Filtered tags to download: ${filteredTagsToDownload.join(", ")}`,
+    );
+    dependencies.logger.debug(
+      `Filtered IDs to download: ${filteredIdsToDownload.join(", ")}`,
+    );
   }
 
   // Step 4: Download artifacts
@@ -144,10 +147,12 @@ export async function pullProject(
     };
   }
 
-  // const missingArtifactCount =
-  //   filteredTagsToDownload.length + filteredIdsToDownload.length;
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    const missingArtifactCount =
+      filteredTagsToDownload.length + filteredIdsToDownload.length;
+    dependencies.logger.debug(
+      `Total artifacts to download: ${missingArtifactCount} (${filteredTagsToDownload.length} tags and ${filteredIdsToDownload.length} IDs)`,
+    );
   }
 
   const tagsPromises: Promise<{ tag: string; id: string }>[] =
@@ -186,7 +191,9 @@ export async function pullProject(
   for (const settlement of tagsSettlements) {
     if (settlement.status === "fulfilled") {
       if (opts.debug) {
-        // REMIND ME TO ADD DEBUG LOG
+        dependencies.logger.debug(
+          `Successfully pulled tag "${settlement.value.tag}" with ID "${settlement.value.id}".`,
+        );
       }
       pulledTags.push(settlement.value.tag);
       pulledIds.push(settlement.value.id);
@@ -194,7 +201,9 @@ export async function pullProject(
       // We know that the only possible error is PullTagError, we check for safety but we don't want any other error to be silently ignored
       if (settlement.reason instanceof PullTagError) {
         if (opts.debug) {
-          // REMIND ME TO ADD DEBUG LOG
+          dependencies.logger.debug(
+            `Failed to pull tag "${settlement.reason.tag}".`,
+          );
         }
         failedTags.push(settlement.reason.tag);
       } else {
@@ -211,7 +220,10 @@ export async function pullProject(
   );
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    const remainingIdsCount = filteredIdsToDownload.length;
+    dependencies.logger.debug(
+      `Remaining IDs to download after filtering: ${remainingIdsCount}`,
+    );
   }
 
   const idsPromises: Promise<{ id: string }>[] = filteredIdsToDownload.map(
@@ -244,12 +256,16 @@ export async function pullProject(
   for (const settlement of idsSettlements) {
     if (settlement.status === "fulfilled") {
       if (opts.debug) {
-        // REMIND ME TO ADD DEBUG LOG
+        dependencies.logger.debug(
+          `Successfully pulled ID "${settlement.value.id}".`,
+        );
       }
       pulledIds.push(settlement.value.id);
     } else {
       if (opts.debug) {
-        // REMIND ME TO ADD DEBUG LOG
+        dependencies.logger.debug(
+          `Failed to pull ID "${settlement.reason.id}".`,
+        );
       }
       // We know that the only possible error is PullIdError, we check for safety but we don't want any other error to be silently ignored
       if (settlement.reason instanceof PullIdError) {
@@ -263,9 +279,11 @@ export async function pullProject(
   }
 
   if (opts.debug) {
-    // const totalPulled = pulledTags.length + pulledIds.length;
-    // const totalFailed = failedTags.length + failedIds.length;
-    // REMIND ME TO ADD DEBUG LOG
+    const totalPulled = pulledTags.length + pulledIds.length;
+    const totalFailed = failedTags.length + failedIds.length;
+    dependencies.logger.debug(
+      `Total pulled: ${totalPulled}, Total failed: ${totalFailed}`,
+    );
   }
 
   return {
@@ -284,7 +302,7 @@ export async function pullProject(
  * @param artifactKey The key of the artifact to pull, which should specify the project and either a tag or an ID
  * @param dependencies.storageProvider The storage provider used to access remote artifacts
  * @param dependencies.pulledArtifactStore The store used to manage pulled artifacts locally
- * @param dependencies.logger The CommandLogger instance to use for logging and prompting the user during the pull process
+ * @param dependencies.logger The DebugLogger instance to use for debug logging during the pull process
  * @param opts Options for the pull command
  * @param opts.force Force the pull to skip checking existing pulled artifacts
  * @param opts.debug Enable debug mode
@@ -295,7 +313,7 @@ export async function pullArtifact(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { force: boolean; debug: boolean },
 ): Promise<{
@@ -314,7 +332,7 @@ export async function pullArtifact(
     );
   }
   if (opts.debug) {
-    dependencies.logger.message(
+    dependencies.logger.debug(
       `Pulled artifact store set up at ${dependencies.pulledArtifactStore.rootPath}`,
     );
   }
@@ -346,7 +364,7 @@ async function pullArtifactById(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { force: boolean; debug: boolean },
 ): Promise<{ tag: null; id: string; pulled: boolean }> {
@@ -364,7 +382,7 @@ async function pullArtifactById(
   // If already pulled and not force, skip
   if (hasAlreadyPulledResult.value && !opts.force) {
     if (opts.debug) {
-      dependencies.logger.message(
+      dependencies.logger.debug(
         `Artifact "${project}@${id}" already pulled, skipping`,
       );
     }
@@ -388,7 +406,9 @@ async function pullArtifactById(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Artifact "${project}@${id}" exists remotely, starting download...`,
+    );
   }
 
   // Download artifact
@@ -403,7 +423,9 @@ async function pullArtifactById(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Artifact "${project}@${id}" downloaded successfully`,
+    );
   }
 
   const createResult = await toAsyncResult(
@@ -419,7 +441,9 @@ async function pullArtifactById(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Artifact "${project}@${id}" saved locally successfully`,
+    );
   }
 
   return {
@@ -435,7 +459,7 @@ async function pullArtifactByTag(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { force: boolean; debug: boolean },
 ): Promise<{ tag: string; id: string; pulled: boolean }> {
@@ -450,7 +474,11 @@ async function pullArtifactByTag(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Checked if artifact "${project}:${tag}" is already pulled: ${
+        hasAlreadyPulledResult.value ? "Yes" : "No"
+      }`,
+    );
   }
 
   // If already pulled and not force, skip
@@ -461,7 +489,7 @@ async function pullArtifactByTag(
     );
     if (artifactIdResult.success) {
       if (opts.debug) {
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Artifact "${project}:${tag}" already pulled, skipping`,
         );
       }
@@ -472,7 +500,7 @@ async function pullArtifactByTag(
       };
     } else {
       if (opts.debug) {
-        dependencies.logger.message(
+        dependencies.logger.debug(
           `Artifact "${project}:${tag}" already pulled but failed to retrieve the associated ID, pulling again. Run with debug mode for more info`,
         );
       }
@@ -496,7 +524,9 @@ async function pullArtifactByTag(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Artifact "${project}:${tag}" exists remotely, starting download...`,
+    );
   }
 
   // Download artifact
@@ -529,7 +559,9 @@ async function pullArtifactByTag(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Artifact "${project}:${tag}" saved locally successfully`,
+    );
   }
 
   return {

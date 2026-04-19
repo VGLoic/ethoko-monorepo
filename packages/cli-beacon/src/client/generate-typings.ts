@@ -8,7 +8,7 @@ import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
 import { AbsolutePath } from "@/utils/path";
 import { StorageProvider } from "@/storage-provider";
-import { CommandLogger } from "@/ui";
+import { DebugLogger } from "@/utils/debug-logger";
 
 /**
  * Based from the Ethoko releases folder content, generate in the Ethoko typings folder
@@ -54,7 +54,7 @@ export async function generateAllPulledArtifactsTypings(
   ethokoTypingsPath: AbsolutePath,
   dependencies: {
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<void> {
@@ -84,7 +84,9 @@ export async function generateAllPulledArtifactsTypings(
     }
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Ethoko typings directory verified/created at ${ethokoTypingsPath.resolvedPath}`,
+    );
   }
 
   const projectsResult = await toAsyncResult(
@@ -100,7 +102,9 @@ export async function generateAllPulledArtifactsTypings(
   }
   const projects = projectsResult.value;
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Projects retrieved successfully: ${projects.join(", ")}`,
+    );
   }
   if (projects.length === 0) {
     const emptySummariesResult = await toAsyncResult(
@@ -153,7 +157,9 @@ export async function generateAllPulledArtifactsTypings(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Project summaries retrieved successfully: ${JSON.stringify(summary, null, 2)}`,
+    );
   }
 
   const generatedSummaryResult = await toAsyncResult(
@@ -170,7 +176,9 @@ export async function generateAllPulledArtifactsTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Summary typings files generated successfully at ${ethokoTypingsPath.resolvedPath}`,
+    );
   }
   const writeAbisResult = await toAsyncResult(
     writeAbiTypings(abisPerContractPerTag, ethokoTypingsPath),
@@ -182,7 +190,9 @@ export async function generateAllPulledArtifactsTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `ABI typings files generated successfully at ${ethokoTypingsPath.join("abis").resolvedPath}`,
+    );
   }
 }
 
@@ -192,7 +202,7 @@ export async function generateProjectTypings(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<void> {
@@ -222,7 +232,9 @@ export async function generateProjectTypings(
     }
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Ethoko typings directory verified/created at ${ethokoTypingsPath.resolvedPath}`,
+    );
   }
 
   const projectSummaryResult = await toAsyncResult(
@@ -235,7 +247,9 @@ export async function generateProjectTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Project summary retrieved successfully for project "${project}": ${JSON.stringify(projectSummaryResult.value, null, 2)}`,
+    );
   }
 
   const generatedSummaryResult = await toAsyncResult(
@@ -257,7 +271,9 @@ export async function generateProjectTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Generated typings content successfully for project "${project}"`,
+    );
   }
   const writeAbisResult = await toAsyncResult(
     writeAbiTypings(
@@ -272,7 +288,9 @@ export async function generateProjectTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `ABI typings files written successfully for project "${project}"`,
+    );
   }
 }
 
@@ -283,7 +301,7 @@ export async function generateTagTypings(
   dependencies: {
     storageProvider: StorageProvider;
     pulledArtifactStore: PulledArtifactStore;
-    logger: CommandLogger;
+    logger: DebugLogger;
   },
   opts: { debug: boolean },
 ): Promise<void> {
@@ -313,7 +331,9 @@ export async function generateTagTypings(
     }
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Ethoko typings directory verified/created at ${ethokoTypingsPath.resolvedPath}`,
+    );
   }
 
   const projectSummaryResult = await toAsyncResult(
@@ -326,7 +346,9 @@ export async function generateTagTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Project summary retrieved successfully for project "${project}": ${JSON.stringify(projectSummaryResult.value, null, 2)}`,
+    );
   }
 
   const filteredTagsPerContract: Record<string, string[]> = {};
@@ -352,7 +374,9 @@ export async function generateTagTypings(
   }
 
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Filtered the project summary for tag "${tag}". Contracts for this tag: ${filteredContractsPerTag[tag]?.join(", ") || "None"}`,
+    );
   }
 
   const generatedSummaryResult = await toAsyncResult(
@@ -374,7 +398,9 @@ export async function generateTagTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `Generated typings content successfully for project "${project}"`,
+    );
   }
   const writeAbisResult = await toAsyncResult(
     writeAbiTypings(
@@ -389,7 +415,9 @@ export async function generateTagTypings(
     );
   }
   if (opts.debug) {
-    // REMIND ME TO ADD DEBUG LOG
+    dependencies.logger.debug(
+      `ABI typings files written successfully for project "${project}"`,
+    );
   }
 }
 

@@ -68,7 +68,7 @@ export function registerArtifactsCommand(
       );
 
       await listPulledArtifacts(
-        { pulledArtifactStore, logger },
+        { pulledArtifactStore, logger: logger.toDebugLogger() },
         {
           debug: parsingResult.data.debug,
         },

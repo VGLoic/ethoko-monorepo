@@ -145,7 +145,7 @@ export function registerTypingsCommand(
           config.typingsPath,
           {
             pulledArtifactStore,
-            logger,
+            logger: logger.toDebugLogger(),
           },
           { debug: parsingResult.data.debug },
         );
@@ -236,6 +236,7 @@ async function runProjectTypingsCommand(
   },
   opts: { debug: boolean },
 ): Promise<void> {
+  const debugLogger = dependencies.logger.toDebugLogger();
   const hasProjectResult = await toAsyncResult(
     dependencies.pulledArtifactStore
       .listProjects()
@@ -256,7 +257,7 @@ async function runProjectTypingsCommand(
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: debugLogger,
       },
       {
         force: false,
@@ -274,7 +275,7 @@ async function runProjectTypingsCommand(
     {
       storageProvider: dependencies.storageProvider,
       pulledArtifactStore: dependencies.pulledArtifactStore,
-      logger: dependencies.logger,
+      logger: debugLogger,
     },
     opts,
   );
@@ -291,6 +292,7 @@ async function runTagTypingsCommand(
   },
   opts: { debug: boolean },
 ): Promise<void> {
+  const debugLogger = dependencies.logger.toDebugLogger();
   const hasTagResult = await toAsyncResult(
     dependencies.pulledArtifactStore.hasTag(project, tag),
     { debug: opts.debug },
@@ -304,17 +306,29 @@ async function runTagTypingsCommand(
     const pullSpinner = dependencies.logger.createSpinner(
       `Artifact "${project}:${tag}" not found locally, pulling...`,
     );
-    // REMIND ME: migrate approach here
     await pullArtifact(
       { project, type: "tag", tag },
       {
         storageProvider: dependencies.storageProvider,
         pulledArtifactStore: dependencies.pulledArtifactStore,
-        logger: dependencies.logger,
+        logger: debugLogger,
       },
       { force: false, debug: opts.debug },
-    );
+    ).catch((err) => {
+      pullSpinner.fail("Failed to pull artifact");
+      throw err;
+    });
     pullSpinner.succeed(`Artifact "${project}:${tag}" pulled successfully`);
   }
-  await generateTagTypings(project, tag, typingsPath, dependencies, opts);
+  await generateTagTypings(
+    project,
+    tag,
+    typingsPath,
+    {
+      storageProvider: dependencies.storageProvider,
+      pulledArtifactStore: dependencies.pulledArtifactStore,
+      logger: debugLogger,
+    },
+    opts,
+  );
 }
