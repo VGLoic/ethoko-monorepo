@@ -67,9 +67,12 @@ export function registerArtifactsCommand(
         config.pulledArtifactsPath,
       );
 
-      await listPulledArtifacts(pulledArtifactStore, {
-        debug: parsingResult.data.debug,
-      })
+      await listPulledArtifacts(
+        { pulledArtifactStore, logger },
+        {
+          debug: parsingResult.data.debug,
+        },
+      )
         .then((result) => {
           if (parsingResult.data.json && !logger.silent) {
             console.log(JSON.stringify(result, null, 2));

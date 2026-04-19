@@ -173,11 +173,11 @@ export async function runInspectCommand(
 
   const inspectResult = await inspectArtifact(
     resolvedArtifactKey,
-    dependencies.pulledArtifactStore,
     {
-      debug: opts.debug,
+      pulledArtifactStore: dependencies.pulledArtifactStore,
       logger: dependencies.logger,
     },
+    { debug: opts.debug },
   );
 
   if (opts.json && !dependencies.logger.silent) {

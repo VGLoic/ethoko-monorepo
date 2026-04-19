@@ -56,7 +56,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulled).toBe(true);
 
         const listArtifactsResult = await listPulledArtifacts(
-          pulledArtifactStore,
+          { pulledArtifactStore, logger },
           {
             debug: false,
           },
@@ -134,7 +134,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulled).toBe(true);
 
         const listArtifactsResult = await listPulledArtifacts(
-          pulledArtifactStore,
+          { pulledArtifactStore, logger },
           {
             debug: false,
           },
@@ -189,7 +189,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags).toContain(tag2);
 
         const listArtifactsResult = await listPulledArtifacts(
-          pulledArtifactStore,
+          { pulledArtifactStore, logger },
           {
             debug: false,
           },

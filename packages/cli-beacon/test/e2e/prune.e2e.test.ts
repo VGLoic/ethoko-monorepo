@@ -1,12 +1,5 @@
 import { describe, expect } from "vitest";
-import {
-  CliError,
-  pruneArtifact,
-  pruneOrphanedAndUntaggedArtifacts,
-  pruneProjectArtifacts,
-  pullArtifact,
-  pullProject,
-} from "@/client/index";
+import { CliError, pullArtifact, pullProject } from "@/client/index";
 import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import {
   STORAGE_PROVIDER_STRATEGIES,
@@ -15,6 +8,7 @@ import {
 import { createTestProjectName } from "@test/helpers/test-utils";
 import { CommandLogger } from "@/ui";
 import { runPushCommand } from "@/commands/push";
+import { runPruneCommand } from "@/commands/prune";
 
 const logger = new CommandLogger(true);
 const [, artifactFixture] = ARTIFACTS_STRATEGIES[0];
@@ -55,10 +49,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -102,10 +96,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([project]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([project]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(0);
@@ -135,10 +129,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([project]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([project]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -170,10 +164,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -185,10 +179,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     storageProviderTest(
       "pruneOrphanedAndUntaggedArtifacts - empty store returns empty list",
       async ({ pulledArtifactStore }) => {
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
         expect(result).toHaveLength(0);
       },
@@ -224,13 +218,12 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           logger,
         });
 
-        const result = await pruneProjectArtifacts(
-          project,
-          pulledArtifactStore,
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { type: "project", project } },
+          { pulledArtifactStore, logger },
           {
             dryRun: false,
             debug: false,
-            logger,
           },
         );
 
@@ -268,13 +261,12 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneProjectArtifacts(
-          project,
-          pulledArtifactStore,
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { type: "project", project } },
+          { pulledArtifactStore, logger },
           {
             dryRun: true,
             debug: false,
-            logger,
           },
         );
 
@@ -307,10 +299,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "id", id: artifactId },
-          pulledArtifactStore,
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          {
+            type: "specific",
+            artifactKey: { project, type: "id", id: artifactId },
+          },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -342,10 +337,13 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "id", id: artifactId },
-          pulledArtifactStore,
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          {
+            type: "specific",
+            artifactKey: { project, type: "id", id: artifactId },
+          },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -361,13 +359,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifact(
-            { project, type: "id", id: "nonexistentid" },
-            pulledArtifactStore,
+          runPruneCommand(
+            {
+              type: "specific",
+              artifactKey: { project, type: "id", id: "nonexistentid" },
+            },
+            { pulledArtifactStore, logger },
             {
               dryRun: false,
               debug: false,
-              logger,
             },
           ),
         ).rejects.toThrow(CliError);
@@ -395,10 +395,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "tag", tag },
-          pulledArtifactStore,
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -428,10 +428,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           { force: false, debug: false, logger },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "tag", tag },
-          pulledArtifactStore,
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -447,13 +447,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifact(
-            { project, type: "tag", tag: "nonexistent-tag" },
-            pulledArtifactStore,
+          runPruneCommand(
+            {
+              type: "specific",
+              artifactKey: { project, type: "tag", tag: "nonexistent-tag" },
+            },
+            { pulledArtifactStore, logger },
             {
               dryRun: false,
               debug: false,
-              logger,
             },
           ),
         ).rejects.toThrow(CliError);

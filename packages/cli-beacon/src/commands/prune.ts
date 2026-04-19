@@ -1,3 +1,4 @@
+import z from "zod";
 import { Command } from "commander";
 import { CommandLogger } from "@/ui";
 import { toAsyncResult } from "@/utils/result";
@@ -45,35 +46,37 @@ export function registerPruneCommand(
       }
 
       const config = configResult.value;
-      const store = new PulledArtifactStore(config.pulledArtifactsPath);
+      const pulledArtifactStore = new PulledArtifactStore(
+        config.pulledArtifactsPath,
+      );
       const dryRun = Boolean(options.dryRun);
 
       if (!artifactKey) {
-        logger.intro("Pruning orphaned and untagged artifacts");
         const configuredProjects = new Set([
           ...config.localProjectNames,
           ...config.globalProjectNames,
         ]);
-        await pruneOrphanedAndUntaggedArtifacts(store, configuredProjects, {
-          logger,
-          dryRun,
-          debug,
-        })
-          .then((prunedArtifacts) => {
-            displayPrunedArtifacts(prunedArtifacts, logger, dryRun);
-            logger.outro();
-          })
-          .catch((error) => {
-            if (error instanceof CliError) {
-              logger.error(error.message);
-            } else {
-              logger.error(
-                "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-              );
-              console.error(error);
-            }
-            process.exitCode = 1;
-          });
+        await runPruneCommand(
+          { type: "all", projects: configuredProjects },
+          {
+            pulledArtifactStore,
+            logger,
+          },
+          {
+            dryRun,
+            debug,
+          },
+        ).catch((error) => {
+          if (error instanceof CliError) {
+            logger.error(error.message);
+          } else {
+            logger.error(
+              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+            );
+            console.error(error);
+          }
+          process.exitCode = 1;
+        });
         return;
       }
 
@@ -86,52 +89,77 @@ export function registerPruneCommand(
         return;
       }
 
-      let pruneResultPromise: Promise<PruneResult>;
-      if (parsedKeyResult.data.type === "project") {
-        logger.intro(
-          `Pruning artifacts for project "${parsedKeyResult.data.project}"`,
-        );
-        pruneResultPromise = pruneProjectArtifacts(
-          parsedKeyResult.data.project,
-          store,
-          {
-            logger,
-            dryRun,
-            debug,
-          },
-        );
-      } else {
-        logger.intro(
-          `Pruning artifact "${parsedKeyResult.data.project}${
-            parsedKeyResult.data.type === "tag"
-              ? `:${parsedKeyResult.data.tag}`
-              : `@${parsedKeyResult.data.id}`
-          }"`,
-        );
-        pruneResultPromise = pruneArtifact(parsedKeyResult.data, store, {
+      await runPruneCommand(
+        { type: "specific", artifactKey: parsedKeyResult.data },
+        {
+          pulledArtifactStore,
           logger,
+        },
+        {
           dryRun,
           debug,
-        });
-      }
-
-      await pruneResultPromise
-        .then((prunedArtifacts) => {
-          displayPrunedArtifacts(prunedArtifacts, logger, dryRun);
-          logger.outro();
-        })
-        .catch((error) => {
-          if (error instanceof CliError) {
-            logger.error(error.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            console.error(error);
-          }
-          process.exitCode = 1;
-        });
+        },
+      ).catch((error) => {
+        if (error instanceof CliError) {
+          logger.error(error.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(error);
+        }
+        process.exitCode = 1;
+      });
     });
+}
+
+export async function runPruneCommand(
+  target:
+    | { type: "all"; projects: Set<string> }
+    | {
+        type: "specific";
+        artifactKey: z.infer<typeof ProjectOrArtifactKeySchema>;
+      },
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: {
+    debug: boolean;
+    dryRun: boolean;
+  },
+): Promise<PruneResult> {
+  let pruneResult: PruneResult;
+  if (target.type === "all") {
+    dependencies.logger.intro("Pruning orphaned and untagged artifacts");
+    pruneResult = await pruneOrphanedAndUntaggedArtifacts(
+      target.projects,
+      dependencies,
+      opts,
+    );
+  } else if (target.artifactKey.type === "project") {
+    dependencies.logger.intro(
+      `Pruning artifacts for project "${target.artifactKey.project}"`,
+    );
+    pruneResult = await pruneProjectArtifacts(
+      target.artifactKey.project,
+      dependencies,
+      opts,
+    );
+  } else {
+    dependencies.logger.intro(
+      `Pruning artifact "${target.artifactKey.project}${
+        target.artifactKey.type === "tag"
+          ? `:${target.artifactKey.tag}`
+          : `@${target.artifactKey.id}`
+      }"`,
+    );
+    pruneResult = await pruneArtifact(target.artifactKey, dependencies, opts);
+  }
+
+  displayPrunedArtifacts(pruneResult, dependencies.logger, opts.dryRun);
+
+  return pruneResult;
 }
 
 function formatBytes(bytes: number): string {

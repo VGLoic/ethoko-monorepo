@@ -41,11 +41,14 @@ export type InspectResult = {
  */
 export async function inspectArtifact(
   artifactKey: ResolvedArtifactKey,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { debug: boolean; logger: CommandLogger },
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { debug: boolean },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -56,11 +59,11 @@ export async function inspectArtifact(
 
   const artifactsResult = await toAsyncResult(
     Promise.all([
-      pulledArtifactStore.retrieveInputArtifact(
+      dependencies.pulledArtifactStore.retrieveInputArtifact(
         artifactKey.project,
         artifactKey.id,
       ),
-      pulledArtifactStore.listContractArtifacts(
+      dependencies.pulledArtifactStore.listContractArtifacts(
         artifactKey.project,
         artifactKey.id,
       ),
@@ -73,6 +76,9 @@ export async function inspectArtifact(
     );
   }
   const [inputArtifact, contractList] = artifactsResult.value;
+  if (opts.debug) {
+    // REMIND ME TO ADD DEBUG LOG
+  }
 
   const compilerSettings = deriveCompilerSettings(inputArtifact);
 

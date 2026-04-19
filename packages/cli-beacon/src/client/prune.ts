@@ -11,17 +11,22 @@ export type PruneResult = {
   size: number;
 }[];
 export async function pruneOrphanedAndUntaggedArtifacts(
-  store: PulledArtifactStore,
   configuredProjects: Set<string>,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
   opts: {
     dryRun: boolean;
     debug: boolean;
-    logger: CommandLogger;
   },
 ): Promise<PruneResult> {
-  const storedProjectsResult = await toAsyncResult(store.listProjects(), {
-    debug: opts.debug,
-  });
+  const storedProjectsResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.listProjects(),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!storedProjectsResult.success) {
     throw new CliError(
       "Failed to list projects locally. Run with debug for more details. File an issue if the problem persists.",
@@ -37,15 +42,20 @@ export async function pruneOrphanedAndUntaggedArtifacts(
       orphanedProjects.push(p);
     }
   }
+  if (opts.debug) {
+    // REMIND ME: Add debug log
+  }
 
   const artifactsToPrune = [];
 
   // Retrieve all artifacts for orphaned projects
   const orphanedArtifactsSettlements = await Promise.allSettled(
     orphanedProjects.map((project) =>
-      listProjectArtifacts(project, store).catch((err) => {
-        throw new ProjectError(project, err);
-      }),
+      listProjectArtifacts(project, dependencies.pulledArtifactStore).catch(
+        (err) => {
+          throw new ProjectError(project, err);
+        },
+      ),
     ),
   );
   let hasOrphanedArtifactsError = false;
@@ -56,7 +66,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
       hasOrphanedArtifactsError = true;
       if (opts.debug) {
         const reason = settlement.reason as ProjectError;
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to list artifacts for an orphaned project "${reason.project}". Error: ${reason.error}`,
         );
       }
@@ -68,10 +78,14 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
   // Retrieve all untagged artifacts for configured projects
   const untaggedArtifactsSettlements = await Promise.allSettled(
     configuredStoredProjects.map((project) =>
-      listProjectArtifacts(project, store)
+      listProjectArtifacts(project, dependencies.pulledArtifactStore)
         .then((artifacts) => artifacts.filter((a) => a.tag === null))
         .catch((err) => {
           throw new ProjectError(project, err);
@@ -86,7 +100,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
       hasUntaggedArtifactsError = true;
       if (opts.debug) {
         const reason = settlement.reason as ProjectError;
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to list untagged artifacts for a configured project "${reason.project}". Error: ${reason.error}`,
         );
       }
@@ -98,9 +112,13 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
   const artifactsWithSizeSettlements = await Promise.allSettled(
     artifactsToPrune.map((artifact) =>
-      store
+      dependencies.pulledArtifactStore
         .getIdSize(artifact.project, artifact.id)
         .then((size) => ({ ...artifact, size })),
     ),
@@ -113,7 +131,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     } else {
       hasGetSizeError = true;
       if (opts.debug) {
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to get size for an artifact "${settlement.reason.project}@${settlement.reason.id}". Error: ${settlement.reason.error}`,
         );
       }
@@ -125,6 +143,9 @@ export async function pruneOrphanedAndUntaggedArtifacts(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
   if (opts.dryRun) {
     return artifactsWithSize;
   }
@@ -132,10 +153,18 @@ export async function pruneOrphanedAndUntaggedArtifacts(
   const deleteSettlements = await Promise.allSettled(
     artifactsWithSize.map((artifact) => {
       const promise = artifact.tag
-        ? store
+        ? dependencies.pulledArtifactStore
             .deleteTag(artifact.project, artifact.tag)
-            .then(() => store.deleteId(artifact.project, artifact.id))
-        : store.deleteId(artifact.project, artifact.id);
+            .then(() =>
+              dependencies.pulledArtifactStore.deleteId(
+                artifact.project,
+                artifact.id,
+              ),
+            )
+        : dependencies.pulledArtifactStore.deleteId(
+            artifact.project,
+            artifact.id,
+          );
       return promise
         .then(() => artifact)
         .catch((err) => {
@@ -157,7 +186,7 @@ export async function pruneOrphanedAndUntaggedArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to delete an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -174,17 +203,22 @@ export async function pruneOrphanedAndUntaggedArtifacts(
 
 export async function pruneProjectArtifacts(
   project: string,
-  store: PulledArtifactStore,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
   opts: {
     dryRun: boolean;
     debug: boolean;
-    logger: CommandLogger;
   },
 ): Promise<PruneResult> {
-  const artifacts = await listProjectArtifacts(project, store);
+  const artifacts = await listProjectArtifacts(
+    project,
+    dependencies.pulledArtifactStore,
+  );
   const artifactsWithSizeSettlements = await Promise.allSettled(
     artifacts.map((artifact) =>
-      store
+      dependencies.pulledArtifactStore
         .getIdSize(artifact.project, artifact.id)
         .then((size) => ({ ...artifact, size }))
         .catch((err) => {
@@ -209,7 +243,7 @@ export async function pruneProjectArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to get size for an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -221,6 +255,10 @@ export async function pruneProjectArtifacts(
     );
   }
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
   if (opts.dryRun) {
     return artifactsWithSize;
   }
@@ -228,10 +266,18 @@ export async function pruneProjectArtifacts(
   const deleteSettlements = await Promise.allSettled(
     artifactsWithSize.map((artifact) => {
       const promise = artifact.tag
-        ? store
+        ? dependencies.pulledArtifactStore
             .deleteTag(artifact.project, artifact.tag)
-            .then(() => store.deleteId(artifact.project, artifact.id))
-        : store.deleteId(artifact.project, artifact.id);
+            .then(() =>
+              dependencies.pulledArtifactStore.deleteId(
+                artifact.project,
+                artifact.id,
+              ),
+            )
+        : dependencies.pulledArtifactStore.deleteId(
+            artifact.project,
+            artifact.id,
+          );
       return promise
         .then(() => artifact)
         .catch((err) => {
@@ -253,7 +299,7 @@ export async function pruneProjectArtifacts(
         const artifactDisplay = reason.tag
           ? `${reason.project}:${reason.tag}`
           : `${reason.project}@${reason.id}`;
-        opts.logger.error(
+        dependencies.logger.message(
           `Failed to delete an artifact "${artifactDisplay}". Error: ${reason.error}`,
         );
       }
@@ -264,26 +310,36 @@ export async function pruneProjectArtifacts(
       "Failed to delete some artifacts. Run with debug for more details. File an issue if the problem persists.",
     );
   }
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
 
   return artifactsWithSize;
 }
 
 export async function pruneArtifact(
   artifactKey: ArtifactKey,
-  store: PulledArtifactStore,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
   opts: {
     dryRun: boolean;
     debug: boolean;
-    logger: CommandLogger;
   },
 ): Promise<PruneResult> {
   if (artifactKey.type === "id") {
-    return pruneArtifactById(artifactKey.project, artifactKey.id, store, opts);
+    return pruneArtifactById(
+      artifactKey.project,
+      artifactKey.id,
+      dependencies,
+      opts,
+    );
   } else {
     return pruneArtifactByTag(
       artifactKey.project,
       artifactKey.tag,
-      store,
+      dependencies,
       opts,
     );
   }
@@ -292,16 +348,21 @@ export async function pruneArtifact(
 async function pruneArtifactById(
   project: string,
   id: string,
-  store: PulledArtifactStore,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
   opts: {
     dryRun: boolean;
     debug: boolean;
-    logger: CommandLogger;
   },
 ): Promise<PruneResult> {
-  const hasIdResult = await toAsyncResult(store.hasId(project, id), {
-    debug: opts.debug,
-  });
+  const hasIdResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.hasId(project, id),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!hasIdResult.success) {
     throw new CliError(
       `Failed to check if the artifact exists. Run with debug for more details. File an issue if the problem persists.`,
@@ -312,9 +373,12 @@ async function pruneArtifactById(
       `Artifact "${project}@${id}" not found. Run with debug for more details. File an issue if the problem persists.`,
     );
   }
-  const sizeResult = await toAsyncResult(store.getIdSize(project, id), {
-    debug: opts.debug,
-  });
+  const sizeResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.getIdSize(project, id),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!sizeResult.success) {
     throw new CliError(
       `Failed to get size for the artifact "${project}@${id}". Run with debug for more details. File an issue if the problem persists.`,
@@ -327,17 +391,28 @@ async function pruneArtifactById(
     size: sizeResult.value,
   };
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
   if (opts.dryRun) {
     return [artifactWithSize];
   }
 
-  const deleteResult = await toAsyncResult(store.deleteId(project, id), {
-    debug: opts.debug,
-  });
+  const deleteResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.deleteId(project, id),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!deleteResult.success) {
     throw new CliError(
       `Failed to delete the artifact "${project}@${id}". Run with debug for more details. File an issue if the problem persists.`,
     );
+  }
+
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
   }
 
   return [artifactWithSize];
@@ -346,16 +421,21 @@ async function pruneArtifactById(
 async function pruneArtifactByTag(
   project: string,
   tag: string,
-  store: PulledArtifactStore,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
   opts: {
     dryRun: boolean;
     debug: boolean;
-    logger: CommandLogger;
   },
 ): Promise<PruneResult> {
-  const hasTagResult = await toAsyncResult(store.hasTag(project, tag), {
-    debug: opts.debug,
-  });
+  const hasTagResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.hasTag(project, tag),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!hasTagResult.success) {
     throw new CliError(
       `Failed to check if the artifact exists. Run with debug for more details. File an issue if the problem persists.`,
@@ -366,18 +446,28 @@ async function pruneArtifactByTag(
       `Artifact "${project}:${tag}" not found. Run with debug for more details. File an issue if the problem persists.`,
     );
   }
-  const idResult = await toAsyncResult(store.retrieveArtifactId(project, tag), {
-    debug: opts.debug,
-  });
+  const idResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.retrieveArtifactId(project, tag),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!idResult.success) {
     throw new CliError(
       `Failed to retrieve the artifact ID for "${project}:${tag}". Run with debug for more details. File an issue if the problem persists.`,
     );
   }
   const id = idResult.value;
-  const sizeResult = await toAsyncResult(store.getIdSize(project, id), {
-    debug: opts.debug,
-  });
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
+  const sizeResult = await toAsyncResult(
+    dependencies.pulledArtifactStore.getIdSize(project, id),
+    {
+      debug: opts.debug,
+    },
+  );
   if (!sizeResult.success) {
     throw new CliError(
       `Failed to get size for the artifact "${project}:${tag}". Run with debug for more details. File an issue if the problem persists.`,
@@ -390,12 +480,19 @@ async function pruneArtifactByTag(
     size: sizeResult.value,
   };
 
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
+  }
+
   if (opts.dryRun) {
     return [artifactWithSize];
   }
 
   const deleteResult = await toAsyncResult(
-    Promise.all([store.deleteId(project, id), store.deleteTag(project, tag)]),
+    Promise.all([
+      dependencies.pulledArtifactStore.deleteId(project, id),
+      dependencies.pulledArtifactStore.deleteTag(project, tag),
+    ]),
     {
       debug: opts.debug,
     },
@@ -404,6 +501,10 @@ async function pruneArtifactByTag(
     throw new CliError(
       `Failed to delete the artifact "${project}:${tag}". Run with debug for more details. File an issue if the problem persists.`,
     );
+  }
+
+  if (opts.debug) {
+    // REMIND ME: ADD DEBUG LOG
   }
 
   return [artifactWithSize];
