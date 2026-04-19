@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect } from "vitest";
-import { pullArtifact } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -15,6 +14,7 @@ import { CommandLogger } from "@/ui";
 import { AbsolutePath } from "@/utils/path";
 import { runPushCommand } from "@/commands/push";
 import { runRestoreCommand } from "@/commands/restore";
+import { runPullCommand } from "@/commands/pull";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Restore E2E Tests (%s)",
@@ -234,7 +234,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "tag", tag },
                 { storageProvider, pulledArtifactStore, logger },
                 {
@@ -298,7 +298,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "id", id: artifactId },
                 { storageProvider, pulledArtifactStore, logger },
                 {

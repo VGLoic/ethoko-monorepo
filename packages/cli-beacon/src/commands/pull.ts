@@ -14,6 +14,7 @@ import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -91,99 +92,78 @@ export function registerPullCommand(
         config.pulledArtifactsPath,
       );
 
-      let pullPromise: Promise<PullResult>;
-      if (artifactKeyParsingResult.data.type === "tag") {
-        const tag = artifactKeyParsingResult.data.tag;
-        logger.intro(
-          `Pulling artifact "${artifactKeyParsingResult.data.project}:${tag}"`,
-        );
-        pullPromise = pullArtifact(
-          artifactKeyParsingResult.data,
-          {
-            storageProvider,
-            pulledArtifactStore,
-            logger,
-          },
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-          },
-        ).then((result) => ({
-          remoteTags: [tag],
-          remoteIds: [result.id],
-          pulledTags: result.pulled ? [tag] : [],
-          pulledIds: result.pulled ? [result.id] : [],
-          failedTags: [],
-          failedIds: [],
-        }));
-      } else if (artifactKeyParsingResult.data.type === "id") {
-        const id = artifactKeyParsingResult.data.id;
-        logger.intro(
-          `Pulling artifact "${artifactKeyParsingResult.data.project}@${id}"`,
-        );
-        pullPromise = pullArtifact(
-          artifactKeyParsingResult.data,
-          {
-            storageProvider,
-            pulledArtifactStore,
-            logger,
-          },
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-          },
-        ).then((result) => ({
-          remoteTags: [],
-          remoteIds: [id],
-          pulledTags: [],
-          pulledIds: result.pulled ? [id] : [],
-          failedTags: [],
-          failedIds: [],
-        }));
-      } else if (artifactKeyParsingResult.data.type === "project") {
-        logger.intro(
-          `Pulling artifacts for project "${artifactKeyParsingResult.data.project}"`,
-        );
-        pullPromise = pullProject(
-          artifactKeyParsingResult.data.project,
-          {
-            storageProvider,
-            pulledArtifactStore,
-            logger,
-          },
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-          },
-        );
-      } else {
-        logger.error(
-          `Unknown artifact key type: ${artifactKeyParsingResult.data satisfies never}`,
-        );
-        process.exitCode = 1;
-        return;
-      }
-
-      await pullPromise
-        .then((result) => {
-          displayPullResults(
-            logger,
-            artifactKeyParsingResult.data.project,
-            result,
+      await runPullCommand(
+        artifactKeyParsingResult.data,
+        {
+          storageProvider,
+          pulledArtifactStore,
+          logger,
+        },
+        {
+          force: optsParsingResult.data.force,
+          debug: optsParsingResult.data.debug,
+        },
+      ).catch((err) => {
+        if (err instanceof CliError) {
+          logger.error(err.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-        })
-        .catch((err) => {
-          if (err instanceof CliError) {
-            logger.error(err.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            logger.error(err);
-          }
-          process.exitCode = 1;
-        });
+          logger.error(err);
+        }
+        process.exitCode = 1;
+      });
     });
+}
+
+export async function runPullCommand(
+  target: z.infer<typeof ProjectOrArtifactKeySchema>,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: {
+    force: boolean;
+    debug: boolean;
+  },
+): Promise<PullResult> {
+  let pullPromise: Promise<PullResult>;
+  if (target.type === "tag") {
+    const tag = target.tag;
+    dependencies.logger.intro(`Pulling artifact "${target.project}:${tag}"`);
+    pullPromise = pullArtifact(target, dependencies, opts).then((result) => ({
+      remoteTags: [tag],
+      remoteIds: [result.id],
+      pulledTags: result.pulled ? [tag] : [],
+      pulledIds: result.pulled ? [result.id] : [],
+      failedTags: [],
+      failedIds: [],
+    }));
+  } else if (target.type === "id") {
+    const id = target.id;
+    dependencies.logger.intro(`Pulling artifact "${target.project}@${id}"`);
+    pullPromise = pullArtifact(target, dependencies, opts).then((result) => ({
+      remoteTags: [],
+      remoteIds: [id],
+      pulledTags: [],
+      pulledIds: result.pulled ? [id] : [],
+      failedTags: [],
+      failedIds: [],
+    }));
+  } else if (target.type === "project") {
+    dependencies.logger.intro(
+      `Pulling artifacts for project "${target.project}"`,
+    );
+    pullPromise = pullProject(target.project, dependencies, opts);
+  } else {
+    throw new CliError(`Unknown artifact key type: ${target satisfies never}`);
+  }
+
+  const pullResult = await pullPromise;
+  displayPullResults(dependencies.logger, target.project, pullResult);
+  return pullResult;
 }
 
 function displayPullResults(

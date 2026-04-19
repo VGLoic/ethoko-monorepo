@@ -1,6 +1,5 @@
 import fs from "fs/promises";
 import { describe, expect } from "vitest";
-import { pullArtifact } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -11,6 +10,7 @@ import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import { CommandLogger } from "@/ui";
 import { runPushCommand } from "@/commands/push";
 import { runExportCommand } from "@/commands/export";
+import { runPullCommand } from "@/commands/pull";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Export E2E Tests (%s)",
@@ -51,7 +51,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "tag", tag },
                 {
                   storageProvider,
@@ -133,7 +133,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
               },
             );
 
-            await pullArtifact(
+            await runPullCommand(
               { project, type: "id", id: artifactId },
               { storageProvider, pulledArtifactStore, logger },
               {
@@ -232,7 +232,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           },
         );
 
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
           { storageProvider, pulledArtifactStore, logger },
           {
