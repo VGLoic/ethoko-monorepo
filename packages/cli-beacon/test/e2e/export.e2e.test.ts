@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { describe, expect } from "vitest";
-import { pullArtifact, exportContractArtifact } from "@/client/index";
+import { pullArtifact } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -10,6 +10,7 @@ import {
 import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import { CommandLogger } from "@/ui";
 import { runPushCommand } from "@/commands/push";
+import { runExportCommand } from "@/commands/export";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Export E2E Tests (%s)",
@@ -64,15 +65,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             const exportFixture = artifactFixture.exportExpectedResult;
 
-            const exportResult = await exportContractArtifact(
+            const exportResult = await runExportCommand(
               { project, type: "tag", tag },
               exportFixture.name,
-              storageProvider,
-              pulledArtifactStore,
               {
-                debug: false,
+                storageProvider,
+                pulledArtifactStore,
                 logger,
               },
+              { debug: false },
             );
 
             expect(exportResult.project).toBe(project);
@@ -143,15 +144,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             const exportFixture = artifactFixture.exportExpectedResult;
 
-            const exportResult = await exportContractArtifact(
+            const exportResult = await runExportCommand(
               { project, type: "id", id: artifactId },
               exportFixture.name,
-              storageProvider,
-              pulledArtifactStore,
               {
-                debug: false,
+                storageProvider,
+                pulledArtifactStore,
                 logger,
               },
+              { debug: false },
             );
 
             expect(exportResult.project).toBe(project);
@@ -191,15 +192,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          exportContractArtifact(
+          runExportCommand(
             { project, type: "tag", tag: "non-existent-tag" },
             "Counter",
-            storageProvider,
-            pulledArtifactStore,
             {
-              debug: false,
+              storageProvider,
+              pulledArtifactStore,
               logger,
             },
+            { debug: false },
           ),
         ).rejects.toThrow();
       },
@@ -243,15 +244,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         await expect(
-          exportContractArtifact(
+          runExportCommand(
             { project, type: "id", id: artifactId },
             "NonExistentContract",
-            storageProvider,
-            pulledArtifactStore,
             {
-              debug: false,
+              storageProvider,
+              pulledArtifactStore,
               logger,
             },
+            { debug: false },
           ),
         ).rejects.toThrow();
       },

@@ -26,7 +26,7 @@ export async function resolvePulledArtifact(
       );
     }
     if (hasIdResult.value) {
-      return { project: artifactKey.project, id: artifactKey.id };
+      return { project: artifactKey.project, id: artifactKey.id, tag: null };
     }
   } else {
     const hasTagResult = await toAsyncResult(
@@ -51,7 +51,11 @@ export async function resolvePulledArtifact(
           `The artifact ${artifactKey.project}:${artifactKey.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
         );
       }
-      return { project: artifactKey.project, id: artifactIdResult.value };
+      return {
+        project: artifactKey.project,
+        id: artifactIdResult.value,
+        tag: artifactKey.tag,
+      };
     }
   }
 

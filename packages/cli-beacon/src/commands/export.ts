@@ -5,15 +5,18 @@ import { CommandLogger } from "@/ui/index.js";
 import {
   CliError,
   exportContractArtifact,
+  pullArtifact,
+  resolvePulledArtifact,
   type ExportContractArtifactResult,
-} from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
-
+} from "@/client";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 import { createStorageProvider } from "./utils/storage-provider";
+import { ArtifactKey } from "@/utils/artifact-key";
+import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -121,59 +124,112 @@ export function registerExportCommand(
         optsParsingResult.data.debug,
       );
 
-      await exportContractArtifact(
+      await runExportCommand(
         artifactKeyParsingResult.data,
         optsParsingResult.data.contract,
-        storageProvider,
-        pulledArtifactStore,
         {
-          debug: optsParsingResult.data.debug,
+          storageProvider,
+          pulledArtifactStore,
           logger,
         },
-      )
-        .then(async (result: ExportContractArtifactResult) => {
-          if (optsParsingResult.data.output) {
-            const artifactJson = JSON.stringify(result, null, 2);
-
-            try {
-              await fs.access(optsParsingResult.data.output.resolvedPath);
-              logger.warn(
-                `File ${optsParsingResult.data.output.resolvedPath} already exists, overwriting...`,
-              );
-            } catch {
-              const dir = optsParsingResult.data.output.dirname();
-              await fs.mkdir(dir.resolvedPath, { recursive: true });
-            }
-
-            await fs.writeFile(
-              optsParsingResult.data.output.resolvedPath,
-              `${artifactJson}\n`,
-            );
-
-            const contractIdentifier = `${result.sourceName}:${result.contractName}`;
-            const artifactLabel = result.tag
-              ? `${result.project}:${result.tag}`
-              : `${result.project}:${result.id}`;
-            logger.success(
-              `Exported contract artifact for ${contractIdentifier} from ${artifactLabel} to ${optsParsingResult.data.output.resolvedPath}`,
-            );
-            return;
+        {
+          debug: optsParsingResult.data.debug,
+          output: optsParsingResult.data.output,
+        },
+      ).catch((err: unknown) => {
+        if (err instanceof CliError) {
+          logger.error(err.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          if (err instanceof Error) {
+            console.error(err);
           }
-
-          console.log(JSON.stringify(result, null, 2));
-        })
-        .catch((err: unknown) => {
-          if (err instanceof CliError) {
-            logger.error(err.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            if (err instanceof Error) {
-              console.error(err);
-            }
-          }
-          process.exitCode = 1;
-        });
+        }
+        process.exitCode = 1;
+      });
     });
+}
+
+export async function runExportCommand(
+  artifactKey: ArtifactKey,
+  shortOrFullyQualifiedContractName: string,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: {
+    debug: boolean;
+    output?: AbsolutePath;
+  },
+): Promise<ExportContractArtifactResult> {
+  let resolvedArtifactKey = await resolvePulledArtifact(
+    artifactKey,
+    dependencies.pulledArtifactStore,
+    { debug: opts.debug },
+  );
+  if (!resolvedArtifactKey) {
+    const artifactLabel = `${artifactKey.project}${
+      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+    }`;
+    const pullSpinner = dependencies.logger.createSpinner(
+      `Artifact "${artifactLabel}" not found locally, pulling...`,
+    );
+    const pulledArtifact = await pullArtifact(
+      artifactKey,
+      dependencies.storageProvider,
+      dependencies.pulledArtifactStore,
+      {
+        force: false,
+        debug: opts.debug,
+        logger: dependencies.logger,
+      },
+    );
+    pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
+    resolvedArtifactKey = {
+      project: artifactKey.project,
+      id: pulledArtifact.id,
+      tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+    };
+  }
+
+  const exportResult = await exportContractArtifact(
+    resolvedArtifactKey,
+    shortOrFullyQualifiedContractName,
+    dependencies.pulledArtifactStore,
+    {
+      debug: opts.debug,
+      logger: dependencies.logger,
+    },
+  );
+
+  if (opts.output) {
+    const artifactJson = JSON.stringify(exportResult, null, 2);
+
+    try {
+      await fs.access(opts.output.resolvedPath);
+      dependencies.logger.warn(
+        `File ${opts.output.resolvedPath} already exists, overwriting...`,
+      );
+    } catch {
+      const dir = opts.output.dirname();
+      await fs.mkdir(dir.resolvedPath, { recursive: true });
+    }
+
+    await fs.writeFile(opts.output.resolvedPath, `${artifactJson}\n`);
+
+    const contractIdentifier = `${exportResult.sourceName}:${exportResult.contractName}`;
+    const artifactLabel = exportResult.tag
+      ? `${exportResult.project}:${exportResult.tag}`
+      : `${exportResult.project}:${exportResult.id}`;
+    dependencies.logger.success(
+      `Exported contract artifact for ${contractIdentifier} from ${artifactLabel} to ${opts.output.resolvedPath}`,
+    );
+  }
+
+  console.log(JSON.stringify(exportResult, null, 2));
+
+  return exportResult;
 }

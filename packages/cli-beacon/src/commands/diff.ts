@@ -214,6 +214,7 @@ async function runDiffCommand(
     resolvedArtifactKey = {
       project: artifactKey.project,
       id: pulledArtifact.id,
+      tag: artifactKey.type === "tag" ? "tag" : null,
     };
   }
 

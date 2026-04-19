@@ -4,9 +4,7 @@ import { toAsyncResult, toResult } from "../utils/result";
 import { CliError } from "./error";
 import { ContractMetadataSchema } from "@/solc-artifacts/v0.8.33/contract-metadata-json";
 import z from "zod";
-import { retrieveOrPullArtifact } from "./retrieve-or-pull-artifact";
-import { StorageProvider } from "@/storage-provider/storage-provider.interface";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactKey } from "@/utils/artifact-key";
 
 type ContractBytecode = {
   functionDebugData?: unknown;
@@ -56,9 +54,8 @@ export type ExportContractArtifactResult = {
 };
 
 export async function exportContractArtifact(
-  artifactKey: ArtifactKey,
+  artifactKey: ResolvedArtifactKey,
   shortOrFullyQualifiedContractName: string,
-  storageProvider: StorageProvider,
   pulledArtifactStore: PulledArtifactStore,
   opts: { debug: boolean; logger: CommandLogger },
 ): Promise<ExportContractArtifactResult> {
@@ -72,17 +69,11 @@ export async function exportContractArtifact(
     );
   }
 
-  // @dev `retrieveOrPullArtifact` will throw a `CliError` if it fails
-  // so we don't need to handle the error case here
-  const artifactId = await retrieveOrPullArtifact(
-    artifactKey,
-    storageProvider,
-    pulledArtifactStore,
-    { debug: opts.debug, logger: opts.logger },
-  );
-
   const contractListResult = await toAsyncResult(
-    pulledArtifactStore.listContractArtifacts(artifactKey.project, artifactId),
+    pulledArtifactStore.listContractArtifacts(
+      artifactKey.project,
+      artifactKey.id,
+    ),
     { debug: opts.debug },
   );
   if (!contractListResult.success) {
@@ -143,7 +134,7 @@ export async function exportContractArtifact(
   const contractArtifactResult = await toAsyncResult(
     pulledArtifactStore.retrieveContractOutputArtifact(
       artifactKey.project,
-      artifactId,
+      artifactKey.id,
       targetContract.sourceName,
       targetContract.contractName,
     ),
@@ -177,7 +168,7 @@ export async function exportContractArtifact(
     const inputArtifactResult = await toAsyncResult(
       pulledArtifactStore.retrieveInputArtifact(
         artifactKey.project,
-        artifactId,
+        artifactKey.id,
       ),
       { debug: opts.debug },
     );
@@ -209,7 +200,7 @@ export async function exportContractArtifact(
   }
 
   return {
-    tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+    tag: artifactKey.tag,
     _format: "exported-ethoko-contract-artifact-v0",
     id: contractArtifact.id,
     project: artifactKey.project,
@@ -240,8 +231,8 @@ export async function exportContractArtifact(
   };
 }
 
-function deriveDisplayArtifactName(artifactKey: ArtifactKey): string {
-  if (artifactKey.type === "tag") {
+function deriveDisplayArtifactName(artifactKey: ResolvedArtifactKey): string {
+  if (artifactKey.tag) {
     return `${artifactKey.project}:${artifactKey.tag}`;
   }
   return `${artifactKey.project}:${artifactKey.id}`;

@@ -13,4 +13,5 @@ export type ArtifactKey =
 export type ResolvedArtifactKey = {
   project: string;
   id: string;
+  tag: string | null;
 };
