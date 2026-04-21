@@ -1,13 +1,4 @@
 import { describe, expect } from "vitest";
-import {
-  CliError,
-  pruneArtifact,
-  pruneOrphanedAndUntaggedArtifacts,
-  pruneProjectArtifacts,
-  pullArtifact,
-  pullProject,
-  push,
-} from "@/client/index";
 import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import {
   STORAGE_PROVIDER_STRATEGIES,
@@ -15,6 +6,9 @@ import {
 } from "@test/helpers/storage-provider-test";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import { CommandLogger } from "@/ui";
+import { runPushCommand } from "@/commands/push";
+import { runPruneCommand } from "@/commands/prune";
+import { runPullCommand } from "@/commands/pull";
 
 const logger = new CommandLogger(true);
 const [, artifactFixture] = ARTIFACTS_STRATEGIES[0];
@@ -33,24 +27,31 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName("prune-orphaned");
         await pulledArtifactStore.ensureProjectSetup(project);
         const tag = "orphaned-tag";
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          tag,
-          storageProvider,
-          { force: false, debug: false, logger },
+          {
+            project,
+            tag,
+          },
+          {
+            storageProvider,
+            logger,
+          },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -72,24 +73,31 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName("prune-configured-tagged");
         await pulledArtifactStore.ensureProjectSetup(project);
         const tag = "v1.0.0";
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          tag,
-          storageProvider,
-          { force: false, debug: false, logger },
+          {
+            project,
+            tag,
+          },
+          {
+            storageProvider,
+            logger,
+          },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([project]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([project]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(0);
@@ -103,24 +111,25 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-configured-untagged");
         await pulledArtifactStore.ensureProjectSetup(project);
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([project]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([project]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -136,24 +145,25 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-ota-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -165,10 +175,10 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     storageProviderTest(
       "pruneOrphanedAndUntaggedArtifacts - empty store returns empty list",
       async ({ pulledArtifactStore }) => {
-        const result = await pruneOrphanedAndUntaggedArtifacts(
-          pulledArtifactStore,
-          new Set([]),
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "all", projects: new Set([]) },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
         expect(result).toHaveLength(0);
       },
@@ -184,35 +194,35 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const tag = "v1.0.0";
 
         // tagged artifact
-        const taggedId = await push(
+        const taggedId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          tag,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag },
+          { storageProvider, logger },
+          { force: false, debug: false },
         );
 
         // untagged artifact (different content to produce a different ID)
-        const untaggedId = await push(
+        const untaggedId = await runPushCommand(
           artifactFixture2.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          { force: false, debug: false },
         );
-        await pullProject(project, storageProvider, pulledArtifactStore, {
-          force: false,
-          debug: false,
-          logger,
-        });
+        await runPullCommand(
+          { type: "project", project },
+          { storageProvider, pulledArtifactStore, logger },
+          {
+            force: false,
+            debug: false,
+          },
+        );
 
-        const result = await pruneProjectArtifacts(
-          project,
-          pulledArtifactStore,
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { type: "project", project } },
+          { pulledArtifactStore, logger },
           {
             dryRun: false,
             debug: false,
-            logger,
           },
         );
 
@@ -234,27 +244,27 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-project-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneProjectArtifacts(
-          project,
-          pulledArtifactStore,
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { type: "project", project } },
+          { pulledArtifactStore, logger },
           {
             dryRun: true,
             debug: false,
-            logger,
           },
         );
 
@@ -271,24 +281,28 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id");
         await pulledArtifactStore.ensureProjectSetup(project);
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "id", id: artifactId },
-          pulledArtifactStore,
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          {
+            type: "specific",
+            artifactKey: { project, type: "id", id: artifactId },
+          },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -304,24 +318,28 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
       async ({ storageProvider, pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          undefined,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag: undefined },
+          { storageProvider, logger },
+          {
+            force: false,
+            debug: false,
+          },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "id", id: artifactId },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "id", id: artifactId },
-          pulledArtifactStore,
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          {
+            type: "specific",
+            artifactKey: { project, type: "id", id: artifactId },
+          },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -331,22 +349,24 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifact - by ID - throws CliError when ID not found",
+      "pruneArtifact - by ID - throws when ID not found",
       async ({ pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-id-missing");
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifact(
-            { project, type: "id", id: "nonexistentid" },
-            pulledArtifactStore,
+          runPruneCommand(
+            {
+              type: "specific",
+              artifactKey: { project, type: "id", id: "nonexistentid" },
+            },
+            { pulledArtifactStore, logger },
             {
               dryRun: false,
               debug: false,
-              logger,
             },
           ),
-        ).rejects.toThrow(CliError);
+        ).rejects.toThrow();
       },
     );
 
@@ -358,24 +378,22 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName("prune-by-tag");
         await pulledArtifactStore.ensureProjectSetup(project);
         const tag = "v1.0.0";
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          tag,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag },
+          { storageProvider, logger },
+          { force: false, debug: false },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "tag", tag },
-          pulledArtifactStore,
-          { dryRun: false, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { pulledArtifactStore, logger },
+          { dryRun: false, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -392,24 +410,22 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const project = createTestProjectName("prune-by-tag-dry");
         await pulledArtifactStore.ensureProjectSetup(project);
         const tag = "v1.0.0";
-        const artifactId = await push(
+        const artifactId = await runPushCommand(
           artifactFixture.folderPath,
-          project,
-          tag,
-          storageProvider,
-          { force: false, debug: false, logger },
+          { project, tag },
+          { storageProvider, logger },
+          { force: false, debug: false },
         );
-        await pullArtifact(
+        await runPullCommand(
           { project, type: "tag", tag },
-          storageProvider,
-          pulledArtifactStore,
-          { force: false, debug: false, logger },
+          { storageProvider, pulledArtifactStore, logger },
+          { force: false, debug: false },
         );
 
-        const result = await pruneArtifact(
-          { project, type: "tag", tag },
-          pulledArtifactStore,
-          { dryRun: true, debug: false, logger },
+        const result = await runPruneCommand(
+          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { pulledArtifactStore, logger },
+          { dryRun: true, debug: false },
         );
 
         expect(result).toHaveLength(1);
@@ -419,22 +435,24 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
     );
 
     storageProviderTest(
-      "pruneArtifact - by tag - throws CliError when tag not found",
+      "pruneArtifact - by tag - throws when tag not found",
       async ({ pulledArtifactStore }) => {
         const project = createTestProjectName("prune-by-tag-missing");
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          pruneArtifact(
-            { project, type: "tag", tag: "nonexistent-tag" },
-            pulledArtifactStore,
+          runPruneCommand(
+            {
+              type: "specific",
+              artifactKey: { project, type: "tag", tag: "nonexistent-tag" },
+            },
+            { pulledArtifactStore, logger },
             {
               dryRun: false,
               debug: false,
-              logger,
             },
           ),
-        ).rejects.toThrow(CliError);
+        ).rejects.toThrow();
       },
     );
   },

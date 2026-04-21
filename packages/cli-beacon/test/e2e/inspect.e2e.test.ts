@@ -1,5 +1,4 @@
 import { describe, expect } from "vitest";
-import { inspectArtifact, pullArtifact, push } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -8,6 +7,9 @@ import {
 } from "@test/helpers/storage-provider-test";
 import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import { CommandLogger } from "@/ui";
+import { runPushCommand } from "@/commands/push";
+import { runInspectCommand } from "@/commands/inspect";
+import { runPullCommand } from "@/commands/pull";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Inspect E2E Tests (%s)",
@@ -31,36 +33,41 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             await pulledArtifactStore.ensureProjectSetup(project);
 
-            const artifactId = await push(
+            const artifactId = await runPushCommand(
               artifactFixture.folderPath,
-              project,
-              tag,
-              storageProvider,
+              {
+                project,
+                tag,
+              },
+              {
+                storageProvider,
+                logger,
+              },
               {
                 force: false,
                 debug: true,
-                logger,
               },
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "tag", tag },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }
 
-            const inspectResult = await inspectArtifact(
+            const inspectResult = await runInspectCommand(
               { project, type: "tag", tag },
-              storageProvider,
-              pulledArtifactStore,
-              { debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { debug: false },
             );
 
             expect(inspectResult.project).toBe(project);
@@ -91,36 +98,41 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             await pulledArtifactStore.ensureProjectSetup(project);
 
-            const artifactId = await push(
+            const artifactId = await runPushCommand(
               artifactFixture.folderPath,
-              project,
-              undefined,
-              storageProvider,
+              {
+                project,
+                tag: undefined,
+              },
+              {
+                storageProvider,
+                logger,
+              },
               {
                 force: false,
                 debug: false,
-                logger,
               },
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "id", id: artifactId },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }
 
-            const inspectResult = await inspectArtifact(
+            const inspectResult = await runInspectCommand(
               { project, type: "id", id: artifactId },
-              storageProvider,
-              pulledArtifactStore,
-              { debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { debug: false },
             );
 
             expect(inspectResult.project).toBe(project);
@@ -149,14 +161,14 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await pulledArtifactStore.ensureProjectSetup(project);
 
         await expect(
-          inspectArtifact(
+          runInspectCommand(
             { project, type: "tag", tag: "non-existent-tag" },
-            storageProvider,
-            pulledArtifactStore,
             {
-              debug: false,
+              storageProvider,
+              pulledArtifactStore,
               logger,
             },
+            { debug: false },
           ),
         ).rejects.toThrow();
       },

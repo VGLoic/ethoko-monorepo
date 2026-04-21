@@ -27,9 +27,9 @@ Fix failures immediately before proceeding.
 
 ## Workflow: New CLI command
 
-1. [ ] Add client method in `src/client/<name>.ts` -- see [EXAMPLES.md](EXAMPLES.md) client skeleton
-2. [ ] Re-export from `src/client/index.ts`
-3. [ ] Add command handler in `src/commands/<name>.ts` -- see [EXAMPLES.md](EXAMPLES.md) command skeleton
+1. [ ] Add command handler in `src/commands/<name>.ts` -- see [EXAMPLES.md](EXAMPLES.md) command skeleton
+2. [ ] If abstraction needed, add client method in `src/client/<abstraction>.ts` -- see [EXAMPLES.md](EXAMPLES.md) client method skeleton
+3. [ ] If new methods, export client method from `src/client/index.ts`
 4. [ ] Register in `src/index.ts` via `registerXCommand(program, getConfig)`
 5. [ ] Add E2E test in `test/e2e/<name>.e2e.test.ts` -- see [EXAMPLES.md](EXAMPLES.md) test skeleton
 6. [ ] Run validation workflow

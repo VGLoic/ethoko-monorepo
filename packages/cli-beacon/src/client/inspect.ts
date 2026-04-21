@@ -1,11 +1,9 @@
-import { PulledArtifactStore } from "../pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "../pulled-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
-import { CommandLogger } from "@/ui";
-import { StorageProvider } from "@/storage-provider";
-import { retrieveOrPullArtifact } from "./helpers/retrieve-or-pull-artifact";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export type InspectResult = {
   project: string;
@@ -42,13 +40,15 @@ export type InspectResult = {
  * @throws CliError if the artifact cannot be found or read.
  */
 export async function inspectArtifact(
-  artifactKey: ArtifactKey,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { debug: boolean; logger: CommandLogger },
+  artifactKey: ResolvedArtifactKey,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    logger: DebugLogger;
+  },
+  opts: { debug: boolean },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
-    pulledArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.pulledArtifactStore.ensureProjectSetup(artifactKey.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -57,24 +57,15 @@ export async function inspectArtifact(
     );
   }
 
-  // @dev `retrieveOrPullArtifact` will throw a `CliError` if it fails
-  // so we don't need to handle the error case here
-  const artifactId = await retrieveOrPullArtifact(
-    artifactKey,
-    storageProvider,
-    pulledArtifactStore,
-    { debug: opts.debug, logger: opts.logger },
-  );
-
   const artifactsResult = await toAsyncResult(
     Promise.all([
-      pulledArtifactStore.retrieveInputArtifact(
+      dependencies.pulledArtifactStore.retrieveInputArtifact(
         artifactKey.project,
-        artifactId,
+        artifactKey.id,
       ),
-      pulledArtifactStore.listContractArtifacts(
+      dependencies.pulledArtifactStore.listContractArtifacts(
         artifactKey.project,
-        artifactId,
+        artifactKey.id,
       ),
     ]),
     { debug: opts.debug },
@@ -85,6 +76,11 @@ export async function inspectArtifact(
     );
   }
   const [inputArtifact, contractList] = artifactsResult.value;
+  if (opts.debug) {
+    dependencies.logger.debug(
+      `Pulled artifact retrieved successfully for artifact "${artifactKey.project}@${artifactKey.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
+    );
+  }
 
   const compilerSettings = deriveCompilerSettings(inputArtifact);
 
@@ -109,7 +105,7 @@ export async function inspectArtifact(
 
   return {
     project: artifactKey.project,
-    tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+    tag: artifactKey.tag,
     id: inputArtifact.id,
     origin,
     compiler: compilerSettings,

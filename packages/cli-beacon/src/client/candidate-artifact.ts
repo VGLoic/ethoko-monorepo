@@ -1,16 +1,72 @@
 import fs from "fs/promises";
 import { toAsyncResult } from "@/utils/result";
-import { CliError } from "../error";
+import { CliError } from "./error";
 import {
   inferOriginalArtifactFormat,
   InferredArtifact,
 } from "@/supported-origins/infer-original-artifact-format";
-import { OriginalBuildInfoPaths } from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
-import { CommandLogger } from "@/ui";
-import { AbsolutePath } from "@/utils/path";
+import {
+  mapOriginalArtifactToEthokoArtifact,
+  OriginalBuildInfoPaths,
+} from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
+import { AbsolutePath, RelativePath } from "@/utils/path";
+import {
+  EthokoContractOutputArtifact,
+  EthokoInputArtifact,
+} from "@/ethoko-artifacts/v0";
+import { DebugLogger } from "@/utils/debug-logger";
+
+/**
+ * Map a candidate artifact (build info) to the Ethoko format, based on its format.
+ * This function is a wrapper around the `mapOriginalArtifactToEthokoArtifact` function with CliError handling.
+ * @param buildInfoPaths The paths to the candidate artifact
+ * @param dependencies The dependencies for mapping, including a logger
+ * @param opts Options for mapping, including debug mode
+ * @returns The mapped Ethoko artifact
+ */
+export async function mapCandidateArtifactToEthokoArtifact(
+  buildInfoPaths: OriginalBuildInfoPaths,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
+): Promise<{
+  inputArtifact: EthokoInputArtifact;
+  outputContractArtifacts: EthokoContractOutputArtifact[];
+  originalContent: {
+    rootPath: AbsolutePath;
+    paths: RelativePath[];
+  };
+}> {
+  const ethokoArtifactParsingResult = await toAsyncResult(
+    mapOriginalArtifactToEthokoArtifact(buildInfoPaths, dependencies, opts),
+    { debug: opts.debug },
+  );
+  if (!ethokoArtifactParsingResult.success) {
+    throw new CliError(
+      FORMAT_TO_ERROR_MESSAGE[buildInfoPaths.format] ||
+        `An error occurred while mapping the build info to Ethoko artifacts. Please provide valid build info JSON files or contact us. Run with debug mode for more info.`,
+    );
+  }
+  return ethokoArtifactParsingResult.value;
+}
+
+const FORMAT_TO_ERROR_MESSAGE: Record<
+  OriginalBuildInfoPaths["format"],
+  string
+> = {
+  "hardhat-v3":
+    "Hardhat v3 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide valid Hardhat v3 compilation files or contact us. Run with debug mode for more info.",
+  "hardhat-v3-non-isolated-build":
+    "Hardhat v3 (non isolated build) compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide valid Hardhat v3 compilation files or contact us. Run with debug mode for more info.",
+  "hardhat-v2":
+    "Hardhat v2 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Hardhat v2 build info JSON file or contact us. Run with debug mode for more info.",
+  "forge-v1-with-build-info-option":
+    "Forge v1 compilation artifacts with the build info option have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Forge v1 build info JSON file or contact us. Run with debug mode for more info.",
+  "forge-v1-default":
+    "Forge v1 compilation artifacts have been identified but the mapping to Ethoko artifact format failed. Please provide a valid Forge v1 build info JSON file or contact us. Run with debug mode for more info.",
+};
 
 type CandidateBuildInfoOption = {
-  display: string;
+  label: string;
   value: OriginalBuildInfoPaths;
 };
 
@@ -45,6 +101,7 @@ type CandidateBuildInfoOption = {
  *    - an option is created for each of these set of pairs, with a display name containing the Solc version and the mtime of the files for the user to differentiate them.
  * The list of options is returned to the caller, as well as the count of ignored files (files that are not recognized as valid build info files) and the final folder path where the files are located (either the inputPath or the build-info directory if it exists).
  * @param inputPath The path to look for the build info JSON file
+ * @param dependencies The dependencies for the function, including a logger
  * @param opts Options for the function
  * @param opts.debug Enable debug mode
  * @returns An object containing the candidate artifact options, the count of ignored files, and the final folder path
@@ -52,9 +109,15 @@ type CandidateBuildInfoOption = {
  */
 export async function lookForCandidateArtifacts(
   inputPath: AbsolutePath,
+  dependencies: { logger: DebugLogger },
   opts: { debug: boolean },
 ): Promise<{
-  candidateBuildInfoOptions: CandidateBuildInfoOption[];
+  candidateBuildInfo:
+    | { type: "multiple"; options: CandidateBuildInfoOption[] }
+    | {
+        type: "single";
+        buildInfoPaths: OriginalBuildInfoPaths;
+      };
   ignoredFilesCount: number;
   finalFolderPath: AbsolutePath;
 }> {
@@ -125,17 +188,13 @@ export async function lookForCandidateArtifacts(
       return {
         finalFolderPath: inputPath.dirname(),
         ignoredFilesCount: 0,
-        candidateBuildInfoOptions: [
-          {
-            display: "Input build info",
-            value: {
-              format: "hardhat-v3",
-              buildInfoPaths: [
-                { input: inputPath, output: matchingOutputPath },
-              ],
-            },
+        candidateBuildInfo: {
+          type: "single",
+          buildInfoPaths: {
+            format: "hardhat-v3",
+            buildInfoPaths: [{ input: inputPath, output: matchingOutputPath }],
           },
-        ],
+        },
       };
     }
     if (format.artifact.format === "hardhat-v3-output") {
@@ -172,30 +231,26 @@ export async function lookForCandidateArtifacts(
       return {
         finalFolderPath: inputPath.dirname(),
         ignoredFilesCount: 0,
-        candidateBuildInfoOptions: [
-          {
-            display: "Input build info",
-            value: {
-              format: "hardhat-v3",
-              buildInfoPaths: [{ input: matchingInputPath, output: inputPath }],
-            },
+        candidateBuildInfo: {
+          type: "single",
+          buildInfoPaths: {
+            format: "hardhat-v3",
+            buildInfoPaths: [{ input: matchingInputPath, output: inputPath }],
           },
-        ],
+        },
       };
     }
 
     return {
       finalFolderPath: inputPath.dirname(),
       ignoredFilesCount: 0,
-      candidateBuildInfoOptions: [
-        {
-          display: "Input build info",
-          value: {
-            buildInfoPath: inputPath,
-            format: format.artifact.format,
-          },
+      candidateBuildInfo: {
+        type: "single",
+        buildInfoPaths: {
+          buildInfoPath: inputPath,
+          format: format.artifact.format,
         },
-      ],
+      },
     };
   }
 
@@ -256,8 +311,8 @@ export async function lookForCandidateArtifacts(
         debug,
       });
       if (!statsResult.success) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `Failed to get stats for file "${filePath}". Error: ${statsResult.error}`,
           );
         }
@@ -275,8 +330,8 @@ export async function lookForCandidateArtifacts(
         { debug },
       );
       if (!inferrenceResult.success) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `Failed to infer format for file "${filePath}". Error: ${inferrenceResult.error}`,
           );
         }
@@ -286,8 +341,8 @@ export async function lookForCandidateArtifacts(
         };
       }
       if (!inferrenceResult.value.recognized) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `File "${filePath}" is not a valid build info JSON file (format inferred as "unknown"). It will be ignored.`,
           );
         }
@@ -322,8 +377,31 @@ export async function lookForCandidateArtifacts(
 
   files.sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
 
+  const options = filesToOptions(files);
+
+  const firstOption = options[0];
+  if (!firstOption) {
+    throw new CliError(
+      "No valid compilation artifacts were found in the provided path. Please provide a valid path to a compilation artifact (build info) or a directory containing it.",
+    );
+  }
+
+  if (options.length === 1) {
+    return {
+      candidateBuildInfo: {
+        type: "single",
+        buildInfoPaths: firstOption.value,
+      },
+      ignoredFilesCount,
+      finalFolderPath,
+    };
+  }
+
   return {
-    candidateBuildInfoOptions: filesToOptions(files),
+    candidateBuildInfo: {
+      type: "multiple",
+      options,
+    },
     ignoredFilesCount,
     finalFolderPath,
   };
@@ -364,7 +442,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
         continue;
       }
       options.push({
-        display: `${truncateFilename(file.name)} (Hardhat v3, Solc ${file.artifact.data.solcLongVersion}, ${formatTimeAgo(file.mtime)})`,
+        label: `${truncateFilename(file.name)} (Hardhat v3, Solc ${file.artifact.data.solcLongVersion}, ${formatTimeAgo(file.mtime)})`,
         value: {
           format: "hardhat-v3-non-isolated-build",
           buildInfoPaths: {
@@ -401,7 +479,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
       // Hardhat V3 output files are ignored as they will be handled together with their corresponding input file
     } else {
       options.push({
-        display: `${truncateFilename(file.name)} (${BUILD_INFO_FORMAT_TO_HUMAN_READABLE[file.artifact.format]}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
+        label: `${truncateFilename(file.name)} (${BUILD_INFO_FORMAT_TO_HUMAN_READABLE[file.artifact.format]}, ${formatTimeAgo(file.mtime)}, ${formatFileSize(file.size)})`,
         value: {
           buildInfoPath: file.filePath,
           format: file.artifact.format,
@@ -436,7 +514,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
   }
   const hardhatV3OptionGroups: CandidateBuildInfoOption[] =
     hardhatV3PairsGroups.map((group) => {
-      const display = `${BUILD_INFO_FORMAT_TO_HUMAN_READABLE["hardhat-v3"]} (Solc ${group.solcLongVersion}, ${formatTimeAgo(group.startWindow)}`;
+      const label = `${BUILD_INFO_FORMAT_TO_HUMAN_READABLE["hardhat-v3"]} (Solc ${group.solcLongVersion}, ${formatTimeAgo(group.startWindow)}`;
       const value: OriginalBuildInfoPaths = {
         format: "hardhat-v3",
         buildInfoPaths: group.pairs.map((pair) => ({
@@ -445,7 +523,7 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
         })),
       };
       return {
-        display,
+        label,
         value,
       };
     });
@@ -453,62 +531,6 @@ function filesToOptions(files: FileSummary[]): CandidateBuildInfoOption[] {
   options.push(...hardhatV3OptionGroups);
 
   return options;
-}
-
-/**
- * Prompts the user to select one option from a list
- * @param logger The CommandLogger instance to use for prompting the user
- * @param message The message to display to the user
- * @param options The list of options to choose from
- * @param timeoutMs Optional timeout in milliseconds (default: 30000ms = 30s). Set to 0 to disable timeout.
- * @returns The selected option
- * @throws CliError when timeout is reached or user cancels
- */
-export async function promptUserSelection(
-  logger: CommandLogger,
-  message: string,
-  options: CandidateBuildInfoOption[],
-  timeoutMs: number = 30_000,
-): Promise<OriginalBuildInfoPaths> {
-  // Use Promise.race for timeout if enabled
-  let timeoutHandle: NodeJS.Timeout | null = null;
-  const timeoutPromise =
-    timeoutMs > 0
-      ? new Promise<never>((_, reject) => {
-          timeoutHandle = setTimeout(() => {
-            reject(
-              new CliError(
-                `User selection timed out after ${timeoutMs / 1_000}s.`,
-              ),
-            );
-          }, timeoutMs);
-        })
-      : new Promise<never>(() => {}); // Never resolves if timeout is disabled
-
-  const selectionPromise = logger.prompts
-    .select<OriginalBuildInfoPaths>({
-      message,
-      options: options.map((opt) => ({
-        value: opt.value,
-        label: opt.display,
-        // We cast as any because `clack` expects to break the discriminated union of the options to include the label
-        // I did not succeed in making that smoothly with typescript
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      })) as any,
-    })
-    .then((result) => {
-      if (logger.prompts.isCancel(result)) {
-        throw new CliError("Selection cancelled by user");
-      }
-      return result;
-    })
-    .finally(() => {
-      if (timeoutHandle) {
-        clearTimeout(timeoutHandle);
-      }
-    });
-
-  return await Promise.race([selectionPromise, timeoutPromise]);
 }
 
 function formatTimeAgo(date: Date): string {

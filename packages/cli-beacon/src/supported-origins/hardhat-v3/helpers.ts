@@ -8,6 +8,7 @@ import z from "zod";
 import { lookForContractArtifactPath } from "@/supported-origins/utils/look-for-contract-artifact-path";
 import { toAsyncResult } from "@/utils/result";
 import { AbsolutePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export function readInputArtifact(
   path: AbsolutePath,
@@ -31,7 +32,8 @@ export async function retrieveHardhatv3ContractArtifactsPaths(
   buildInfoDirectoryPath: AbsolutePath,
   buildInfoIds: string[],
   userSourceNameMap: Record<string, string>,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<AbsolutePath[]> {
   const rootArtifactsFolder = buildInfoDirectoryPath.dirname();
 
@@ -52,11 +54,11 @@ export async function retrieveHardhatv3ContractArtifactsPaths(
           const rawParsing = JSON.parse(content);
           return HardhatV3CompilerContractOutputSchema.parse(rawParsing);
         }),
-      { debug },
+      { debug: opts.debug },
     );
     if (!contractContentResult.success) {
-      if (debug) {
-        console.warn(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Failed to parse contract artifact at path "${contractArtifactPath.resolvedPath}". Skipping it. Error: ${contractContentResult.error}`,
         );
       }
@@ -64,16 +66,16 @@ export async function retrieveHardhatv3ContractArtifactsPaths(
     }
     const contract = contractContentResult.value;
     if (!buildInfoIdsSet.has(contract.buildInfoId)) {
-      if (debug) {
-        console.warn(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Found compilation artifact at path "${contractArtifactPath.resolvedPath}" but does not have the same build info ID than the input/output. Skipping it.`,
         );
       }
       continue;
     }
     if (!expectedUserSourceNameMap.has(contract.sourceName)) {
-      if (debug) {
-        console.warn(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Found compilation artifact at path "${contractArtifactPath.resolvedPath}" but does not belong to the expected user source name map. Skipping it.`,
         );
       }
@@ -85,8 +87,8 @@ export async function retrieveHardhatv3ContractArtifactsPaths(
   }
 
   if (rebuiltSourceNameMap.size !== expectedUserSourceNameMap.size) {
-    if (debug) {
-      console.warn(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `The number of visited contract artifacts (${rebuiltSourceNameMap.size}) does not match the number of expected contract artifacts (${expectedUserSourceNameMap.size})`,
       );
     }

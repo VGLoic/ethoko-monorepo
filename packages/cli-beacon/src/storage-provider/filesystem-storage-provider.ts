@@ -2,8 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 import { createReadStream, Dirent } from "fs";
 import { Stream } from "stream";
-import { styleText } from "node:util";
-import { LOG_COLORS } from "@/ui";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
@@ -12,10 +10,12 @@ import {
 } from "../ethoko-artifacts/v0";
 import { StorageProvider } from "./storage-provider.interface";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 type FilesystemStorageProviderConfig = {
   path: AbsolutePath;
   debug?: boolean;
+  logger: DebugLogger;
 };
 
 /**
@@ -29,10 +29,12 @@ type FilesystemStorageProviderConfig = {
 export class FilesystemStorageProvider implements StorageProvider {
   private readonly storagePath: AbsolutePath;
   private readonly debug: boolean;
+  private readonly logger: DebugLogger;
 
   constructor(config: FilesystemStorageProviderConfig) {
     this.storagePath = config.path;
     this.debug = config.debug ?? false;
+    this.logger = config.logger;
   }
 
   public getStoragePath(): AbsolutePath {
@@ -153,11 +155,8 @@ export class FilesystemStorageProvider implements StorageProvider {
     }
 
     if (this.debug) {
-      console.error(
-        styleText(
-          LOG_COLORS.log,
-          `Stored artifact ${project}:${tag || inputArtifact.id} in ${this.storagePath}`,
-        ),
+      this.logger.debug(
+        `Stored artifact ${project}:${tag || inputArtifact.id} in ${this.storagePath}`,
       );
     }
   }

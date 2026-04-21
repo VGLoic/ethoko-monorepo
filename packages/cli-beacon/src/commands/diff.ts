@@ -1,19 +1,35 @@
 import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
-import { CommandLogger, LOG_COLORS } from "@/ui/index.js";
+import { CommandLogger, LOG_COLORS } from "@/ui";
 import {
   CliError,
   Difference,
   generateDiffWithTargetRelease,
-} from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
+  resolvePulledArtifact,
+  lookForCandidateArtifacts,
+  mapCandidateArtifactToEthokoArtifact,
+  pullArtifact,
+} from "@/client";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
-import { AbsolutePath, generateAbsolutePathSchema } from "@/utils/path.js";
+import {
+  AbsolutePath,
+  generateAbsolutePathSchema,
+  RelativePath,
+} from "@/utils/path.js";
 import { createStorageProvider } from "./utils/storage-provider";
+import {
+  EthokoContractOutputArtifact,
+  EthokoInputArtifact,
+} from "@/ethoko-artifacts/v0";
+import { StorageProvider } from "@/storage-provider";
+import { ArtifactKey } from "@/utils/artifact-key";
+import { OriginalBuildInfoPaths } from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
+import { promptUserSelection } from "./utils/prompt-select";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -115,43 +131,113 @@ export function registerDiffCommand(
         return;
       }
 
-      const pulledArtifactStore = new PulledArtifactStore(
-        config.pulledArtifactsPath,
-      );
-      const storageProvider = createStorageProvider(
-        projectConfig.storage,
-        paramParsingResult.data.debug,
-      );
-
-      await generateDiffWithTargetRelease(
+      await runDiffCommand(
         finalArtifactPath,
         artifactKeyParsingResult.data,
-        storageProvider,
-        pulledArtifactStore,
+        {
+          logger,
+          pulledArtifactStore: new PulledArtifactStore(
+            config.pulledArtifactsPath,
+          ),
+          storageProvider: createStorageProvider(
+            projectConfig.storage,
+            logger.toDebugLogger(),
+            paramParsingResult.data.debug,
+          ),
+        },
         {
           debug: paramParsingResult.data.debug,
-          isCI: process.env.CI === "true" || process.env.CI === "1",
-          logger,
         },
-      )
-        .then((result) => {
-          displayDifferences(logger, result);
-        })
-        .catch((err) => {
-          if (err instanceof CliError) {
-            logger.error(err.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            console.error(err);
-          }
-          process.exitCode = 1;
-        });
+      ).catch((err) => {
+        if (err instanceof CliError) {
+          logger.error(err.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          console.error(err);
+        }
+        process.exitCode = 1;
+      });
     });
 }
 
-export function displayDifferences(
+async function runDiffCommand(
+  artifactPath: AbsolutePath,
+  artifactKey: ArtifactKey,
+  dependencies: {
+    pulledArtifactStore: PulledArtifactStore;
+    storageProvider: StorageProvider;
+    logger: CommandLogger;
+  },
+  opts: {
+    debug: boolean;
+  },
+): Promise<void> {
+  const spinner1 = dependencies.logger.createSpinner(
+    "Looking for compilation artifacts...",
+  );
+  const candidateArtifact = await parseCandidateArtifact(artifactPath, {
+    debug: opts.debug,
+    logger: dependencies.logger,
+    isCI: process.env.CI === "true" || process.env.CI === "1",
+  }).catch((err) => {
+    spinner1.fail("Fail to parse compilation artifacts");
+    throw err;
+  });
+  spinner1.succeed(
+    artifactOriginToSuccessText(candidateArtifact.inputArtifact.origin.type),
+  );
+
+  let resolvedArtifactKey = await resolvePulledArtifact(
+    artifactKey,
+    dependencies.pulledArtifactStore,
+    { debug: opts.debug },
+  );
+  if (!resolvedArtifactKey) {
+    const artifactLabel = `${artifactKey.project}${
+      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+    }`;
+    const pullSpinner = dependencies.logger.createSpinner(
+      `Artifact "${artifactLabel}" not found locally, pulling...`,
+    );
+    const pulledArtifact = await pullArtifact(
+      artifactKey,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: dependencies.logger.toDebugLogger(),
+      },
+      {
+        force: false,
+        debug: opts.debug,
+      },
+    ).catch((err) => {
+      pullSpinner.fail("Failed to pull artifact");
+      throw err;
+    });
+    pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
+    resolvedArtifactKey = {
+      project: artifactKey.project,
+      id: pulledArtifact.id,
+      tag: artifactKey.type === "tag" ? "tag" : null,
+    };
+  }
+
+  const diffResult = await generateDiffWithTargetRelease(
+    resolvedArtifactKey,
+    candidateArtifact,
+    {
+      pulledArtifactStore: dependencies.pulledArtifactStore,
+      logger: dependencies.logger.toDebugLogger(),
+    },
+    { debug: opts.debug },
+  );
+
+  displayDifferences(dependencies.logger, diffResult);
+}
+
+function displayDifferences(
   logger: CommandLogger,
   differences: Difference[],
 ): void {
@@ -197,4 +283,76 @@ export function displayDifferences(
 
   logger.note("Differences Found", summaryLines.join("\n"));
   logger.outro(undefined);
+}
+
+function artifactOriginToSuccessText(
+  origin: EthokoInputArtifact["origin"]["type"],
+): string {
+  if (origin === "hardhat-v3") {
+    return `Hardhat v3 compilation artifact found`;
+  }
+  if (origin === "hardhat-v3-non-isolated-build") {
+    return `Hardhat v3 compilation artifact found (non isolated build)`;
+  }
+  if (origin === "hardhat-v2") {
+    return `Hardhat v2 compilation artifact found`;
+  }
+  if (
+    origin === "forge-v1-default" ||
+    origin === "forge-v1-with-build-info-option"
+  ) {
+    return `Forge compilation artifact found`;
+  }
+  throw new CliError(
+    `Unsupported build info format: ${origin satisfies never}`,
+  );
+}
+
+async function parseCandidateArtifact(
+  artifactPath: AbsolutePath,
+  opts: { debug: boolean; logger: CommandLogger; isCI?: boolean },
+): Promise<{
+  inputArtifact: EthokoInputArtifact;
+  outputContractArtifacts: EthokoContractOutputArtifact[];
+  originalContent: {
+    rootPath: AbsolutePath;
+    paths: RelativePath[];
+  };
+}> {
+  const candidateArtifacts = await lookForCandidateArtifacts(
+    artifactPath,
+    {
+      logger: opts.logger.toDebugLogger(),
+    },
+    {
+      debug: opts.debug,
+    },
+  );
+
+  let selectedBuildInfoPaths: OriginalBuildInfoPaths;
+  if (candidateArtifacts.candidateBuildInfo.type === "single") {
+    selectedBuildInfoPaths =
+      candidateArtifacts.candidateBuildInfo.buildInfoPaths;
+  } else {
+    if (opts.isCI) {
+      throw new CliError(
+        "Multiple compilation artifacts were found in the provided path. Please provide a more specific path or run the command in interactive mode to select the desired artifact.",
+      );
+    }
+    const selectedOption = await promptUserSelection(
+      opts.logger,
+      `Multiple JSON files found in "${candidateArtifacts.finalFolderPath}" (${candidateArtifacts.ignoredFilesCount} ignored). Please select which build info file to use:`,
+      candidateArtifacts.candidateBuildInfo.options,
+      30_000,
+    );
+    selectedBuildInfoPaths = selectedOption;
+  }
+
+  const ethokoArtifact = await mapCandidateArtifactToEthokoArtifact(
+    selectedBuildInfoPaths,
+    { logger: opts.logger.toDebugLogger() },
+    { debug: opts.debug },
+  );
+
+  return ethokoArtifact;
 }

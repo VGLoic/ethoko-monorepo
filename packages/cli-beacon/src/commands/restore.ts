@@ -2,14 +2,22 @@ import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
 import { LOG_COLORS, CommandLogger } from "@/ui/index.js";
-import { CliError, restore, type RestoreResult } from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
+import {
+  CliError,
+  pullArtifact,
+  resolvePulledArtifact,
+  restore,
+  type RestoreResult,
+} from "@/client/index.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
 import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
+import { ArtifactKey } from "@/utils/artifact-key";
+import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -101,6 +109,7 @@ export function registerRestoreCommand(
 
       const storageProvider = createStorageProvider(
         projectConfig.storage,
+        logger.toDebugLogger(),
         optsParsingResult.data.debug,
       );
 
@@ -108,32 +117,99 @@ export function registerRestoreCommand(
         config.pulledArtifactsPath,
       );
 
-      await restore(
+      await runRestoreCommand(
         artifactKeyParsingResult.data,
         optsParsingResult.data.output,
-        storageProvider,
-        pulledArtifactStore,
+        {
+          storageProvider,
+          pulledArtifactStore,
+          logger,
+        },
         {
           force: optsParsingResult.data.force,
           debug: optsParsingResult.data.debug,
-          logger,
         },
-      )
-        .then((result: RestoreResult) => displayRestoreResult(logger, result))
-        .catch((err: unknown) => {
-          if (err instanceof CliError) {
-            logger.error(err.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            if (err instanceof Error) {
-              console.error(err);
-            }
+      ).catch((err: unknown) => {
+        if (err instanceof CliError) {
+          logger.error(err.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+          );
+          if (err instanceof Error) {
+            console.error(err);
           }
-          process.exitCode = 1;
-        });
+        }
+        process.exitCode = 1;
+      });
     });
+}
+
+export async function runRestoreCommand(
+  artifactKey: ArtifactKey,
+  outputPath: AbsolutePath,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: {
+    force: boolean;
+    debug: boolean;
+  },
+): Promise<RestoreResult> {
+  let resolvedArtifactKey = await resolvePulledArtifact(
+    artifactKey,
+    dependencies.pulledArtifactStore,
+    { debug: opts.debug },
+  );
+  if (!resolvedArtifactKey) {
+    const artifactLabel = `${artifactKey.project}${
+      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+    }`;
+    const pullSpinner = dependencies.logger.createSpinner(
+      `Artifact "${artifactLabel}" not found locally, pulling...`,
+    );
+    const pulledArtifact = await pullArtifact(
+      artifactKey,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: dependencies.logger.toDebugLogger(),
+      },
+      {
+        force: false,
+        debug: opts.debug,
+      },
+    ).catch((err) => {
+      pullSpinner.fail("Fail to pull artifact");
+      throw err;
+    });
+    pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
+    resolvedArtifactKey = {
+      project: artifactKey.project,
+      id: pulledArtifact.id,
+      tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+    };
+  }
+
+  const restoreResult = await restore(
+    resolvedArtifactKey,
+    outputPath,
+    {
+      pulledArtifactStore: dependencies.pulledArtifactStore,
+      storageProvider: dependencies.storageProvider,
+      logger: dependencies.logger.toDebugLogger(),
+    },
+    {
+      force: opts.force,
+      debug: opts.debug,
+    },
+  );
+
+  displayRestoreResult(dependencies.logger, restoreResult);
+
+  return restoreResult;
 }
 
 function displayRestoreResult(

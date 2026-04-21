@@ -4,11 +4,13 @@ import { ForgeCompilerContractOutputSchema } from "@/supported-origins/forge-v1/
 import z from "zod";
 import { lookForContractArtifactPath } from "@/supported-origins/utils/look-for-contract-artifact-path";
 import { AbsolutePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export async function* lookForForgeContractArtifactPath(
   rootArtifactsFolderPath: AbsolutePath,
   buildInfoContractPaths: Map<string, string>,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): AsyncIterable<{
   artifactPath: AbsolutePath;
   fullyQualifiedName: {
@@ -27,11 +29,11 @@ export async function* lookForForgeContractArtifactPath(
           const rawParsing = JSON.parse(content);
           return ForgeCompilerContractOutputSchema.parse(rawParsing);
         }),
-      { debug },
+      { debug: opts.debug },
     );
     if (!contractContentResult.success) {
-      if (debug) {
-        console.error(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Failed to parse contract artifact at path "${contractArtifactPath.resolvedPath}". Skipping it. Error: ${contractContentResult.error}`,
         );
       }
@@ -53,8 +55,8 @@ export async function* lookForForgeContractArtifactPath(
       );
       const targetEntry = compilationTargetEntries.at(0);
       if (!targetEntry || compilationTargetEntries.length > 1) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `No compilation target found or too many targets for contract "${contractArtifactPath.resolvedPath}". Skipping it.`,
           );
         }
@@ -68,8 +70,8 @@ export async function* lookForForgeContractArtifactPath(
       contract.id.toString(),
     );
     if (expectedContractPath != contractPath) {
-      if (debug) {
-        console.error(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Found an artifact belonging to another compilation for contract "${contractArtifactPath.resolvedPath}". Skipping it.`,
         );
       }

@@ -7,7 +7,7 @@ import {
   ListArtifactsResult,
   listPulledArtifacts,
 } from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
@@ -67,9 +67,12 @@ export function registerArtifactsCommand(
         config.pulledArtifactsPath,
       );
 
-      await listPulledArtifacts(pulledArtifactStore, {
-        debug: parsingResult.data.debug,
-      })
+      await listPulledArtifacts(
+        { pulledArtifactStore, logger: logger.toDebugLogger() },
+        {
+          debug: parsingResult.data.debug,
+        },
+      )
         .then((result) => {
           if (parsingResult.data.json && !logger.silent) {
             console.log(JSON.stringify(result, null, 2));

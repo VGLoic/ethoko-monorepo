@@ -9,36 +9,36 @@ import { z } from "zod";
 import { CliError } from "@/client/error";
 import type { StorageProvider } from "@/storage-provider";
 import type { PulledArtifactStore } from "@/pulled-artifact-store";
-import type { CommandLogger } from "@/ui";
+import type { DebugLogger } from "@/utils/debug-logger";
 import { toAsyncResult } from "@/utils/result";
 
 /**
- * Does something useful.
+ * Does something useful and abstracted.
  * @throws {CliError} When the operation fails.
  */
-export async function doSomething(
+export async function doSomethingAbstract(
   project: string,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider,
+    pulledArtifactStore: PulledArtifactStore,
+    logger: DebugLogger;
+  },
+  opts: { force: boolean; debug: boolean; },
 ): Promise<DoSomethingResult> {
-  const steps = opts.logger.createSpinner("Doing something...");
 
   const result = await toAsyncResult(storageProvider.listTags(project), {
     debug: opts.debug,
   });
   if (!result.success) {
-    steps.fail("Failed to do something");
     throw new CliError(
       "Could not complete the operation. Check your configuration.",
     );
   }
 
   if (opts.debug) {
-    opts.logger.message(`Found ${result.value.length} items`);
+    dependencies.logger.debug(`Found ${result.value.length} items`);
   }
 
-  steps.succeed("Done");
   return { items: result.value };
 }
 
@@ -52,7 +52,7 @@ type DoSomethingResult = { items: string[] };
 import type { Command } from "commander";
 import { z } from "zod";
 
-import { doSomething, CliError } from "@/client";
+import { doSomethingAbstract, CliError } from "@/client";
 import type { EthokoCliConfig } from "@/config";
 import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { CommandLogger } from "@/ui";
@@ -108,14 +108,16 @@ export function registerDoSomethingCommand(
         config.pulledArtifactsPath,
       );
 
-      await doSomething(
+      await runDoSomethingCommand(
         keyResult.data.project,
-        storageProvider,
-        pulledArtifactStore,
+        {
+          storageProvider,
+          pulledArtifactStore,
+          logger,
+        },
         {
           force: options.force as boolean,
           debug: options.debug as boolean,
-          logger,
         },
       )
         .then((result) => {
@@ -135,6 +137,29 @@ export function registerDoSomethingCommand(
         });
     });
 }
+
+type DoSomethingResult = { items: string[] };
+
+export async function runDoSomethingCommand(
+  projectArg: string,
+  dependencies: {
+     storageProvider: StorageProvider;
+     pulledArtifactStore: PulledArtifactStore;
+     logger: CommandLogger;
+   },
+   opts: { force: boolean; debug: boolean; },
+): Promise<DoSomethingResult> {
+  // This function can be used in tests to call the command logic directly
+  const abstractResult = await doSomethingAbstract(projectArg, {
+      storageProvider: dependencies.storageProvider,
+      pulledArtifactStore: dependencies.pulledArtifactStore,
+      logger: dependencies.logger.toDebugLogger(),
+  }, opts);
+  ...
+  logger.success(`Processed ${abstractResult.items.length} items`);
+  logger.outro("Done");
+  return abstractResult;
+}
 ```
 
 ## E2E test skeleton
@@ -143,7 +168,7 @@ export function registerDoSomethingCommand(
 // test/e2e/do-something.e2e.test.ts
 import { describe, expect } from "vitest";
 
-import { doSomething } from "@/client";
+import { runDoSomethingCommand } from "@/commands/do-something";
 import { CommandLogger } from "@/ui";
 
 import {
@@ -168,14 +193,16 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         await push(projectName);
 
         // Test the client method
-        const result = await doSomething(
+        const result = await runDoSomethingCommand(
           projectName,
-          storageProvider,
-          pulledArtifactStore,
+          {
+            storageProvider,
+            pulledArtifactStore,
+            logger,
+          },
           {
             force: false,
             debug: false,
-            logger,
           },
         );
 

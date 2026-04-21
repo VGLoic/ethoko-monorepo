@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect } from "vitest";
-import { pullArtifact, push, restore } from "@/client";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -13,6 +12,9 @@ import { ARTIFACTS_STRATEGIES } from "@test/helpers/artifacts-strategy";
 import { deriveAllAbsolutePathsInDirectory } from "@test/helpers/derive-all-paths-in-directory";
 import { CommandLogger } from "@/ui";
 import { AbsolutePath } from "@/utils/path";
+import { runPushCommand } from "@/commands/push";
+import { runRestoreCommand } from "@/commands/restore";
+import { runPullCommand } from "@/commands/pull";
 
 describe.for(STORAGE_PROVIDER_STRATEGIES)(
   "Restore E2E Tests (%s)",
@@ -49,25 +51,23 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           await pulledArtifactStore.ensureProjectSetup(project);
 
-          await push(
+          await runPushCommand(
             artifactFixture.folderPath,
-            project,
-            tag,
-            storageProvider,
-            {
-              force: false,
-              debug: false,
-              logger,
-            },
+            { project, tag },
+            { storageProvider, logger },
+            { force: false, debug: false },
           );
 
           const outputPath = tempOutputDir.join("absolute-path-test");
-          const result = await restore(
+          const result = await runRestoreCommand(
             { project, type: "tag", tag },
             outputPath,
-            storageProvider,
-            pulledArtifactStore,
-            { force: false, debug: false, logger },
+            {
+              storageProvider,
+              pulledArtifactStore,
+              logger,
+            },
+            { force: false, debug: false },
           );
 
           expect(result.filesRestored.length).toBeGreaterThan(0);
@@ -90,16 +90,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           await pulledArtifactStore.ensureProjectSetup(project);
 
-          await push(
+          await runPushCommand(
             artifactFixture.folderPath,
-            project,
-            tag,
-            storageProvider,
-            {
-              force: false,
-              debug: false,
-              logger,
-            },
+            { project, tag },
+            { storageProvider, logger },
+            { force: false, debug: false },
           );
 
           const outputPath = tempOutputDir.join("existing-dir-test");
@@ -110,12 +105,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           );
 
           await expect(
-            restore(
+            runRestoreCommand(
               { project, type: "tag", tag },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow(/not empty|overwrite/);
         },
@@ -133,16 +131,11 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
           await pulledArtifactStore.ensureProjectSetup(project);
 
-          await push(
+          await runPushCommand(
             artifactFixture.folderPath,
-            project,
-            tag,
-            storageProvider,
-            {
-              force: false,
-              debug: false,
-              logger,
-            },
+            { project, tag },
+            { storageProvider, logger },
+            { force: false, debug: false },
           );
 
           const outputPath = tempOutputDir.join("force-overwrite-test");
@@ -152,12 +145,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
             "content",
           );
 
-          const result = await restore(
+          const result = await runRestoreCommand(
             { project, type: "tag", tag },
             outputPath,
-            storageProvider,
-            pulledArtifactStore,
-            { force: true, debug: false, logger },
+            {
+              storageProvider,
+              pulledArtifactStore,
+              logger,
+            },
+            { force: true, debug: false },
           );
 
           expect(result.filesRestored.length).toBeGreaterThan(0);
@@ -175,12 +171,15 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           await pulledArtifactStore.ensureProjectSetup(project);
 
           await expect(
-            restore(
+            runRestoreCommand(
               { project, type: "tag", tag: "non-existing-tag" },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow();
         },
@@ -192,16 +191,19 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           const outputPath = tempOutputDir.join("invalid-project-test");
 
           await expect(
-            restore(
+            runRestoreCommand(
               {
                 project: "non-existent-project",
                 type: "tag",
                 tag: TEST_CONSTANTS.TAGS.V1,
               },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             ),
           ).rejects.toThrow();
         },
@@ -224,38 +226,34 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             await pulledArtifactStore.ensureProjectSetup(project);
 
-            await push(
+            await runPushCommand(
               artifactFixture.folderPath,
-              project,
-              tag,
-              storageProvider,
-              {
-                force: false,
-                debug: false,
-                logger,
-              },
+              { project, tag },
+              { storageProvider, logger },
+              { force: false, debug: false },
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "tag", tag },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }
 
             const outputPath = tempOutputDir.join(`${tag}-tag-test`);
-            const result = await restore(
+            const result = await runRestoreCommand(
               { project, type: "tag", tag },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             );
 
             expect(result.project).toBe(project);
@@ -292,38 +290,34 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
 
             await pulledArtifactStore.ensureProjectSetup(project);
 
-            const artifactId = await push(
+            const artifactId = await runPushCommand(
               artifactFixture.folderPath,
-              project,
-              undefined,
-              storageProvider,
-              {
-                force: false,
-                debug: false,
-                logger,
-              },
+              { project, tag: undefined },
+              { storageProvider, logger },
+              { force: false, debug: false },
             );
 
             if (!artifactAlreadyPulled) {
-              await pullArtifact(
+              await runPullCommand(
                 { project, type: "id", id: artifactId },
-                storageProvider,
-                pulledArtifactStore,
+                { storageProvider, pulledArtifactStore, logger },
                 {
                   force: false,
                   debug: false,
-                  logger,
                 },
               );
             }
 
             const outputPath = tempOutputDir.join(`${artifactId}-id-test`);
-            const result = await restore(
+            const result = await runRestoreCommand(
               { project, type: "id", id: artifactId },
               outputPath,
-              storageProvider,
-              pulledArtifactStore,
-              { force: false, debug: false, logger },
+              {
+                storageProvider,
+                pulledArtifactStore,
+                logger,
+              },
+              { force: false, debug: false },
             );
 
             expect(result.project).toBe(project);

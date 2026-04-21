@@ -1,7 +1,7 @@
 import fs from "fs/promises";
 import os from "os";
 import path from "path";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { TEST_CONSTANTS } from "./test-constants";
 import { AbsolutePath } from "@/utils/path";
 

@@ -8,12 +8,13 @@ import {
   pullArtifact,
   PullResult,
 } from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store.js";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
 import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
 
@@ -85,83 +86,110 @@ export function registerPullCommand(
 
       const storageProvider = createStorageProvider(
         projectConfig.storage,
+        logger.toDebugLogger(),
         optsParsingResult.data.debug,
       );
       const pulledArtifactStore = new PulledArtifactStore(
         config.pulledArtifactsPath,
       );
 
-      let pullPromise: Promise<PullResult>;
-      if (artifactKeyParsingResult.data.type === "tag") {
-        logger.intro(
-          `Pulling artifact "${artifactKeyParsingResult.data.project}:${artifactKeyParsingResult.data.tag}"`,
-        );
-        pullPromise = pullArtifact(
-          artifactKeyParsingResult.data,
+      await runPullCommand(
+        artifactKeyParsingResult.data,
+        {
           storageProvider,
           pulledArtifactStore,
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-            logger,
-          },
-        );
-      } else if (artifactKeyParsingResult.data.type === "id") {
-        logger.intro(
-          `Pulling artifact "${artifactKeyParsingResult.data.project}@${artifactKeyParsingResult.data.id}"`,
-        );
-        pullPromise = pullArtifact(
-          artifactKeyParsingResult.data,
-          storageProvider,
-          pulledArtifactStore,
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-            logger,
-          },
-        );
-      } else if (artifactKeyParsingResult.data.type === "project") {
-        logger.intro(
-          `Pulling artifacts for project "${artifactKeyParsingResult.data.project}"`,
-        );
-        pullPromise = pullProject(
-          artifactKeyParsingResult.data.project,
-          storageProvider,
-          pulledArtifactStore,
-          {
-            force: optsParsingResult.data.force,
-            debug: optsParsingResult.data.debug,
-            logger,
-          },
-        );
-      } else {
-        logger.error(
-          `Unknown artifact key type: ${artifactKeyParsingResult.data satisfies never}`,
-        );
-        process.exitCode = 1;
-        return;
-      }
-
-      await pullPromise
-        .then((result) => {
-          displayPullResults(
-            logger,
-            artifactKeyParsingResult.data.project,
-            result,
+          logger,
+        },
+        {
+          force: optsParsingResult.data.force,
+          debug: optsParsingResult.data.debug,
+        },
+      ).catch((err) => {
+        if (err instanceof CliError) {
+          logger.error(err.message);
+        } else {
+          logger.error(
+            "An unexpected error occurred, please fill an issue with the error details if the problem persists",
           );
-        })
-        .catch((err) => {
-          if (err instanceof CliError) {
-            logger.error(err.message);
-          } else {
-            logger.error(
-              "An unexpected error occurred, please fill an issue with the error details if the problem persists",
-            );
-            logger.error(err);
-          }
-          process.exitCode = 1;
-        });
+          logger.error(err);
+        }
+        process.exitCode = 1;
+      });
     });
+}
+
+export async function runPullCommand(
+  target: z.infer<typeof ProjectOrArtifactKeySchema>,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: {
+    force: boolean;
+    debug: boolean;
+  },
+): Promise<PullResult> {
+  const debugLogger = dependencies.logger.toDebugLogger();
+  let pullPromise: Promise<PullResult>;
+  if (target.type === "tag") {
+    const tag = target.tag;
+    dependencies.logger.intro(`Pulling artifact "${target.project}:${tag}"`);
+    pullPromise = pullArtifact(
+      target,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    ).then((result) => ({
+      remoteTags: [tag],
+      remoteIds: [result.id],
+      pulledTags: result.pulled ? [tag] : [],
+      pulledIds: result.pulled ? [result.id] : [],
+      failedTags: [],
+      failedIds: [],
+    }));
+  } else if (target.type === "id") {
+    const id = target.id;
+    dependencies.logger.intro(`Pulling artifact "${target.project}@${id}"`);
+    pullPromise = pullArtifact(
+      target,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    ).then((result) => ({
+      remoteTags: [],
+      remoteIds: [id],
+      pulledTags: [],
+      pulledIds: result.pulled ? [id] : [],
+      failedTags: [],
+      failedIds: [],
+    }));
+  } else if (target.type === "project") {
+    dependencies.logger.intro(
+      `Pulling artifacts for project "${target.project}"`,
+    );
+    pullPromise = pullProject(
+      target.project,
+      {
+        storageProvider: dependencies.storageProvider,
+        pulledArtifactStore: dependencies.pulledArtifactStore,
+        logger: debugLogger,
+      },
+      opts,
+    );
+  } else {
+    throw new CliError(`Unknown artifact key type: ${target satisfies never}`);
+  }
+
+  const pullResult = await pullPromise;
+  displayPullResults(dependencies.logger, target.project, pullResult);
+  return pullResult;
 }
 
 function displayPullResults(

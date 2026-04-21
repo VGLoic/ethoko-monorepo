@@ -8,7 +8,6 @@ export {
 } from "./generate-typings";
 export { inspectArtifact, type InspectResult } from "./inspect";
 export { pullProject, pullArtifact, type PullResult } from "./pull";
-export { push } from "./push";
 export {
   listPulledArtifacts,
   type ListArtifactsResult,
@@ -25,3 +24,8 @@ export {
   pruneOrphanedAndUntaggedArtifacts,
   type PruneResult,
 } from "./prune";
+export { resolvePulledArtifact } from "./resolve-pulled-artifact";
+export {
+  lookForCandidateArtifacts,
+  mapCandidateArtifactToEthokoArtifact,
+} from "./candidate-artifact";

@@ -14,15 +14,17 @@ src/
 │   ├── diff.ts                     # generateDiffWithTargetRelease()
 │   ├── inspect.ts                  # inspectArtifact()
 │   ├── prune.ts                    # pruneArtifact(), pruneProjectArtifacts(), pruneOrphanedAndUntaggedArtifacts()
+│   ├── candidate-artifact.ts       # mapCandidateArtifactToEthokoArtifact(), lookForCandidateArtifacts()
+│   ├── resolve-pulled-artifact.ts  # resolvePulledArtifact()
 │   ├── export-contract-artifact.ts # exportContractArtifact()
 │   ├── list-pulled-artifacts.ts    # listPulledArtifacts()
 │   ├── restore.ts                  # restore()
-│   ├── generate-typings.ts         # generateProjectTypings(), generateTagTypings()
-│   └── helpers/                    # Internal helpers (not re-exported)
+│   └── generate-typings.ts         # generateProjectTypings(), generateTagTypings()
 ├── commands/                       # Commander command definitions (register + handle)
 │   ├── utils/
 │   │   ├── parse-project-or-artifact-key.ts  # Zod schema for PROJECT[:TAG|@ID]
 │   │   ├── storage-provider.ts               # createStorageProvider() factory
+│   │   ├── prompt-select.ts                  # promptUserSelection() helper
 │   │   └── installation.ts                   # detectInstallMethod(), upgrade helpers
 │   └── *.ts                        # One file per command: registerXCommand()
 ├── config/                         # Configuration loading and merging
@@ -45,6 +47,7 @@ src/
 └── utils/
     ├── result.ts                   # toAsyncResult(), toResult()
     ├── path.ts                     # AbsolutePath, RelativePath classes
+    ├── debug-logger.ts             # DebugLogger interface
     └── artifact-key.ts             # ArtifactKey discriminated union type
 ```
 
@@ -56,7 +59,8 @@ src/
 | `StorageProvider`               | `src/storage-provider/storage-provider.interface.ts` | Interface for remote storage (S3, filesystem)                                                                           |
 | `PulledArtifactStore`           | `src/pulled-artifact-store/`                         | Local filesystem cache for pulled artifacts                                                                             |
 | `EthokoCliConfig`               | `src/config/index.ts`                                | Merged global + local config with `.getProjectConfig()`                                                                 |
-| `CommandLogger`                 | `src/ui/index.ts`                                    | Structured terminal output (all to stderr). Methods: `.success()`, `.error()`, `.warn()`, `.info()`, `.createSpinner()` |
+| `CommandLogger`                 | `src/ui/index.ts`                                    | Structured terminal output for commands (all to stderr). Methods: `.success()`, `.error()`, `.warn()`, `.info()`, `.createSpinner()` |
+| `DebugLogger`                   | `src/utils/debug-logger.ts`                          | Structured terminal output for debugging (all to stderr). Method: `.debug()`    |
 | `ArtifactKey`                   | `src/utils/artifact-key.ts`                          | `{ project, type: "tag", tag } \| { project, type: "id", id }`                                                          |
 | `AbsolutePath` / `RelativePath` | `src/utils/path.ts`                                  | Path wrapper classes with `.join()`, `.dirname()`, `.relativeTo()`                                                      |
 
@@ -66,7 +70,7 @@ src/
 | --------------------------------------- | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------- |
 | **Client** (`src/client/*`)             | `CliError` only. Wrap async ops with `toAsyncResult()` | Never catches -- propagates up                                                                       |
 | **Internal** (`src/` outside `client/`) | Standard `Error`                                       | N/A                                                                                                  |
-| **Commands** (`src/commands/*`)         | Never throws                                           | Catches all: `CliError` -> show message; other -> generic message + dump. Set `process.exitCode = 1` |
+| **Commands** (`src/commands/*`)         | Never throws in                                           | Catches all: `CliError` -> show message; other -> generic message + dump. Set `process.exitCode = 1` |
 
 ## E2E test architecture
 

@@ -8,8 +8,6 @@ import {
 } from "@aws-sdk/client-s3";
 import { AssumeRoleCommand, STSClient } from "@aws-sdk/client-sts";
 import { NodeJsClient } from "@smithy/types";
-import { styleText } from "node:util";
-import { LOG_COLORS } from "@/ui";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
@@ -20,6 +18,7 @@ import { StorageProvider } from "./storage-provider.interface";
 import fs from "fs/promises";
 import { AbsolutePath, RelativePath } from "@/utils/path";
 import path from "path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 type S3BucketProviderConfig = {
   bucketName: string;
@@ -44,6 +43,7 @@ type S3BucketProviderConfig = {
   forcePathStyle?: boolean;
   debug?: boolean;
   rootPath?: string;
+  logger: DebugLogger;
 };
 
 type RoleCredentials = {
@@ -62,10 +62,12 @@ export class S3BucketProvider implements StorageProvider {
   private readonly config: S3BucketProviderConfig;
   private client: NodeJsClient<S3Client> | undefined;
   private readonly rootPath: string;
+  private readonly logger: DebugLogger;
 
   constructor(config: S3BucketProviderConfig) {
     this.config = config;
     this.rootPath = config.rootPath || "projects";
+    this.logger = config.logger;
   }
 
   private async getClient(): Promise<NodeJsClient<S3Client>> {
@@ -76,11 +78,8 @@ export class S3BucketProvider implements StorageProvider {
     const credentialsConfig = this.config.credentials;
     if (!credentialsConfig) {
       if (this.config.debug) {
-        console.error(
-          styleText(
-            LOG_COLORS.log,
-            "No AWS credentials provided in config, using default credential provider chain",
-          ),
+        this.logger.debug(
+          "No AWS credentials provided in config, using default credential provider chain",
         );
       }
       this.client = new S3Client({
@@ -93,11 +92,8 @@ export class S3BucketProvider implements StorageProvider {
 
     if (credentialsConfig.type === "profile") {
       if (this.config.debug) {
-        console.error(
-          styleText(
-            LOG_COLORS.log,
-            `AWS credentials profile "${credentialsConfig.profile}" provided in config, loading credentials from profile`,
-          ),
+        this.logger.debug(
+          `AWS credentials profile "${credentialsConfig.profile}" provided in config, loading credentials from profile`,
         );
       }
       this.client = new S3Client({
@@ -111,11 +107,8 @@ export class S3BucketProvider implements StorageProvider {
 
     if (!credentialsConfig.role) {
       if (this.config.debug) {
-        console.error(
-          styleText(
-            LOG_COLORS.log,
-            "No role configuration provided, using static credentials from config",
-          ),
+        this.logger.debug(
+          "No role configuration provided, using static credentials from config",
         );
       }
       this.client = new S3Client({
@@ -131,11 +124,8 @@ export class S3BucketProvider implements StorageProvider {
     }
 
     if (this.config.debug) {
-      console.error(
-        styleText(
-          LOG_COLORS.log,
-          `Role configuration provided, will attempt to assume role ${credentialsConfig.role.roleArn} before accessing S3`,
-        ),
+      this.logger.debug(
+        `Role configuration provided, will attempt to assume role ${credentialsConfig.role.roleArn} before accessing S3`,
       );
     }
     const roleCredentials = await this.getRoleCredentials();
@@ -202,11 +192,8 @@ export class S3BucketProvider implements StorageProvider {
     }
 
     if (this.config.debug) {
-      console.error(
-        styleText(
-          LOG_COLORS.log,
-          `Assumed role ${role.roleArn} with session ${sessionName} (access key ${credentials.AccessKeyId}, expires ${credentials.Expiration})`,
-        ),
+      this.logger.debug(
+        `Assumed role ${role.roleArn} with session ${sessionName} (access key ${credentials.AccessKeyId}, expires ${credentials.Expiration})`,
       );
     }
 

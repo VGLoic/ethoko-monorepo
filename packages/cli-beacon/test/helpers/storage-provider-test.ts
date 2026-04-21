@@ -5,7 +5,7 @@ import {
   TestS3StorageProviderFactory,
 } from "./storage-provider-factory";
 import { StorageProvider } from "@/storage-provider/storage-provider.interface";
-import { PulledArtifactStore } from "@/pulled-artifact-store/pulled-artifact-store";
+import { PulledArtifactStore } from "@/pulled-artifact-store";
 import { createTestPulledArtifactStore } from "./local-storage-factory";
 
 /**

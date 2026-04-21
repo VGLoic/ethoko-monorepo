@@ -7,6 +7,7 @@ import {
 import { ForgeCompilerOutputWithBuildInfoOptionSchema } from "./schemas";
 import { lookForForgeContractArtifactPath } from "./look-for-forge-contract-artifact-paths";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 /**
  * The full Forge build info format splits the contract output into multiple files in the same way as Forge default
@@ -25,11 +26,13 @@ import { AbsolutePath, RelativePath } from "@/utils/path";
  * - ...
  *
  * @param buildInfoPath The path to the Forge build info JSON file (the one in the build-info folder)
- * @param debug Whether to enable debug logging
+ * @param dependencies.logger Logger
+ * @param opts.debug Whether to enable debug logging
  */
 export async function mapForgeV1FullBuildInfoToEthokoArtifact(
   buildInfoPath: AbsolutePath,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputContractArtifacts: EthokoContractOutputArtifact[];
@@ -39,8 +42,8 @@ export async function mapForgeV1FullBuildInfoToEthokoArtifact(
     .readFile(buildInfoPath.resolvedPath, "utf-8")
     .then(JSON.parse)
     .catch((error) => {
-      if (debug) {
-        console.error(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Failed to read or parse the build info file "${buildInfoPath.resolvedPath}". Error: ${error}`,
         );
       }
@@ -50,8 +53,8 @@ export async function mapForgeV1FullBuildInfoToEthokoArtifact(
   const buildInfoParsingResult =
     ForgeCompilerOutputWithBuildInfoOptionSchema.safeParse(jsonContent);
   if (!buildInfoParsingResult.success) {
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Failed to parse the build info file "${buildInfoPath.resolvedPath}" as a Forge v1 full build info compiler output format. Error: ${buildInfoParsingResult.error}`,
       );
     }
@@ -63,10 +66,11 @@ export async function mapForgeV1FullBuildInfoToEthokoArtifact(
   const contractArtifactsPaths = await retrieveForgeContractArtifactsPaths(
     buildInfoPath,
     forgeBuildInfo.source_id_to_path,
-    debug,
+    { logger: dependencies.logger },
+    { debug: opts.debug },
   ).catch((error) => {
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Failed to retrieve the contract artifacts paths related to the build info file "${buildInfoPath.resolvedPath}". Error: ${error}`,
       );
     }
@@ -123,7 +127,8 @@ export async function mapForgeV1FullBuildInfoToEthokoArtifact(
 async function retrieveForgeContractArtifactsPaths(
   buildInfoPath: AbsolutePath,
   sourceIdToPath: Record<string, string>,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<AbsolutePath[]> {
   const expectedSourceIdToPath = new Map(Object.entries(sourceIdToPath));
 
@@ -142,7 +147,8 @@ async function retrieveForgeContractArtifactsPaths(
   } of lookForForgeContractArtifactPath(
     rootArtifactsFolder,
     expectedSourceIdToPath,
-    debug,
+    { logger: dependencies.logger },
+    { debug: opts.debug },
   )) {
     // We register the visiter contract path with the ID
     rebuiltSourceIdToPath.set(contract.id.toString(), fullyQualifiedName.path);
@@ -159,8 +165,8 @@ async function retrieveForgeContractArtifactsPaths(
       }
     }
 
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Some contract artifact paths were not visited during the retrieval of Forge contract artifacts. This might be due to a change in the Forge output format or contract files containing pure types. Missing contract paths:\n${pathsNotVisited.join(
           ",\n",
         )}.`,
