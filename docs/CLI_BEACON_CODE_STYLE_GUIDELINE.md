@@ -65,21 +65,49 @@ Use standard `Error`.
 
 ### Command handlers (`src/commands/*`)
 
-Catch errors at the command level. Distinguish `CliError` (show message) from unexpected errors (generic message + dump):
+Export command handlers post-parsing logic as async functions to be used in tests, they MUST throw CliError on errors.
+```typescript
+export async function runInspectCommand(
+  artifactKey: ArtifactKey,
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: CommandLogger;
+  },
+  opts: { debug: boolean; json?: boolean },
+): Promise<InspectResult> {
+  ...
+}
+```
+
+Use it in the command definition with error catching: distinguish `CliError` (show message) from unexpected errors (generic message + dump):
 
 ```typescript
-.catch((err) => {
-  if (err instanceof CliError) {
-    logger.error(err.message);
-  } else {
-    logger.error("An unexpected error occurred...");
-    console.error(err);
-  }
-  process.exitCode = 1;
-});
+await runInspectCommand(
+    artifactKeyParsingResult.data,
+    {
+      storageProvider,
+      pulledArtifactStore,
+      logger,
+    },
+    {
+      debug: optsParsingResult.data.debug,
+    },
+  ).catch((err) => {
+    if (err instanceof CliError) {
+      logger.error(err.message);
+    } else {
+      logger.error(
+        "An unexpected error occurred, please fill an issue with the error details if the problem persists",
+      );
+      console.error(err);
+    }
+    process.exitCode = 1;
+  });
 ```
 
 Use `process.exitCode = 1` instead of `process.exit()`.
+
 
 ## Exhaustive Checks
 
@@ -94,18 +122,21 @@ default:
 
 - Use `CommandLogger` (from `src/ui/index.ts`) in command handlers: `logger.success()`, `logger.error()`, `logger.warn()`, `logger.info()`.
 - **All output goes to stderr.** Stdout is reserved exclusively for JSON output (e.g., `inspect` command).
-- Without a logger instance, use `console.error` with `styleText` and `LOG_COLORS`.
+- Use `DebugLogger` (from `src/utils/debug-logger.ts`) for debug logs in the rest of the codebase, controlled by `opts.debug` flags.
 
 ## Function Signatures
 
-Use required dependencies as positional params, options as a final `opts` object:
+Use dependencies as positional params, options as a final `opts` object:
 
 ```typescript
 async function pullProject(
   project: string,
-  storageProvider: StorageProvider,
-  pulledArtifactStore: PulledArtifactStore,
-  opts: { force: boolean; debug: boolean; logger: CommandLogger },
+  dependencies: {
+    storageProvider: StorageProvider;
+    pulledArtifactStore: PulledArtifactStore;
+    logger: DebugLogger;
+  },
+  opts: { force: boolean; debug: boolean; },
 ): Promise<PullResult> {}
 ```
 
