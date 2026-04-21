@@ -86,6 +86,7 @@ export function registerPullCommand(
 
       const storageProvider = createStorageProvider(
         projectConfig.storage,
+        logger.toDebugLogger(),
         optsParsingResult.data.debug,
       );
       const pulledArtifactStore = new PulledArtifactStore(

@@ -121,6 +121,7 @@ export function registerExportCommand(
       );
       const storageProvider = createStorageProvider(
         projectConfig.storage,
+        logger.toDebugLogger(),
         optsParsingResult.data.debug,
       );
 

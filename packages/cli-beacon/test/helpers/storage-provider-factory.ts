@@ -8,6 +8,7 @@ import {
 } from "@/storage-provider";
 import { TEST_CONSTANTS } from "./test-constants";
 import { AbsolutePath } from "@/utils/path";
+import { TestLogger } from "./test-logger";
 
 export abstract class StorageProviderFactory<
   T extends StorageProvider = StorageProvider,
@@ -32,6 +33,7 @@ export class TestFilesystemStorageProviderFactory extends StorageProviderFactory
     const storageProvider = new FilesystemStorageProvider({
       path: new AbsolutePath(tempDir),
       debug: this.debug,
+      logger: new TestLogger(),
     });
 
     const cleanup = async () => {
@@ -60,6 +62,7 @@ export class TestS3StorageProviderFactory extends StorageProviderFactory<S3Bucke
       forcePathStyle: true,
       debug: this.debug,
       rootPath: "projects",
+      logger: new TestLogger(),
     });
 
     const cleanup = async () => {

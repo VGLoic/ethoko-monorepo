@@ -141,6 +141,7 @@ export function registerDiffCommand(
           ),
           storageProvider: createStorageProvider(
             projectConfig.storage,
+            logger.toDebugLogger(),
             paramParsingResult.data.debug,
           ),
         },
@@ -318,9 +319,15 @@ async function parseCandidateArtifact(
     paths: RelativePath[];
   };
 }> {
-  const candidateArtifacts = await lookForCandidateArtifacts(artifactPath, {
-    debug: opts.debug,
-  });
+  const candidateArtifacts = await lookForCandidateArtifacts(
+    artifactPath,
+    {
+      logger: opts.logger.toDebugLogger(),
+    },
+    {
+      debug: opts.debug,
+    },
+  );
 
   let selectedBuildInfoPaths: OriginalBuildInfoPaths;
   if (candidateArtifacts.candidateBuildInfo.type === "single") {
@@ -343,6 +350,7 @@ async function parseCandidateArtifact(
 
   const ethokoArtifact = await mapCandidateArtifactToEthokoArtifact(
     selectedBuildInfoPaths,
+    { logger: opts.logger.toDebugLogger() },
     { debug: opts.debug },
   );
 

@@ -14,16 +14,19 @@ import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
 } from "@/ethoko-artifacts/v0";
+import { DebugLogger } from "@/utils/debug-logger";
 
 /**
  * Map a candidate artifact (build info) to the Ethoko format, based on its format.
  * This function is a wrapper around the `mapOriginalArtifactToEthokoArtifact` function with CliError handling.
  * @param buildInfoPaths The paths to the candidate artifact
+ * @param dependencies The dependencies for mapping, including a logger
  * @param opts Options for mapping, including debug mode
  * @returns The mapped Ethoko artifact
  */
 export async function mapCandidateArtifactToEthokoArtifact(
   buildInfoPaths: OriginalBuildInfoPaths,
+  dependencies: { logger: DebugLogger },
   opts: { debug: boolean },
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
@@ -34,7 +37,7 @@ export async function mapCandidateArtifactToEthokoArtifact(
   };
 }> {
   const ethokoArtifactParsingResult = await toAsyncResult(
-    mapOriginalArtifactToEthokoArtifact(buildInfoPaths, opts.debug),
+    mapOriginalArtifactToEthokoArtifact(buildInfoPaths, dependencies, opts),
     { debug: opts.debug },
   );
   if (!ethokoArtifactParsingResult.success) {
@@ -98,6 +101,7 @@ type CandidateBuildInfoOption = {
  *    - an option is created for each of these set of pairs, with a display name containing the Solc version and the mtime of the files for the user to differentiate them.
  * The list of options is returned to the caller, as well as the count of ignored files (files that are not recognized as valid build info files) and the final folder path where the files are located (either the inputPath or the build-info directory if it exists).
  * @param inputPath The path to look for the build info JSON file
+ * @param dependencies The dependencies for the function, including a logger
  * @param opts Options for the function
  * @param opts.debug Enable debug mode
  * @returns An object containing the candidate artifact options, the count of ignored files, and the final folder path
@@ -105,6 +109,7 @@ type CandidateBuildInfoOption = {
  */
 export async function lookForCandidateArtifacts(
   inputPath: AbsolutePath,
+  dependencies: { logger: DebugLogger },
   opts: { debug: boolean },
 ): Promise<{
   candidateBuildInfo:
@@ -306,8 +311,8 @@ export async function lookForCandidateArtifacts(
         debug,
       });
       if (!statsResult.success) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `Failed to get stats for file "${filePath}". Error: ${statsResult.error}`,
           );
         }
@@ -325,8 +330,8 @@ export async function lookForCandidateArtifacts(
         { debug },
       );
       if (!inferrenceResult.success) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `Failed to infer format for file "${filePath}". Error: ${inferrenceResult.error}`,
           );
         }
@@ -336,8 +341,8 @@ export async function lookForCandidateArtifacts(
         };
       }
       if (!inferrenceResult.value.recognized) {
-        if (debug) {
-          console.error(
+        if (opts.debug) {
+          dependencies.logger.debug(
             `File "${filePath}" is not a valid build info JSON file (format inferred as "unknown"). It will be ignored.`,
           );
         }

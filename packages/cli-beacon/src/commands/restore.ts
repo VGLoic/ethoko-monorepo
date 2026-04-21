@@ -109,6 +109,7 @@ export function registerRestoreCommand(
 
       const storageProvider = createStorageProvider(
         projectConfig.storage,
+        logger.toDebugLogger(),
         optsParsingResult.data.debug,
       );
 

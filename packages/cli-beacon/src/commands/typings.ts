@@ -162,6 +162,7 @@ export function registerTypingsCommand(
         }
         const storageProvider = createStorageProvider(
           projectConfig.storage,
+          logger.toDebugLogger(),
           parsingResult.data.debug,
         );
         if (projectOrArtifactKey.type === "project") {

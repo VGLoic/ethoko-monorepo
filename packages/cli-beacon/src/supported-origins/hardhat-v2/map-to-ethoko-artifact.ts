@@ -6,10 +6,12 @@ import {
   EthokoInputArtifact,
 } from "@/ethoko-artifacts/v0";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 export async function mapHardhatV2ArtifactToEthokoArtifact(
   buildInfoPath: AbsolutePath,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputContractArtifacts: EthokoContractOutputArtifact[];
@@ -22,8 +24,8 @@ export async function mapHardhatV2ArtifactToEthokoArtifact(
     .readFile(buildInfoPath.resolvedPath, "utf-8")
     .then(JSON.parse)
     .catch((error) => {
-      if (debug) {
-        console.error(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Failed to read or parse the build info file "${buildInfoPath.resolvedPath}". Error: ${error}`,
         );
       }
@@ -32,8 +34,8 @@ export async function mapHardhatV2ArtifactToEthokoArtifact(
 
   const parsingResult = HardhatV2CompilerOutputSchema.safeParse(jsonContent);
   if (!parsingResult.success) {
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Failed to parse the build info file "${buildInfoPath.resolvedPath}" as a Hardhat v2 compiler output format. Error: ${parsingResult.error}`,
       );
     }

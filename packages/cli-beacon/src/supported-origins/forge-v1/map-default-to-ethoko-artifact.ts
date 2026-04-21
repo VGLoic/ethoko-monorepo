@@ -14,6 +14,7 @@ import {
 import { SolcContractSchema } from "@/solc-artifacts/v0.8.33/output-json";
 import { lookForForgeContractArtifactPath } from "./look-for-forge-contract-artifact-paths";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 type SolcContractOutput = z.infer<typeof SolcContractSchema>;
 /**
@@ -37,11 +38,13 @@ type SolcContractOutput = z.infer<typeof SolcContractSchema>;
  *    - we parse the content, we reconstruct the output and input parts
  * At the end, we compare the contracts we explored with the mapping in the build info file, if they match, we can be confident that we reconstructed the input and output correctly, and we can return the Ethoko artifacts.
  * @param buildInfoPath The path to the Forge build info JSON file (the one in the build-info folder)
- * @param debug Whether to enable debug logging
+ * @param dependencies.logger Logger
+ * @param opts.debug Whether to enable debug logging
  */
 export async function mapForgeV1DefaultArtifactToEthokoArtifact(
   buildInfoPath: AbsolutePath,
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputContractArtifacts: EthokoContractOutputArtifact[];
@@ -51,8 +54,8 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
     .readFile(buildInfoPath.resolvedPath, "utf-8")
     .then(JSON.parse)
     .catch((error) => {
-      if (debug) {
-        console.error(
+      if (opts.debug) {
+        dependencies.logger.debug(
           `Failed to read or parse the build info file "${buildInfoPath.resolvedPath}". Error: ${error}`,
         );
       }
@@ -62,8 +65,8 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
   const buildInfoParsingResult =
     ForgeCompilerDefaultOutputSchema.safeParse(jsonContent);
   if (!buildInfoParsingResult.success) {
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Failed to parse the build info file "${buildInfoPath.resolvedPath}" as a Forge v1 default compiler output format. Error: ${buildInfoParsingResult.error}`,
       );
     }
@@ -106,7 +109,8 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
   } of lookForForgeContractArtifactPath(
     rootArtifactsFolder,
     expectedSourceIdToPath,
-    debug,
+    { logger: dependencies.logger },
+    { debug: opts.debug },
   )) {
     // We register the visiter contract path with the ID
     rebuiltSourceIdToPath.set(contract.id.toString(), fullyQualifiedName.path);
@@ -206,8 +210,8 @@ export async function mapForgeV1DefaultArtifactToEthokoArtifact(
       }
     }
 
-    if (debug) {
-      console.error(
+    if (opts.debug) {
+      dependencies.logger.debug(
         `Some contract artifact paths were not visited during the retrieval of Forge contract artifacts. This might be due to a change in the Forge output format or contract files containing pure types. Missing contract paths:\n${pathsNotVisited.join(
           ",\n",
         )}.`,

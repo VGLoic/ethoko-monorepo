@@ -9,6 +9,7 @@ import {
   retrieveHardhatv3ContractArtifactsPaths,
 } from "./helpers";
 import { AbsolutePath, RelativePath } from "@/utils/path";
+import { DebugLogger } from "@/utils/debug-logger";
 
 /**
  * Hardhat v3 non isolated build will emit a single pair of input/output artifacts
@@ -17,14 +18,16 @@ import { AbsolutePath, RelativePath } from "@/utils/path";
  * Once found, we register their paths in the original content list
  *
  * @param pairs The list of pairs of input/output artifacts paths to transform into Ethoko artifacts.
- * @param debug Whether to enable debug logging
+ * @param dependencies.logger Logger
+ * @param opts.debug Whether to enable debug logging
  */
 export async function mapNonIsolatedBuildHardhatV3ArtifactsToEthokoArtifact(
   pair: {
     input: AbsolutePath;
     output: AbsolutePath;
   },
-  debug: boolean,
+  dependencies: { logger: DebugLogger },
+  opts: { debug: boolean },
 ): Promise<{
   inputArtifact: EthokoInputArtifact;
   outputContractArtifacts: EthokoContractOutputArtifact[];
@@ -67,7 +70,8 @@ export async function mapNonIsolatedBuildHardhatV3ArtifactsToEthokoArtifact(
     buildInfoDirPath,
     [inputArtifact.id],
     userSourceNameMap,
-    debug,
+    { logger: dependencies.logger },
+    { debug: opts.debug },
   );
   return {
     inputArtifact: {
