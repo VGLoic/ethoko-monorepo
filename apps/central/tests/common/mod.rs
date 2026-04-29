@@ -1,6 +1,7 @@
 use ethoko_central::httpserver::serve_http_server;
-use std::net::SocketAddr;
-use tracing::{Level, level_filters::LevelFilter};
+use sqlx::postgres::PgPoolOptions;
+use std::{net::SocketAddr, time::Duration};
+use tracing::{Level, error, level_filters::LevelFilter};
 use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
 
 #[allow(dead_code)]
@@ -13,6 +14,26 @@ pub async fn setup_instance() -> Result<InstanceState, anyhow::Error> {
     let _ = tracing_subscriber::registry()
         .with(tracing_subscriber::fmt::layer().with_filter(LevelFilter::from_level(Level::INFO)))
         .try_init();
+
+    let pool = match PgPoolOptions::new()
+        .max_connections(5)
+        .acquire_timeout(Duration::from_secs(5))
+        .connect("postgresql://admin:admin@localhost:5433/central")
+        .await
+    {
+        Ok(c) => c,
+        Err(e) => {
+            let err = format!("Failed to establish connection to database {e}");
+            error!(err);
+            return Err(anyhow::anyhow!(err));
+        }
+    };
+
+    if let Err(e) = sqlx::migrate!("./migrations").run(&pool).await {
+        let err = format!("Failed to run database migrations: {e}");
+        error!(err);
+        return Err(anyhow::anyhow!(err));
+    };
 
     let port = 0;
 
