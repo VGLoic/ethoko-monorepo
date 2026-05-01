@@ -145,3 +145,15 @@ jobs:
       - run: pnpm build --filter=@ethoko/cli-beacon
       - run: pnpm install
       - run: pnpm test:e2e:apps
+  test-integration-central:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          submodules: "recursive"
+      - uses: pnpm/action-setup@v4
+      - uses: actions-rust-lang/setup-rust-toolchain@v1
+          with:
+            toolchain: stable
+            override: true
+      - run: pnpm test:integration
