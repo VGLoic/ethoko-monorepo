@@ -55,3 +55,17 @@ Run this validation suite from root after completing each logical unit of work (
 5. **`pnpm test:e2e:core`** - Run all E2E tests for `@ethoko/cli-beacon`
 5. **`pnpm test:integration`** - Run integration tests for `apps/central`
 6. **`pnpm test:e2e:apps`** - Run all E2E tests for integration apps
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in GitHub Issues for `VGLoic/ethoko-monorepo`, accessed via the `gh` CLI. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles, each mapped to a label of the same name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Multi-context layout: `CONTEXT-MAP.md` at the root, per-package `CONTEXT.md` files under `packages/cli-beacon/` and `apps/central/`. See `docs/agents/domain.md`.
