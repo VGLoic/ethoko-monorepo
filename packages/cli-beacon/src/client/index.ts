@@ -4,15 +4,15 @@ export {
   generateEmptyTypings,
   generateProjectTypings,
   generateTagTypings,
-  generateAllPulledArtifactsTypings,
+  generateAllLocalArtifactsTypings,
 } from "./generate-typings";
 export { inspectArtifact, type InspectResult } from "./inspect";
 export { pullProject, pullArtifact, type PullResult } from "./pull";
 export {
-  listPulledArtifacts,
+  listLocalArtifacts,
   type ListArtifactsResult,
   type ArtifactItem,
-} from "./list-pulled-artifacts";
+} from "./list-local-artifacts";
 export {
   exportContractArtifact,
   type ExportContractArtifactResult,
@@ -24,7 +24,7 @@ export {
   pruneOrphanedAndUntaggedArtifacts,
   type PruneResult,
 } from "./prune";
-export { resolvePulledArtifact } from "./resolve-pulled-artifact";
+export { resolveLocalArtifact } from "./resolve-local-artifact";
 export {
   lookForCandidateArtifacts,
   mapCandidateArtifactToEthokoArtifact,

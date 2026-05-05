@@ -105,7 +105,7 @@ const pushArtifact = Effect.gen(function* () {
 
 ### 5. `Context` / `Layer` — dependency injection
 
-Replaces the manual threading of `StorageProvider` and `PulledArtifactStore` through function arguments:
+Replaces the manual threading of `StorageProvider` and `LocalArtifactStore` through function arguments:
 
 ```typescript
 import { Context, Layer, Effect } from "effect";

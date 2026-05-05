@@ -5,11 +5,11 @@ import { LOG_COLORS, CommandLogger } from "@/ui/index.js";
 import {
   CliError,
   pullArtifact,
-  resolvePulledArtifact,
+  resolveLocalArtifact,
   restore,
   type RestoreResult,
 } from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store";
+import { LocalArtifactStore } from "@/local-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
@@ -113,8 +113,8 @@ export function registerRestoreCommand(
         optsParsingResult.data.debug,
       );
 
-      const pulledArtifactStore = new PulledArtifactStore(
-        config.pulledArtifactsPath,
+      const localArtifactStore = new LocalArtifactStore(
+        config.localArtifactStorePath,
       );
 
       await runRestoreCommand(
@@ -122,7 +122,7 @@ export function registerRestoreCommand(
         optsParsingResult.data.output,
         {
           storageProvider,
-          pulledArtifactStore,
+          localArtifactStore,
           logger,
         },
         {
@@ -150,7 +150,7 @@ export async function runRestoreCommand(
   outputPath: AbsolutePath,
   dependencies: {
     storageProvider: StorageProvider;
-    pulledArtifactStore: PulledArtifactStore;
+    localArtifactStore: LocalArtifactStore;
     logger: CommandLogger;
   },
   opts: {
@@ -158,9 +158,9 @@ export async function runRestoreCommand(
     debug: boolean;
   },
 ): Promise<RestoreResult> {
-  let resolvedArtifactKey = await resolvePulledArtifact(
+  let resolvedArtifactKey = await resolveLocalArtifact(
     artifactKey,
-    dependencies.pulledArtifactStore,
+    dependencies.localArtifactStore,
     { debug: opts.debug },
   );
   if (!resolvedArtifactKey) {
@@ -174,7 +174,7 @@ export async function runRestoreCommand(
       artifactKey,
       {
         storageProvider: dependencies.storageProvider,
-        pulledArtifactStore: dependencies.pulledArtifactStore,
+        localArtifactStore: dependencies.localArtifactStore,
         logger: dependencies.logger.toDebugLogger(),
       },
       {
@@ -197,7 +197,7 @@ export async function runRestoreCommand(
     resolvedArtifactKey,
     outputPath,
     {
-      pulledArtifactStore: dependencies.pulledArtifactStore,
+      localArtifactStore: dependencies.localArtifactStore,
       storageProvider: dependencies.storageProvider,
       logger: dependencies.logger.toDebugLogger(),
     },

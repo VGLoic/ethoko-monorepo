@@ -1,13 +1,9 @@
 import { styleText } from "node:util";
 import { Command } from "commander";
 import { z } from "zod";
-import { CommandLogger, LOG_COLORS } from "@/ui/index.js";
-import {
-  CliError,
-  ListArtifactsResult,
-  listPulledArtifacts,
-} from "@/client/index.js";
-import { PulledArtifactStore } from "@/pulled-artifact-store";
+import { CommandLogger, LOG_COLORS } from "@/ui";
+import { CliError, ListArtifactsResult, listLocalArtifacts } from "@/client";
+import { LocalArtifactStore } from "@/local-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
@@ -63,12 +59,12 @@ export function registerArtifactsCommand(
         logger.intro("Listing artifacts");
       }
 
-      const pulledArtifactStore = new PulledArtifactStore(
-        config.pulledArtifactsPath,
+      const localArtifactStore = new LocalArtifactStore(
+        config.localArtifactStorePath,
       );
 
-      await listPulledArtifacts(
-        { pulledArtifactStore, logger: logger.toDebugLogger() },
+      await listLocalArtifacts(
+        { localArtifactStore, logger: logger.toDebugLogger() },
         {
           debug: parsingResult.data.debug,
         },

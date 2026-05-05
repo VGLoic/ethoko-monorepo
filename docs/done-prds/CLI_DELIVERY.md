@@ -1132,7 +1132,7 @@ COPY ethoko /usr/local/bin/ethoko
 ```json
 {
   "project": "PROJECT_NAME",
-  "pulledArtifactsPath": "PULLED_ARTIFACTS_PATH",
+  "pulledArtifactsPath": "LOCAL_ARTIFACT_STORE_PATH",
   "typingsPath": "TYPINGS_PATH",
   "compilationOutputPath": "./artifacts",
   "storage": {
