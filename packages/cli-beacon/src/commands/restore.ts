@@ -5,7 +5,7 @@ import { LOG_COLORS, CommandLogger } from "@/ui/index.js";
 import {
   CliError,
   pullArtifact,
-  resolvePulledArtifact,
+  resolveLocalArtifact,
   restore,
   type RestoreResult,
 } from "@/client/index.js";
@@ -158,7 +158,7 @@ export async function runRestoreCommand(
     debug: boolean;
   },
 ): Promise<RestoreResult> {
-  let resolvedArtifactKey = await resolvePulledArtifact(
+  let resolvedArtifactKey = await resolveLocalArtifact(
     artifactKey,
     dependencies.localArtifactStore,
     { debug: opts.debug },

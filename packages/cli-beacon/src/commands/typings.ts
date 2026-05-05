@@ -3,7 +3,7 @@ import { z } from "zod";
 import { CommandLogger } from "@/ui/index.js";
 import {
   CliError,
-  generateAllPulledArtifactsTypings,
+  generateAllLocalArtifactsTypings,
   generateEmptyTypings,
   generateProjectTypings,
   generateTagTypings,
@@ -137,7 +137,7 @@ export function registerTypingsCommand(
         });
       } else if (parsingResult.data.all) {
         logger.intro("Generating typings for all pulled artifacts");
-        promise = generateAllPulledArtifactsTypings(
+        promise = generateAllLocalArtifactsTypings(
           config.typingsPath,
           {
             localArtifactStore,

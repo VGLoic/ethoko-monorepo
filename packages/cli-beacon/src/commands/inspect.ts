@@ -7,7 +7,7 @@ import {
   inspectArtifact,
   InspectResult,
   pullArtifact,
-  resolvePulledArtifact,
+  resolveLocalArtifact,
 } from "@/client";
 import { LocalArtifactStore } from "@/local-artifact-store";
 import type { EthokoCliConfig } from "@/config";
@@ -139,7 +139,7 @@ export async function runInspectCommand(
   },
   opts: { debug: boolean; json?: boolean },
 ): Promise<InspectResult> {
-  let resolvedArtifactKey = await resolvePulledArtifact(
+  let resolvedArtifactKey = await resolveLocalArtifact(
     artifactKey,
     dependencies.localArtifactStore,
     { debug: opts.debug },

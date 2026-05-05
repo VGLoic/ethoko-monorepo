@@ -78,7 +78,7 @@ export async function inspectArtifact(
   const [inputArtifact, contractList] = artifactsResult.value;
   if (opts.debug) {
     dependencies.logger.debug(
-      `Pulled artifact retrieved successfully for artifact "${artifactKey.project}@${artifactKey.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
+      `Local artifact retrieved successfully for artifact "${artifactKey.project}@${artifactKey.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
     );
   }
 

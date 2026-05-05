@@ -53,7 +53,7 @@ export async function pullProject(
   }
   if (opts.debug) {
     dependencies.logger.debug(
-      `Pulled artifact store set up at ${dependencies.localArtifactStore.rootPath}`,
+      `Local artifact store set up at ${dependencies.localArtifactStore.rootPath}`,
     );
   }
 
@@ -111,7 +111,7 @@ export async function pullProject(
     );
     if (!localListingResult.success) {
       throw new CliError(
-        "Error checking pulled artifacts, is the script not allowed to read from the filesystem? Run with debug mode for more info",
+        "Error checking locally pulled artifacts, is the script not allowed to read from the filesystem? Run with debug mode for more info",
       );
     }
 
@@ -333,7 +333,7 @@ export async function pullArtifact(
   }
   if (opts.debug) {
     dependencies.logger.debug(
-      `Pulled artifact store set up at ${dependencies.localArtifactStore.rootPath}`,
+      `Local artifact store set up at ${dependencies.localArtifactStore.rootPath}`,
     );
   }
 

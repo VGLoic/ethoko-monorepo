@@ -14,7 +14,7 @@ export class ConfigSetup {
     this.testId = testId;
     this.testPath = `${GlobalFolder.path}/test-${testId}`;
     this.storagePath = `${this.testPath}/storage`;
-    this.localArtifactStorePath = `${this.testPath}/pulled-artifacts`;
+    this.localArtifactStorePath = `${this.testPath}/local-artifact-store`;
     this.typingsPath = `${this.testPath}/typings`;
   }
 
@@ -47,7 +47,7 @@ export class CliConfigSetup {
     );
     const cliConfigContent = cliConfigTemplate
       .replace("PROJECT_NAME", PROJECT_NAME)
-      .replace("PULLED_ARTIFACTS_PATH", this.config.localArtifactStorePath)
+      .replace("LOCAL_ARTIFACT_STORE_PATH", this.config.localArtifactStorePath)
       .replace("TYPINGS_PATH", this.config.typingsPath)
       .replace("STORAGE_PATH", this.config.storagePath);
     await fs.writeFile(this.cliConfigPath, cliConfigContent);
@@ -77,7 +77,7 @@ export class DeployScriptSetup {
     );
     const hardhatConfigContent = hardhatConfigTemplate
       .replace("PROJECT_NAME", PROJECT_NAME)
-      .replace("PULLED_ARTIFACTS_PATH", localArtifactStorePath)
+      .replace("LOCAL_ARTIFACT_STORE_PATH", localArtifactStorePath)
       .replace("TYPINGS_PATH", this.config.typingsPath)
       .replace("STORAGE_PATH", `${this.config.storagePath}`);
 

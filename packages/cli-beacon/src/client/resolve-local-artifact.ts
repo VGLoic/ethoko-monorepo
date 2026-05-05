@@ -10,7 +10,7 @@ import { CliError } from "./error";
  * @param opts Options for resolving the artifact ID, such as debug mode.
  * @returns The artifact ID if it exists in the Local Artifact Store, otherwise null.
  */
-export async function resolvePulledArtifact(
+export async function resolveLocalArtifact(
   artifactKey: ArtifactKey,
   localArtifactStore: LocalArtifactStore,
   opts: { debug: boolean },

@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import { describe, expect } from "vitest";
-import { listPulledArtifacts } from "@/client/index";
+import { listLocalArtifacts } from "@/client/index";
 import { TEST_CONSTANTS } from "@test/helpers/test-constants";
 import { createTestProjectName } from "@test/helpers/test-utils";
 import {
@@ -54,7 +54,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledIds[0]).toEqual(artifactId);
         expect(pullResult.pulledIds.length).toBe(1);
 
-        const listArtifactsResult = await listPulledArtifacts(
+        const listArtifactsResult = await listLocalArtifacts(
           { localArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,
@@ -131,7 +131,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags.length).toBe(1);
         expect(pullResult.pulledIds.length).toBe(1);
 
-        const listArtifactsResult = await listPulledArtifacts(
+        const listArtifactsResult = await listLocalArtifacts(
           { localArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,
@@ -185,7 +185,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         expect(pullResult.pulledTags).toContain(tag1);
         expect(pullResult.pulledTags).toContain(tag2);
 
-        const listArtifactsResult = await listPulledArtifacts(
+        const listArtifactsResult = await listLocalArtifacts(
           { localArtifactStore, logger: logger.toDebugLogger() },
           {
             debug: false,

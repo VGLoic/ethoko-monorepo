@@ -25,7 +25,7 @@ export type ArtifactItem = {
  * @param opts.debug Enable debug mode
  * @returns The list of artifacts in the Local Artifact Store with their project, tag, ID, and last modified date
  */
-export async function listPulledArtifacts(
+export async function listLocalArtifacts(
   dependencies: {
     localArtifactStore: LocalArtifactStore;
     logger: DebugLogger;

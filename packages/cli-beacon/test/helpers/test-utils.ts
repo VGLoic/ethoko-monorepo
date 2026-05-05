@@ -33,7 +33,7 @@ export async function inspectLocalArtifactStore(
   localArtifactStore: LocalArtifactStore,
   project?: string,
 ): Promise<void> {
-  console.log("\n=== Pulled Artifact Store Contents ===");
+  console.log("\n=== Local Artifact Store Contents ===");
 
   try {
     if (project) {

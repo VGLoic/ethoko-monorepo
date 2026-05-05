@@ -1,5 +1,5 @@
 {
-  "localArtifactStorePath": "PULLED_ARTIFACTS_PATH",
+  "localArtifactStorePath": "LOCAL_ARTIFACT_STORE_PATH",
   "typingsPath": "TYPINGS_PATH",
   "projects": [
     {

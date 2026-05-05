@@ -6,7 +6,7 @@ import {
   CliError,
   exportContractArtifact,
   pullArtifact,
-  resolvePulledArtifact,
+  resolveLocalArtifact,
   type ExportContractArtifactResult,
 } from "@/client";
 import { LocalArtifactStore } from "@/local-artifact-store";
@@ -166,7 +166,7 @@ export async function runExportCommand(
     output?: AbsolutePath;
   },
 ): Promise<ExportContractArtifactResult> {
-  let resolvedArtifactKey = await resolvePulledArtifact(
+  let resolvedArtifactKey = await resolveLocalArtifact(
     artifactKey,
     dependencies.localArtifactStore,
     { debug: opts.debug },

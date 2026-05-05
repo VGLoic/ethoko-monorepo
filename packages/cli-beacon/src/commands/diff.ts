@@ -6,7 +6,7 @@ import {
   CliError,
   Difference,
   generateDiffWithTargetRelease,
-  resolvePulledArtifact,
+  resolveLocalArtifact,
   lookForCandidateArtifacts,
   mapCandidateArtifactToEthokoArtifact,
   pullArtifact,
@@ -189,7 +189,7 @@ async function runDiffCommand(
     artifactOriginToSuccessText(candidateArtifact.inputArtifact.origin.type),
   );
 
-  let resolvedArtifactKey = await resolvePulledArtifact(
+  let resolvedArtifactKey = await resolveLocalArtifact(
     artifactKey,
     dependencies.localArtifactStore,
     { debug: opts.debug },

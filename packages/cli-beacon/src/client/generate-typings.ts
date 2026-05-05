@@ -50,7 +50,7 @@ import { DebugLogger } from "@/utils/debug-logger";
  *
  * @throws CliError if there is an error while reading Local Artifact Store or writing typings files.
  */
-export async function generateAllPulledArtifactsTypings(
+export async function generateAllLocalArtifactsTypings(
   ethokoTypingsPath: AbsolutePath,
   dependencies: {
     localArtifactStore: LocalArtifactStore;
