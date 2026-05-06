@@ -1,5 +1,11 @@
 # @ethoko/cli-beacon
 
+## 0.12.0
+
+### Minor Changes
+
+- 512b5ae: Rename `pulledArtifactsPath` to `localArtifactStorePath` in configuration
+
 ## 0.11.0
 
 ### Minor Changes
