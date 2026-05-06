@@ -15,7 +15,7 @@ import {
   RelativePath,
 } from "@/utils/path";
 import { createStorageProvider } from "./utils/storage-provider";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref";
 import {
   EthokoContractOutputArtifact,
   EthokoInputArtifact,
@@ -56,24 +56,23 @@ export function registerPushCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
-        (projectOrArtifactKey) => {
-          if (projectOrArtifactKey.type === "id") {
+      const artifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.transform((projectOrArtifactRef) => {
+          if (projectOrArtifactRef.type === "id") {
             return z.NEVER;
           }
-          if (projectOrArtifactKey.type === "project") {
+          if (projectOrArtifactRef.type === "project") {
             return {
-              project: projectOrArtifactKey.project,
+              project: projectOrArtifactRef.project,
               tag: undefined,
             };
           }
           return {
-            project: projectOrArtifactKey.project,
-            tag: projectOrArtifactKey.tag,
+            project: projectOrArtifactRef.project,
+            tag: projectOrArtifactRef.tag,
           };
-        },
-      ).safeParse(projectArg);
-      if (!artifactKeyParsingResult.success) {
+        }).safeParse(projectArg);
+      if (!artifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG]`,
         );
@@ -81,18 +80,18 @@ export function registerPushCommand(
         return;
       }
       const projectConfig = config.getProjectConfig(
-        artifactKeyParsingResult.data.project,
+        artifactRefParsingResult.data.project,
       );
       if (!projectConfig) {
         logger.error(
-          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+          `Project "${artifactRefParsingResult.data.project}" not found in configuration`,
         );
         process.exitCode = 1;
         return;
       }
 
       logger.intro(
-        `Pushing artifact "${artifactKeyParsingResult.data.project}${artifactKeyParsingResult.data.tag ? `:${artifactKeyParsingResult.data.tag}"` : '"'}`,
+        `Pushing artifact "${artifactRefParsingResult.data.project}${artifactRefParsingResult.data.tag ? `:${artifactRefParsingResult.data.tag}"` : '"'}`,
       );
 
       const optsParsingResult = z
@@ -138,8 +137,8 @@ export function registerPushCommand(
       await runPushCommand(
         finalArtifactPath,
         {
-          project: artifactKeyParsingResult.data.project,
-          tag: artifactKeyParsingResult.data.tag,
+          project: artifactRefParsingResult.data.project,
+          tag: artifactRefParsingResult.data.tag,
         },
         {
           storageProvider: createStorageProvider(

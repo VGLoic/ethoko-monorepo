@@ -3,7 +3,7 @@ import { toAsyncResult, toResult } from "@/utils/result";
 import { CliError } from "./error";
 import { ContractMetadataSchema } from "@/solc-artifacts/v0.8.33/contract-metadata-json";
 import z from "zod";
-import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactReference } from "@/utils/artifact-reference";
 import { DebugLogger } from "@/utils/debug-logger";
 
 type ContractBytecode = {
@@ -56,14 +56,14 @@ export type ExportContractArtifactResult = {
 
 /**
  * Read a locally pulled contract artifact and export its content
- * @param artifactKey Project, ID and optionally tag of the artifact
+ * @param artifactRef Project, ID and optionally tag of the artifact
  * @param shortOrFullyQualifiedContractName either contract name, either fully qualified path of the contract, e.g. `counter` or `src/Counter.sol:Counter`
  * @param dependencies Dependencies
  * @param opts Options including debug mode
  * @throws CliError in case of error
  */
 export async function exportContractArtifact(
-  artifactKey: ResolvedArtifactKey,
+  artifactRef: ResolvedArtifactReference,
   shortOrFullyQualifiedContractName: string,
   dependencies: {
     localArtifactStore: LocalArtifactStore;
@@ -72,7 +72,7 @@ export async function exportContractArtifact(
   opts: { debug: boolean },
 ): Promise<ExportContractArtifactResult> {
   const ensureResult = await toAsyncResult(
-    dependencies.localArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.localArtifactStore.ensureProjectSetup(artifactRef.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -83,14 +83,14 @@ export async function exportContractArtifact(
 
   const contractListResult = await toAsyncResult(
     dependencies.localArtifactStore.listContractArtifacts(
-      artifactKey.project,
-      artifactKey.id,
+      artifactRef.project,
+      artifactRef.id,
     ),
     { debug: opts.debug },
   );
   if (!contractListResult.success) {
     throw new CliError(
-      `Unable to find any contracts for artifact ${deriveDisplayArtifactName(artifactKey)}, please ensure it exists locally. Run with debug mode for more info`,
+      `Unable to find any contracts for artifact ${deriveDisplayArtifactName(artifactRef)}, please ensure it exists locally. Run with debug mode for more info`,
     );
   }
   if (opts.debug) {
@@ -114,12 +114,12 @@ export async function exportContractArtifact(
     const matchingContract = matchingContracts[0];
     if (!matchingContract) {
       throw new CliError(
-        `No contract found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifactKey)}`,
+        `No contract found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifactRef)}`,
       );
     }
     if (matchingContracts.length > 1) {
       throw new CliError(
-        `Multiple contracts found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifactKey)}, please specify the fully qualified contract name (i.e. <sourcePath>:${shortOrFullyQualifiedContractName}).\nMatching source paths: ${matchingContracts.map((c) => c.sourceName).join(", ")}`,
+        `Multiple contracts found with name ${shortOrFullyQualifiedContractName} in artifact ${deriveDisplayArtifactName(artifactRef)}, please specify the fully qualified contract name (i.e. <sourcePath>:${shortOrFullyQualifiedContractName}).\nMatching source paths: ${matchingContracts.map((c) => c.sourceName).join(", ")}`,
       );
     }
 
@@ -142,7 +142,7 @@ export async function exportContractArtifact(
     );
     if (!matchingContract) {
       throw new CliError(
-        `No contract found with name ${contractName} in source path ${sourcePath} in artifact ${deriveDisplayArtifactName(artifactKey)}`,
+        `No contract found with name ${contractName} in source path ${sourcePath} in artifact ${deriveDisplayArtifactName(artifactRef)}`,
       );
     }
     targetContract = matchingContract;
@@ -155,8 +155,8 @@ export async function exportContractArtifact(
 
   const contractArtifactResult = await toAsyncResult(
     dependencies.localArtifactStore.retrieveContractOutputArtifact(
-      artifactKey.project,
-      artifactKey.id,
+      artifactRef.project,
+      artifactRef.id,
       targetContract.sourceName,
       targetContract.contractName,
     ),
@@ -164,7 +164,7 @@ export async function exportContractArtifact(
   );
   if (!contractArtifactResult.success) {
     throw new CliError(
-      `Unable to retrieve the contract artifact content for contract ${targetContract.contractName} in source path ${targetContract.sourceName} for artifact ${deriveDisplayArtifactName(artifactKey)}, please ensure it exists locally. Run with debug mode for more info`,
+      `Unable to retrieve the contract artifact content for contract ${targetContract.contractName} in source path ${targetContract.sourceName} for artifact ${deriveDisplayArtifactName(artifactRef)}, please ensure it exists locally. Run with debug mode for more info`,
     );
   }
   if (opts.debug) {
@@ -181,7 +181,7 @@ export async function exportContractArtifact(
   });
   if (!metadataParsingResult.success) {
     throw new CliError(
-      `Failed to parse the contract metadata for contract ${targetContract.sourceName}:${targetContract.contractName} for artifact ${deriveDisplayArtifactName(artifactKey)}, the metadata field is expected to be a JSON string in the format output by solc. Run with debug mode for more info.`,
+      `Failed to parse the contract metadata for contract ${targetContract.sourceName}:${targetContract.contractName} for artifact ${deriveDisplayArtifactName(artifactRef)}, the metadata field is expected to be a JSON string in the format output by solc. Run with debug mode for more info.`,
     );
   }
   if (opts.debug) {
@@ -200,14 +200,14 @@ export async function exportContractArtifact(
   if (sourcesWithMissingContent.length > 0) {
     const inputArtifactResult = await toAsyncResult(
       dependencies.localArtifactStore.retrieveInputArtifact(
-        artifactKey.project,
-        artifactKey.id,
+        artifactRef.project,
+        artifactRef.id,
       ),
       { debug: opts.debug },
     );
     if (!inputArtifactResult.success) {
       throw new CliError(
-        `Failed to retrieve the artifact input for artifact ${deriveDisplayArtifactName(artifactKey)}, which is required to resolve the contract metadata sources content. Please ensure the artifact input exists locally. Run with debug mode for more info.`,
+        `Failed to retrieve the artifact input for artifact ${deriveDisplayArtifactName(artifactRef)}, which is required to resolve the contract metadata sources content. Please ensure the artifact input exists locally. Run with debug mode for more info.`,
       );
     }
     const inputArtifact = inputArtifactResult.value;
@@ -219,14 +219,14 @@ export async function exportContractArtifact(
       } else {
         if (!metadataParsingResult.value.sources[sourcePath]) {
           throw new CliError(
-            `Source ${sourcePath} is missing in the contract metadata sources and could not be found in the artifact input sources for artifact ${deriveDisplayArtifactName(artifactKey)}. This source is required to be present in the metadata sources to resolve missing content, please ensure the artifact input is correct. Run with debug mode for more info.`,
+            `Source ${sourcePath} is missing in the contract metadata sources and could not be found in the artifact input sources for artifact ${deriveDisplayArtifactName(artifactRef)}. This source is required to be present in the metadata sources to resolve missing content, please ensure the artifact input is correct. Run with debug mode for more info.`,
           );
         }
         metadataParsingResult.value.sources[sourcePath].content =
           inputSource.content;
         if (opts.debug) {
           dependencies.logger.debug(
-            `Source ${sourcePath} content resolved successfully from artifact input for artifact ${deriveDisplayArtifactName(artifactKey)}`,
+            `Source ${sourcePath} content resolved successfully from artifact input for artifact ${deriveDisplayArtifactName(artifactRef)}`,
           );
         }
       }
@@ -234,10 +234,10 @@ export async function exportContractArtifact(
   }
 
   return {
-    tag: artifactKey.tag,
+    tag: artifactRef.tag,
     _format: "exported-ethoko-contract-artifact-v0",
     id: contractArtifact.id,
-    project: artifactKey.project,
+    project: artifactRef.project,
     abi: contractArtifact.output.contract.abi,
     metadata: contractArtifact.output.contract.metadata || "",
     bytecode: prefixWith0x(
@@ -266,11 +266,13 @@ export async function exportContractArtifact(
   };
 }
 
-function deriveDisplayArtifactName(artifactKey: ResolvedArtifactKey): string {
-  if (artifactKey.tag) {
-    return `${artifactKey.project}:${artifactKey.tag}`;
+function deriveDisplayArtifactName(
+  artifactRef: ResolvedArtifactReference,
+): string {
+  if (artifactRef.tag) {
+    return `${artifactRef.project}:${artifactRef.tag}`;
   }
-  return `${artifactKey.project}:${artifactKey.id}`;
+  return `${artifactRef.project}:${artifactRef.id}`;
 }
 
 function prefixWith0x(s: string): `0x${string}` {

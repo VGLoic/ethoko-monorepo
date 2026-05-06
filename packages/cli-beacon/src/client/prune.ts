@@ -1,7 +1,7 @@
 import { LocalArtifactStore } from "@/local-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ArtifactReference } from "@/utils/artifact-reference";
 import { DebugLogger } from "@/utils/debug-logger";
 
 export type PruneResult = {
@@ -352,7 +352,7 @@ export async function pruneProjectArtifacts(
 }
 
 export async function pruneArtifact(
-  artifactKey: ArtifactKey,
+  artifactRef: ArtifactReference,
   dependencies: {
     localArtifactStore: LocalArtifactStore;
     logger: DebugLogger;
@@ -362,17 +362,17 @@ export async function pruneArtifact(
     debug: boolean;
   },
 ): Promise<PruneResult> {
-  if (artifactKey.type === "id") {
+  if (artifactRef.type === "id") {
     return pruneArtifactById(
-      artifactKey.project,
-      artifactKey.id,
+      artifactRef.project,
+      artifactRef.id,
       dependencies,
       opts,
     );
   } else {
     return pruneArtifactByTag(
-      artifactKey.project,
-      artifactKey.tag,
+      artifactRef.project,
+      artifactRef.tag,
       dependencies,
       opts,
     );

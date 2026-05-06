@@ -13,7 +13,7 @@ import { LocalArtifactStore } from "@/local-artifact-store";
 import type { EthokoCliConfig } from "../config";
 import { createStorageProvider } from "./utils/storage-provider.js";
 import { toAsyncResult } from "@/utils/result.js";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref.js";
 import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -46,9 +46,9 @@ export function registerPullCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult =
-        ProjectOrArtifactKeySchema.safeParse(projectArg);
-      if (!artifactKeyParsingResult.success) {
+      const artifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.safeParse(projectArg);
+      if (!artifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT or PROJECT[:TAG|@ID]`,
         );
@@ -56,11 +56,11 @@ export function registerPullCommand(
         return;
       }
       const projectConfig = config.getProjectConfig(
-        artifactKeyParsingResult.data.project,
+        artifactRefParsingResult.data.project,
       );
       if (!projectConfig) {
         logger.error(
-          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+          `Project "${artifactRefParsingResult.data.project}" not found in configuration`,
         );
         process.exitCode = 1;
         return;
@@ -94,7 +94,7 @@ export function registerPullCommand(
       );
 
       await runPullCommand(
-        artifactKeyParsingResult.data,
+        artifactRefParsingResult.data,
         {
           storageProvider,
           localArtifactStore,
@@ -119,7 +119,7 @@ export function registerPullCommand(
 }
 
 export async function runPullCommand(
-  target: z.infer<typeof ProjectOrArtifactKeySchema>,
+  target: z.infer<typeof ProjectOrArtifactReferenceSchema>,
   dependencies: {
     storageProvider: StorageProvider;
     localArtifactStore: LocalArtifactStore;

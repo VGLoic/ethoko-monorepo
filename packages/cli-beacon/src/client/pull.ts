@@ -3,7 +3,7 @@ import { LocalArtifactStore } from "../local-artifact-store";
 import { StorageProvider } from "../storage-provider";
 import { toAsyncResult } from "../utils/result";
 import { CliError } from "./error";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ArtifactReference } from "@/utils/artifact-reference";
 
 export type PullResult = {
   remoteTags: string[];
@@ -299,7 +299,7 @@ export async function pullProject(
 /**
  * Pull a specific artifact by tag or ID, it consists of the same four steps as pullProject but without the need to fetch and filter the list of remote artifacts, since we already know which artifact we want to pull. The method returns an object containing the list of remote tags and IDs (which will contain only the pulled artifact), the list of successfully pulled tags and IDs, and the list of tags and IDs that failed to be pulled.
  * @throws CliError if there is an error setting up the Local Artifact Store, checking the Local Artifact Store, verifying the existence of the artifact remotely, or downloading the artifact. The error messages are meant to be user-friendly and can be directly shown to the user.
- * @param artifactKey The key of the artifact to pull, which should specify the project and either a tag or an ID
+ * @param artifactReference The reference of the artifact to pull, which should specify the project and either a tag or an ID
  * @param dependencies.storageProvider The storage provider used to access remote artifacts
  * @param dependencies.localArtifactStore The store used to manage pulled artifacts locally
  * @param dependencies.logger The DebugLogger instance to use for debug logging during the pull process
@@ -309,7 +309,7 @@ export async function pullProject(
  * @returns An object with the remote tags and IDs, pulled tags and IDs, and failed tags and IDs
  */
 export async function pullArtifact(
-  artifactKey: ArtifactKey,
+  artifactReference: ArtifactReference,
   dependencies: {
     storageProvider: StorageProvider;
     localArtifactStore: LocalArtifactStore;
@@ -323,7 +323,9 @@ export async function pullArtifact(
 }> {
   // Step 1: Set up Local Artifact Store
   const ensureResult = await toAsyncResult(
-    dependencies.localArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.localArtifactStore.ensureProjectSetup(
+      artifactReference.project,
+    ),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -337,23 +339,23 @@ export async function pullArtifact(
     );
   }
 
-  if (artifactKey.type === "tag") {
+  if (artifactReference.type === "tag") {
     return await pullArtifactByTag(
-      artifactKey.project,
-      artifactKey.tag,
+      artifactReference.project,
+      artifactReference.tag,
       dependencies,
       opts,
     );
-  } else if (artifactKey.type === "id") {
+  } else if (artifactReference.type === "id") {
     return await pullArtifactById(
-      artifactKey.project,
-      artifactKey.id,
+      artifactReference.project,
+      artifactReference.id,
       dependencies,
       opts,
     );
   } else {
     throw new CliError(
-      `The tag or ID "${artifactKey satisfies never}" does not exist remotely`,
+      `The tag or ID "${artifactReference satisfies never}" does not exist remotely`,
     );
   }
 }

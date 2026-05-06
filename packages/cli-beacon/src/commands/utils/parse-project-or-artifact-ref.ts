@@ -1,6 +1,6 @@
 import z from "zod";
 
-export const ProjectOrArtifactKeySchema = z
+export const ProjectOrArtifactReferenceSchema = z
   .string(
     "The artifact argument must be a string in the format PROJECT or PROJECT[:TAG|@ID]",
   )
@@ -9,7 +9,7 @@ export const ProjectOrArtifactKeySchema = z
     "The artifact argument cannot be empty. Provide a valid artifact key in the format PROJECT or PROJECT[:TAG|@ID]",
   )
   .transform((str, ctx) => {
-    const result = parseProjectOrArtifactKey(str);
+    const result = parseProjectOrArtifactReference(str);
     if (!result.success) {
       ctx.addIssue({
         code: "custom",
@@ -20,7 +20,7 @@ export const ProjectOrArtifactKeySchema = z
     return result.key;
   });
 
-type ProjectOrArtifactKey =
+type ProjectOrArtifactReference =
   | {
       project: string;
       type: "project";
@@ -36,10 +36,10 @@ type ProjectOrArtifactKey =
       id: string;
     };
 
-function parseProjectOrArtifactKey(key: string):
+function parseProjectOrArtifactReference(key: string):
   | {
       success: true;
-      key: ProjectOrArtifactKey;
+      key: ProjectOrArtifactReference;
     }
   | { success: false; error: string } {
   const hasTagDelimiter = key.includes(":");

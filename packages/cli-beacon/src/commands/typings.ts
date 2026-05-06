@@ -14,7 +14,7 @@ import { LocalArtifactStore } from "@/local-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref";
 import { createStorageProvider } from "./utils/storage-provider";
 import { StorageProvider } from "@/storage-provider";
 import { AbsolutePath } from "@/utils/path";
@@ -52,25 +52,25 @@ export function registerTypingsCommand(
       }
       const config = configResult.value;
 
-      const projectOrArtifactKeyParsingResult =
-        ProjectOrArtifactKeySchema.optional()
-          .refine((projectOrArtifactKey) => projectOrArtifactKey?.type !== "id")
+      const projectOrArtifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.optional()
+          .refine((projectOrArtifactRef) => projectOrArtifactRef?.type !== "id")
           .safeParse(projectArg);
-      if (!projectOrArtifactKeyParsingResult.success) {
+      if (!projectOrArtifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT or PROJECT[:TAG]`,
         );
         process.exitCode = 1;
         return;
       }
-      const projectOrArtifactKey = projectOrArtifactKeyParsingResult.data;
-      if (projectOrArtifactKey) {
+      const projectOrArtifactRef = projectOrArtifactRefParsingResult.data;
+      if (projectOrArtifactRef) {
         const projectConfig = config.getProjectConfig(
-          projectOrArtifactKey.project,
+          projectOrArtifactRef.project,
         );
         if (!projectConfig) {
           logger.error(
-            `Project "${projectOrArtifactKey.project}" not found in configuration`,
+            `Project "${projectOrArtifactRef.project}" not found in configuration`,
           );
           process.exitCode = 1;
           return;
@@ -89,7 +89,7 @@ export function registerTypingsCommand(
         })
         .superRefine((opts, ctx) => {
           // If artifact argument is provided, "all" and "empty" options cannot be used
-          if (projectOrArtifactKey) {
+          if (projectOrArtifactRef) {
             if (opts.all) {
               ctx.addIssue({
                 code: "custom",
@@ -145,13 +145,13 @@ export function registerTypingsCommand(
           },
           { debug: parsingResult.data.debug },
         );
-      } else if (projectOrArtifactKey) {
+      } else if (projectOrArtifactRef) {
         const projectConfig = config.getProjectConfig(
-          projectOrArtifactKey.project,
+          projectOrArtifactRef.project,
         );
         if (!projectConfig) {
           logger.error(
-            `Project "${projectOrArtifactKey.project}" not found in configuration`,
+            `Project "${projectOrArtifactRef.project}" not found in configuration`,
           );
           process.exitCode = 1;
           return;
@@ -161,12 +161,12 @@ export function registerTypingsCommand(
           logger.toDebugLogger(),
           parsingResult.data.debug,
         );
-        if (projectOrArtifactKey.type === "project") {
+        if (projectOrArtifactRef.type === "project") {
           logger.intro(
-            `Generating typings for project "${projectOrArtifactKey.project}"`,
+            `Generating typings for project "${projectOrArtifactRef.project}"`,
           );
           promise = runProjectTypingsCommand(
-            projectOrArtifactKey.project,
+            projectOrArtifactRef.project,
             config.typingsPath,
             {
               storageProvider,
@@ -175,13 +175,13 @@ export function registerTypingsCommand(
             },
             { debug: parsingResult.data.debug },
           );
-        } else if (projectOrArtifactKey.type === "tag") {
+        } else if (projectOrArtifactRef.type === "tag") {
           logger.intro(
-            `Generating typings for artifact "${projectOrArtifactKey.project}:${projectOrArtifactKey.tag}"`,
+            `Generating typings for artifact "${projectOrArtifactRef.project}:${projectOrArtifactRef.tag}"`,
           );
           promise = runTagTypingsCommand(
-            projectOrArtifactKey.project,
-            projectOrArtifactKey.tag,
+            projectOrArtifactRef.project,
+            projectOrArtifactRef.tag,
             config.typingsPath,
             {
               storageProvider,
