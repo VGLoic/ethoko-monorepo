@@ -3,7 +3,7 @@ import { Command } from "commander";
 import { CommandLogger } from "@/ui";
 import { toAsyncResult } from "@/utils/result";
 import { LocalArtifactStore } from "@/local-artifact-store";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref";
 import type { EthokoCliConfig } from "../config";
 import {
   CliError,
@@ -80,8 +80,9 @@ export function registerPruneCommand(
         return;
       }
 
-      const parsedKeyResult = ProjectOrArtifactKeySchema.safeParse(artifactKey);
-      if (!parsedKeyResult.success) {
+      const parsedRefResult =
+        ProjectOrArtifactReferenceSchema.safeParse(artifactKey);
+      if (!parsedRefResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT OR PROJECT[:TAG|@ID]`,
         );
@@ -90,7 +91,7 @@ export function registerPruneCommand(
       }
 
       await runPruneCommand(
-        { type: "specific", artifactKey: parsedKeyResult.data },
+        { type: "specific", artifactRef: parsedRefResult.data },
         {
           localArtifactStore,
           logger,
@@ -118,7 +119,7 @@ export async function runPruneCommand(
     | { type: "all"; projects: Set<string> }
     | {
         type: "specific";
-        artifactKey: z.infer<typeof ProjectOrArtifactKeySchema>;
+        artifactRef: z.infer<typeof ProjectOrArtifactReferenceSchema>;
       },
   dependencies: {
     localArtifactStore: LocalArtifactStore;
@@ -141,12 +142,12 @@ export async function runPruneCommand(
       },
       opts,
     );
-  } else if (target.artifactKey.type === "project") {
+  } else if (target.artifactRef.type === "project") {
     dependencies.logger.intro(
-      `Pruning artifacts for project "${target.artifactKey.project}"`,
+      `Pruning artifacts for project "${target.artifactRef.project}"`,
     );
     pruneResult = await pruneProjectArtifacts(
-      target.artifactKey.project,
+      target.artifactRef.project,
       {
         localArtifactStore: dependencies.localArtifactStore,
         logger: debugLogger,
@@ -155,14 +156,14 @@ export async function runPruneCommand(
     );
   } else {
     dependencies.logger.intro(
-      `Pruning artifact "${target.artifactKey.project}${
-        target.artifactKey.type === "tag"
-          ? `:${target.artifactKey.tag}`
-          : `@${target.artifactKey.id}`
+      `Pruning artifact "${target.artifactRef.project}${
+        target.artifactRef.type === "tag"
+          ? `:${target.artifactRef.tag}`
+          : `@${target.artifactRef.id}`
       }"`,
     );
     pruneResult = await pruneArtifact(
-      target.artifactKey,
+      target.artifactRef,
       {
         localArtifactStore: dependencies.localArtifactStore,
         logger: debugLogger,

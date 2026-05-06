@@ -12,9 +12,9 @@ import {
 import { LocalArtifactStore } from "@/local-artifact-store";
 import type { EthokoCliConfig } from "@/config";
 import { toAsyncResult } from "@/utils/result";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref";
 import { createStorageProvider } from "./utils/storage-provider";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ArtifactReference } from "@/utils/artifact-reference";
 import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -48,15 +48,14 @@ export function registerInspectCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
-        (projectOrArtifactKey) => {
-          if (projectOrArtifactKey.type === "project") {
+      const artifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.transform((projectOrArtifactRef) => {
+          if (projectOrArtifactRef.type === "project") {
             return z.NEVER;
           }
-          return projectOrArtifactKey;
-        },
-      ).safeParse(projectArg);
-      if (!artifactKeyParsingResult.success) {
+          return projectOrArtifactRef;
+        }).safeParse(projectArg);
+      if (!artifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG|@ID]`,
         );
@@ -64,11 +63,11 @@ export function registerInspectCommand(
         return;
       }
       const projectConfig = config.getProjectConfig(
-        artifactKeyParsingResult.data.project,
+        artifactRefParsingResult.data.project,
       );
       if (!projectConfig) {
         logger.error(
-          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+          `Project "${artifactRefParsingResult.data.project}" not found in configuration`,
         );
         process.exitCode = 1;
         return;
@@ -92,7 +91,7 @@ export function registerInspectCommand(
 
       if (!optsParsingResult.data.json) {
         logger.intro(
-          `Inspecting artifact "${projectConfig.name}${artifactKeyParsingResult.data.type === "tag" ? `:${artifactKeyParsingResult.data.tag}` : `@${artifactKeyParsingResult.data.id}`}"`,
+          `Inspecting artifact "${projectConfig.name}${artifactRefParsingResult.data.type === "tag" ? `:${artifactRefParsingResult.data.tag}` : `@${artifactRefParsingResult.data.id}`}"`,
         );
       }
 
@@ -107,7 +106,7 @@ export function registerInspectCommand(
       );
 
       await runInspectCommand(
-        artifactKeyParsingResult.data,
+        artifactRefParsingResult.data,
         {
           storageProvider,
           localArtifactStore,
@@ -131,7 +130,7 @@ export function registerInspectCommand(
 }
 
 export async function runInspectCommand(
-  artifactKey: ArtifactKey,
+  artifactRef: ArtifactReference,
   dependencies: {
     storageProvider: StorageProvider;
     localArtifactStore: LocalArtifactStore;
@@ -139,20 +138,20 @@ export async function runInspectCommand(
   },
   opts: { debug: boolean; json?: boolean },
 ): Promise<InspectResult> {
-  let resolvedArtifactKey = await resolveLocalArtifact(
-    artifactKey,
+  let resolvedArtifactRef = await resolveLocalArtifact(
+    artifactRef,
     dependencies.localArtifactStore,
     { debug: opts.debug },
   );
-  if (!resolvedArtifactKey) {
-    const artifactLabel = `${artifactKey.project}${
-      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+  if (!resolvedArtifactRef) {
+    const artifactLabel = `${artifactRef.project}${
+      artifactRef.type === "id" ? `@${artifactRef.id}` : `:${artifactRef.tag}`
     }`;
     const pullSpinner = dependencies.logger.createSpinner(
       `Artifact "${artifactLabel}" not found locally, pulling...`,
     );
     const pulledArtifact = await pullArtifact(
-      artifactKey,
+      artifactRef,
       {
         storageProvider: dependencies.storageProvider,
         localArtifactStore: dependencies.localArtifactStore,
@@ -167,15 +166,15 @@ export async function runInspectCommand(
       throw err;
     });
     pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
-    resolvedArtifactKey = {
-      project: artifactKey.project,
+    resolvedArtifactRef = {
+      project: artifactRef.project,
       id: pulledArtifact.id,
-      tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+      tag: artifactRef.type === "tag" ? artifactRef.tag : null,
     };
   }
 
   const inspectResult = await inspectArtifact(
-    resolvedArtifactKey,
+    resolvedArtifactRef,
     {
       localArtifactStore: dependencies.localArtifactStore,
       logger: dependencies.logger.toDebugLogger(),

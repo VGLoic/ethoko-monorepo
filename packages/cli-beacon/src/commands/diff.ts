@@ -15,7 +15,7 @@ import { LocalArtifactStore } from "@/local-artifact-store";
 
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref.js";
 import {
   AbsolutePath,
   generateAbsolutePathSchema,
@@ -27,7 +27,7 @@ import {
   EthokoInputArtifact,
 } from "@/ethoko-artifacts/v0";
 import { StorageProvider } from "@/storage-provider";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ArtifactReference } from "@/utils/artifact-reference";
 import { OriginalBuildInfoPaths } from "@/supported-origins/map-original-artifact-to-ethoko-artifact";
 import { promptUserSelection } from "./utils/prompt-select";
 
@@ -62,15 +62,14 @@ export function registerDiffCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
-        (artifactKey) => {
-          if (artifactKey.type === "project") {
+      const artifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.transform((artifactRef) => {
+          if (artifactRef.type === "project") {
             return z.NEVER;
           }
-          return artifactKey;
-        },
-      ).safeParse(projectArg);
-      if (!artifactKeyParsingResult.success) {
+          return artifactRef;
+        }).safeParse(projectArg);
+      if (!artifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG|@ID]`,
         );
@@ -78,20 +77,20 @@ export function registerDiffCommand(
         return;
       }
       const projectConfig = config.getProjectConfig(
-        artifactKeyParsingResult.data.project,
+        artifactRefParsingResult.data.project,
       );
       if (!projectConfig) {
         logger.error(
-          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+          `Project "${artifactRefParsingResult.data.project}" not found in configuration`,
         );
         process.exitCode = 1;
         return;
       }
       logger.intro(
-        `Comparing with artifact "${artifactKeyParsingResult.data.project}:${
-          artifactKeyParsingResult.data.type === "id"
-            ? artifactKeyParsingResult.data.id
-            : artifactKeyParsingResult.data.tag
+        `Comparing with artifact "${artifactRefParsingResult.data.project}:${
+          artifactRefParsingResult.data.type === "id"
+            ? artifactRefParsingResult.data.id
+            : artifactRefParsingResult.data.tag
         }"`,
       );
 
@@ -133,7 +132,7 @@ export function registerDiffCommand(
 
       await runDiffCommand(
         finalArtifactPath,
-        artifactKeyParsingResult.data,
+        artifactRefParsingResult.data,
         {
           logger,
           localArtifactStore: new LocalArtifactStore(
@@ -164,7 +163,7 @@ export function registerDiffCommand(
 
 async function runDiffCommand(
   artifactPath: AbsolutePath,
-  artifactKey: ArtifactKey,
+  artifactRef: ArtifactReference,
   dependencies: {
     localArtifactStore: LocalArtifactStore;
     storageProvider: StorageProvider;
@@ -189,20 +188,20 @@ async function runDiffCommand(
     artifactOriginToSuccessText(candidateArtifact.inputArtifact.origin.type),
   );
 
-  let resolvedArtifactKey = await resolveLocalArtifact(
-    artifactKey,
+  let resolvedArtifactRef = await resolveLocalArtifact(
+    artifactRef,
     dependencies.localArtifactStore,
     { debug: opts.debug },
   );
-  if (!resolvedArtifactKey) {
-    const artifactLabel = `${artifactKey.project}${
-      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+  if (!resolvedArtifactRef) {
+    const artifactLabel = `${artifactRef.project}${
+      artifactRef.type === "id" ? `@${artifactRef.id}` : `:${artifactRef.tag}`
     }`;
     const pullSpinner = dependencies.logger.createSpinner(
       `Artifact "${artifactLabel}" not found locally, pulling...`,
     );
     const pulledArtifact = await pullArtifact(
-      artifactKey,
+      artifactRef,
       {
         storageProvider: dependencies.storageProvider,
         localArtifactStore: dependencies.localArtifactStore,
@@ -217,15 +216,15 @@ async function runDiffCommand(
       throw err;
     });
     pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
-    resolvedArtifactKey = {
-      project: artifactKey.project,
+    resolvedArtifactRef = {
+      project: artifactRef.project,
       id: pulledArtifact.id,
-      tag: artifactKey.type === "tag" ? "tag" : null,
+      tag: artifactRef.type === "tag" ? "tag" : null,
     };
   }
 
   const diffResult = await generateDiffWithTargetRelease(
-    resolvedArtifactKey,
+    resolvedArtifactRef,
     candidateArtifact,
     {
       localArtifactStore: dependencies.localArtifactStore,

@@ -1,4 +1,4 @@
-export type ArtifactKey =
+export type ArtifactReference =
   | {
       project: string;
       type: "tag";
@@ -10,7 +10,7 @@ export type ArtifactKey =
       id: string;
     };
 
-export type ResolvedArtifactKey = {
+export type ResolvedArtifactReference = {
   project: string;
   id: string;
   tag: string | null;

@@ -12,10 +12,10 @@ import {
 import { LocalArtifactStore } from "@/local-artifact-store";
 import type { EthokoCliConfig } from "../config";
 import { toAsyncResult } from "@/utils/result.js";
-import { ProjectOrArtifactKeySchema } from "./utils/parse-project-or-artifact-key.js";
+import { ProjectOrArtifactReferenceSchema } from "./utils/parse-project-or-artifact-ref.js";
 import { generateAbsolutePathSchema, AbsolutePath } from "@/utils/path.js";
 import { createStorageProvider } from "./utils/storage-provider";
-import { ArtifactKey } from "@/utils/artifact-key";
+import { ArtifactReference } from "@/utils/artifact-reference";
 import { StorageProvider } from "@/storage-provider";
 
 type GetConfig = (configPath?: string) => Promise<EthokoCliConfig>;
@@ -53,15 +53,14 @@ export function registerExportCommand(
       }
       const config = configResult.value;
 
-      const artifactKeyParsingResult = ProjectOrArtifactKeySchema.transform(
-        (projectOrArtifactKey) => {
-          if (projectOrArtifactKey.type === "project") {
+      const artifactRefParsingResult =
+        ProjectOrArtifactReferenceSchema.transform((projectOrArtifactRef) => {
+          if (projectOrArtifactRef.type === "project") {
             return z.NEVER;
           }
-          return projectOrArtifactKey;
-        },
-      ).safeParse(projectArg);
-      if (!artifactKeyParsingResult.success) {
+          return projectOrArtifactRef;
+        }).safeParse(projectArg);
+      if (!artifactRefParsingResult.success) {
         logger.error(
           `Invalid artifact argument:\nThe artifact argument must be a string in the format PROJECT[:TAG|@ID]`,
         );
@@ -69,11 +68,11 @@ export function registerExportCommand(
         return;
       }
       const projectConfig = config.getProjectConfig(
-        artifactKeyParsingResult.data.project,
+        artifactRefParsingResult.data.project,
       );
       if (!projectConfig) {
         logger.error(
-          `Project "${artifactKeyParsingResult.data.project}" not found in configuration`,
+          `Project "${artifactRefParsingResult.data.project}" not found in configuration`,
         );
         process.exitCode = 1;
         return;
@@ -112,7 +111,7 @@ export function registerExportCommand(
 
       if (optsParsingResult.data.output) {
         logger.intro(
-          `Exporting contract artifact for "${optsParsingResult.data.contract}" from "${projectConfig.name}${artifactKeyParsingResult.data.type === "tag" ? `:${artifactKeyParsingResult.data.tag}` : `@${artifactKeyParsingResult.data.id}`}" to ${optsParsingResult.data.output}`,
+          `Exporting contract artifact for "${optsParsingResult.data.contract}" from "${projectConfig.name}${artifactRefParsingResult.data.type === "tag" ? `:${artifactRefParsingResult.data.tag}` : `@${artifactRefParsingResult.data.id}`}" to ${optsParsingResult.data.output}`,
         );
       }
 
@@ -126,7 +125,7 @@ export function registerExportCommand(
       );
 
       await runExportCommand(
-        artifactKeyParsingResult.data,
+        artifactRefParsingResult.data,
         optsParsingResult.data.contract,
         {
           storageProvider,
@@ -154,7 +153,7 @@ export function registerExportCommand(
 }
 
 export async function runExportCommand(
-  artifactKey: ArtifactKey,
+  artifactRef: ArtifactReference,
   shortOrFullyQualifiedContractName: string,
   dependencies: {
     storageProvider: StorageProvider;
@@ -166,20 +165,20 @@ export async function runExportCommand(
     output?: AbsolutePath;
   },
 ): Promise<ExportContractArtifactResult> {
-  let resolvedArtifactKey = await resolveLocalArtifact(
-    artifactKey,
+  let resolvedArtifactRef = await resolveLocalArtifact(
+    artifactRef,
     dependencies.localArtifactStore,
     { debug: opts.debug },
   );
-  if (!resolvedArtifactKey) {
-    const artifactLabel = `${artifactKey.project}${
-      artifactKey.type === "id" ? `@${artifactKey.id}` : `:${artifactKey.tag}`
+  if (!resolvedArtifactRef) {
+    const artifactLabel = `${artifactRef.project}${
+      artifactRef.type === "id" ? `@${artifactRef.id}` : `:${artifactRef.tag}`
     }`;
     const pullSpinner = dependencies.logger.createSpinner(
       `Artifact "${artifactLabel}" not found locally, pulling...`,
     );
     const pulledArtifact = await pullArtifact(
-      artifactKey,
+      artifactRef,
       {
         storageProvider: dependencies.storageProvider,
         localArtifactStore: dependencies.localArtifactStore,
@@ -194,15 +193,15 @@ export async function runExportCommand(
       throw err;
     });
     pullSpinner.succeed(`Artifact "${artifactLabel}" pulled successfully`);
-    resolvedArtifactKey = {
-      project: artifactKey.project,
+    resolvedArtifactRef = {
+      project: artifactRef.project,
       id: pulledArtifact.id,
-      tag: artifactKey.type === "tag" ? artifactKey.tag : null,
+      tag: artifactRef.type === "tag" ? artifactRef.tag : null,
     };
   }
 
   const exportResult = await exportContractArtifact(
-    resolvedArtifactKey,
+    resolvedArtifactRef,
     shortOrFullyQualifiedContractName,
     {
       localArtifactStore: dependencies.localArtifactStore,

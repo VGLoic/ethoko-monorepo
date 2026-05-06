@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { LocalArtifactStore } from "@/local-artifact-store";
 import { toAsyncResult, toResult } from "@/utils/result";
-import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactReference } from "@/utils/artifact-reference";
 import { EthokoContractOutputArtifact } from "@/ethoko-artifacts/v0";
 import { CliError } from "./error";
 import { DebugLogger } from "@/utils/debug-logger";
@@ -82,7 +82,7 @@ export type Difference = {
  * Finally, the two maps are compared and the differences are generated
  *
  * @throws CliError if there is an error during the execution of the steps, with user-friendly messages that can be directly shown to the user
- * @param targetArtifactKey The key to the target artifact, containing the project, the id and optionally the tag of the target artifact
+ * @param targetArtifactReference The reference to the target artifact, containing the project, the id and optionally the tag of the target artifact
  * @param candidateArtifact The candidate compilation artifact to compare with the target artifact
  * @param dependencies The dependencies
  * @param opts Options for the diff command
@@ -90,7 +90,7 @@ export type Difference = {
  * @returns The array of differences between the fresh compilation artifact and the target artifact
  */
 export async function generateDiffWithTargetRelease(
-  targetArtifactKey: ResolvedArtifactKey,
+  targetArtifactReference: ResolvedArtifactReference,
   candidateArtifact: {
     outputContractArtifacts: EthokoContractOutputArtifact[];
   },
@@ -102,7 +102,7 @@ export async function generateDiffWithTargetRelease(
 ): Promise<Difference[]> {
   const ensureResult = await toAsyncResult(
     dependencies.localArtifactStore.ensureProjectSetup(
-      targetArtifactKey.project,
+      targetArtifactReference.project,
     ),
     { debug: opts.debug },
   );
@@ -129,13 +129,16 @@ export async function generateDiffWithTargetRelease(
 
   const targetContractsResult = await toAsyncResult(
     dependencies.localArtifactStore
-      .listContractArtifacts(targetArtifactKey.project, targetArtifactKey.id)
+      .listContractArtifacts(
+        targetArtifactReference.project,
+        targetArtifactReference.id,
+      )
       .then((commonContracts) =>
         Promise.all(
           commonContracts.map((c) =>
             dependencies.localArtifactStore.retrieveContractOutputArtifact(
-              targetArtifactKey.project,
-              targetArtifactKey.id,
+              targetArtifactReference.project,
+              targetArtifactReference.id,
               c.sourceName,
               c.contractName,
             ),

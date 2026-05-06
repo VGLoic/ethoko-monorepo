@@ -214,7 +214,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         const result = await runPruneCommand(
-          { type: "specific", artifactKey: { type: "project", project } },
+          { type: "specific", artifactRef: { type: "project", project } },
           { localArtifactStore, logger },
           {
             dryRun: false,
@@ -254,7 +254,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         const result = await runPruneCommand(
-          { type: "specific", artifactKey: { type: "project", project } },
+          { type: "specific", artifactRef: { type: "project", project } },
           { localArtifactStore, logger },
           {
             dryRun: true,
@@ -293,7 +293,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const result = await runPruneCommand(
           {
             type: "specific",
-            artifactKey: { project, type: "id", id: artifactId },
+            artifactRef: { project, type: "id", id: artifactId },
           },
           { localArtifactStore, logger },
           { dryRun: false, debug: false },
@@ -328,7 +328,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         const result = await runPruneCommand(
           {
             type: "specific",
-            artifactKey: { project, type: "id", id: artifactId },
+            artifactRef: { project, type: "id", id: artifactId },
           },
           { localArtifactStore, logger },
           { dryRun: true, debug: false },
@@ -350,7 +350,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           runPruneCommand(
             {
               type: "specific",
-              artifactKey: { project, type: "id", id: "nonexistentid" },
+              artifactRef: { project, type: "id", id: "nonexistentid" },
             },
             { localArtifactStore, logger },
             {
@@ -383,7 +383,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         const result = await runPruneCommand(
-          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { type: "specific", artifactRef: { project, type: "tag", tag } },
           { localArtifactStore, logger },
           { dryRun: false, debug: false },
         );
@@ -413,7 +413,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
         );
 
         const result = await runPruneCommand(
-          { type: "specific", artifactKey: { project, type: "tag", tag } },
+          { type: "specific", artifactRef: { project, type: "tag", tag } },
           { localArtifactStore, logger },
           { dryRun: true, debug: false },
         );
@@ -434,7 +434,7 @@ describe.for(STORAGE_PROVIDER_STRATEGIES)(
           runPruneCommand(
             {
               type: "specific",
-              artifactKey: { project, type: "tag", tag: "nonexistent-tag" },
+              artifactRef: { project, type: "tag", tag: "nonexistent-tag" },
             },
             { localArtifactStore, logger },
             {

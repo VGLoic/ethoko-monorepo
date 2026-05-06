@@ -1,23 +1,26 @@
 import { LocalArtifactStore } from "@/local-artifact-store";
-import { ArtifactKey, ResolvedArtifactKey } from "@/utils/artifact-key";
+import {
+  ArtifactReference,
+  ResolvedArtifactReference,
+} from "@/utils/artifact-reference";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 
 /**
  * Resolve an artifact ID from the Local Artifact Store if it exists, otherwise return null.
- * @param artifactKey The artifact key to resolve, either by tag or by ID.
+ * @param artifactRef The artifact reference to resolve, either by tag or by ID.
  * @param localArtifactStore The Local Artifact Store
  * @param opts Options for resolving the artifact ID, such as debug mode.
  * @returns The artifact ID if it exists in the Local Artifact Store, otherwise null.
  */
 export async function resolveLocalArtifact(
-  artifactKey: ArtifactKey,
+  artifactRef: ArtifactReference,
   localArtifactStore: LocalArtifactStore,
   opts: { debug: boolean },
-): Promise<ResolvedArtifactKey | null> {
-  if (artifactKey.type === "id") {
+): Promise<ResolvedArtifactReference | null> {
+  if (artifactRef.type === "id") {
     const hasIdResult = await toAsyncResult(
-      localArtifactStore.hasId(artifactKey.project, artifactKey.id),
+      localArtifactStore.hasId(artifactRef.project, artifactRef.id),
       { debug: opts.debug },
     );
     if (!hasIdResult.success) {
@@ -26,11 +29,11 @@ export async function resolveLocalArtifact(
       );
     }
     if (hasIdResult.value) {
-      return { project: artifactKey.project, id: artifactKey.id, tag: null };
+      return { project: artifactRef.project, id: artifactRef.id, tag: null };
     }
   } else {
     const hasTagResult = await toAsyncResult(
-      localArtifactStore.hasTag(artifactKey.project, artifactKey.tag),
+      localArtifactStore.hasTag(artifactRef.project, artifactRef.tag),
       { debug: opts.debug },
     );
     if (!hasTagResult.success) {
@@ -41,20 +44,20 @@ export async function resolveLocalArtifact(
     if (hasTagResult.value) {
       const artifactIdResult = await toAsyncResult(
         localArtifactStore.retrieveArtifactId(
-          artifactKey.project,
-          artifactKey.tag,
+          artifactRef.project,
+          artifactRef.tag,
         ),
         { debug: opts.debug },
       );
       if (!artifactIdResult.success) {
         throw new CliError(
-          `The artifact ${artifactKey.project}:${artifactKey.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
+          `The artifact ${artifactRef.project}:${artifactRef.tag} does not have an associated artifact ID. Please pull again. Run with debug mode for more info`,
         );
       }
       return {
-        project: artifactKey.project,
+        project: artifactRef.project,
         id: artifactIdResult.value,
-        tag: artifactKey.tag,
+        tag: artifactRef.tag,
       };
     }
   }

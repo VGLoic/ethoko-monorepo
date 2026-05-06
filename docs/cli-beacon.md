@@ -45,7 +45,7 @@ import { toAsyncResult } from "@/utils/result";
 | Zod schemas                  | PascalCase + `Schema` suffix | `TagManifestSchema`, `AbiSchema`                       |
 | Types inferred from Zod      | `z.infer<typeof XSchema>`    | `type TagManifest = z.infer<typeof TagManifestSchema>` |
 | Constants                    | SCREAMING_SNAKE_CASE         | `LOG_COLORS`, `VERSION`                                |
-| Files                        | kebab-case                   | `artifact-key.ts`, `s3-bucket-provider.ts`             |
+| Files                        | kebab-case                   | `artifact-reference.ts`, `s3-bucket-provider.ts`       |
 
 ## Type Safety
 
@@ -75,7 +75,7 @@ type Result<T> =
 Export command handlers post-parsing logic as async functions to be used in tests, they MUST throw CliError on errors.
 ```typescript
 export async function runInspectCommand(
-  artifactKey: ArtifactKey,
+  artifactReference: ArtifactReference,
   dependencies: {
     storageProvider: StorageProvider;
     localArtifactStore: LocalArtifactStore;
@@ -91,7 +91,7 @@ Use it in the command definition with error catching: distinguish `CliError` (sh
 
 ```typescript
 await runInspectCommand(
-    artifactKeyParsingResult.data,
+    artifactRefParsingResult.data,
     {
       storageProvider,
       localArtifactStore,

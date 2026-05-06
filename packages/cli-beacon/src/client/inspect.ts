@@ -2,7 +2,7 @@ import { LocalArtifactStore } from "../local-artifact-store";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import type { EthokoInputArtifact } from "@/ethoko-artifacts/v0";
-import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactReference } from "@/utils/artifact-reference";
 import { DebugLogger } from "@/utils/debug-logger";
 
 export type InspectResult = {
@@ -40,7 +40,7 @@ export type InspectResult = {
  * @throws CliError if the artifact cannot be found or read.
  */
 export async function inspectArtifact(
-  artifactKey: ResolvedArtifactKey,
+  artifactRef: ResolvedArtifactReference,
   dependencies: {
     localArtifactStore: LocalArtifactStore;
     logger: DebugLogger;
@@ -48,7 +48,7 @@ export async function inspectArtifact(
   opts: { debug: boolean },
 ): Promise<InspectResult> {
   const ensureResult = await toAsyncResult(
-    dependencies.localArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.localArtifactStore.ensureProjectSetup(artifactRef.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -60,12 +60,12 @@ export async function inspectArtifact(
   const artifactsResult = await toAsyncResult(
     Promise.all([
       dependencies.localArtifactStore.retrieveInputArtifact(
-        artifactKey.project,
-        artifactKey.id,
+        artifactRef.project,
+        artifactRef.id,
       ),
       dependencies.localArtifactStore.listContractArtifacts(
-        artifactKey.project,
-        artifactKey.id,
+        artifactRef.project,
+        artifactRef.id,
       ),
     ]),
     { debug: opts.debug },
@@ -78,7 +78,7 @@ export async function inspectArtifact(
   const [inputArtifact, contractList] = artifactsResult.value;
   if (opts.debug) {
     dependencies.logger.debug(
-      `Local artifact retrieved successfully for artifact "${artifactKey.project}@${artifactKey.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
+      `Local artifact retrieved successfully for artifact "${artifactRef.project}@${artifactRef.id}".\nInput artifact details: ${JSON.stringify(inputArtifact, null, 2)}.\nContract list: ${JSON.stringify(contractList, null, 2)}`,
     );
   }
 
@@ -104,8 +104,8 @@ export async function inspectArtifact(
           };
 
   return {
-    project: artifactKey.project,
-    tag: artifactKey.tag,
+    project: artifactRef.project,
+    tag: artifactRef.tag,
     id: inputArtifact.id,
     origin,
     compiler: compilerSettings,

@@ -4,7 +4,7 @@ import { StorageProvider } from "@/storage-provider";
 import { toAsyncResult } from "@/utils/result";
 import { CliError } from "./error";
 import { AbsolutePath, RelativePath } from "@/utils/path";
-import { ResolvedArtifactKey } from "@/utils/artifact-key";
+import { ResolvedArtifactReference } from "@/utils/artifact-reference";
 import { DebugLogger } from "@/utils/debug-logger";
 
 export type RestoreResult = {
@@ -17,7 +17,7 @@ export type RestoreResult = {
 
 /**
  * Restore original compilation artifacts to an input local destination
- * @param artifactKey Project, ID and optionally tag of the artifact
+ * @param artifactRef Project, ID and optionally tag of the artifact
  * @param outputPath The local path where the artifacts will be restored
  * @param dependencies.storageProvider The storage provider
  * @param dependencies.localArtifactStore Pulled artifact store
@@ -28,7 +28,7 @@ export type RestoreResult = {
  * @throws CliError in case of error
  */
 export async function restore(
-  artifactKey: ResolvedArtifactKey,
+  artifactRef: ResolvedArtifactReference,
   outputPath: AbsolutePath,
   dependencies: {
     storageProvider: StorageProvider;
@@ -38,7 +38,7 @@ export async function restore(
   opts: { force: boolean; debug: boolean },
 ): Promise<RestoreResult> {
   const ensureResult = await toAsyncResult(
-    dependencies.localArtifactStore.ensureProjectSetup(artifactKey.project),
+    dependencies.localArtifactStore.ensureProjectSetup(artifactRef.project),
     { debug: opts.debug },
   );
   if (!ensureResult.success) {
@@ -124,8 +124,8 @@ export async function restore(
 
   const originalContentResult = await toAsyncResult(
     dependencies.storageProvider.listOriginalContent(
-      artifactKey.project,
-      artifactKey.id,
+      artifactRef.project,
+      artifactRef.id,
     ),
     { debug: opts.debug },
   );
@@ -142,7 +142,7 @@ export async function restore(
   }
   if (opts.debug) {
     dependencies.logger.debug(
-      `Found ${originalContentPaths.length} original content files for artifact "${artifactKey.project}@${artifactKey.id}"`,
+      `Found ${originalContentPaths.length} original content files for artifact "${artifactRef.project}@${artifactRef.id}"`,
     );
   }
 
@@ -150,8 +150,8 @@ export async function restore(
     originalContentPaths.map(async (relativePath) => {
       const downloadResult = await toAsyncResult(
         dependencies.storageProvider.downloadOriginalContent(
-          artifactKey.project,
-          artifactKey.id,
+          artifactRef.project,
+          artifactRef.id,
           relativePath,
         ),
         { debug: opts.debug },
@@ -195,14 +195,14 @@ export async function restore(
 
   if (opts.debug) {
     dependencies.logger.debug(
-      `All original content files for artifact "${artifactKey.project}@${artifactKey.id}" restored successfully`,
+      `All original content files for artifact "${artifactRef.project}@${artifactRef.id}" restored successfully`,
     );
   }
 
   return {
-    project: artifactKey.project,
-    tag: artifactKey.tag,
-    id: artifactKey.id,
+    project: artifactRef.project,
+    tag: artifactRef.tag,
+    id: artifactRef.id,
     filesRestored: downloadResults,
     outputPath,
   };
