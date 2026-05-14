@@ -3,6 +3,7 @@ use thiserror::Error;
 use crate::newtypes::{
     email::{Email, EmailError},
     handle::{Handle, HandleError},
+    password::{Password, PasswordError},
 };
 
 pub struct EmailSignupRequest {
@@ -13,10 +14,12 @@ pub struct EmailSignupRequest {
 
 #[derive(Debug, Error)]
 pub enum EmailSignupRequestError {
-    #[error("Invalid email format")]
+    #[error("Invalid email")]
     InvalidEmail(EmailError),
-    #[error("Invalid handle format")]
+    #[error("Invalid handle")]
     InvalidHandle(HandleError),
+    #[error("Invalid password")]
+    InvalidPassword(PasswordError),
     #[error(transparent)]
     Unknown(#[from] anyhow::Error),
 }
@@ -27,6 +30,7 @@ impl EmailSignupRequest {
     /// # Errors
     /// `EmailSgnupRequestError::InvalidEmail` if the email format is invalid.
     /// `EmailSgnupRequestError::InvalidHandle` if the handle format is invalid
+    /// `EmailSgnupRequestError::InvalidPassword` if the password format is invalid
     /// `EmailSgnupRequestError::Unknown` for any other errors that may occur during the process.
     pub fn new(
         email: String,
@@ -35,7 +39,10 @@ impl EmailSignupRequest {
     ) -> Result<Self, EmailSignupRequestError> {
         let email = Email::new(&email).map_err(|e| EmailSignupRequestError::InvalidEmail(e))?;
         let handle = Handle::new(&handle).map_err(|e| EmailSignupRequestError::InvalidHandle(e))?;
-        let password_hash = password; // REMIND ME
+        let password =
+            Password::new(&password).map_err(|e| EmailSignupRequestError::InvalidPassword(e))?;
+
+        let password_hash = password.as_str().to_string(); // REMIND ME
         Ok(Self {
             email,
             handle,
@@ -81,6 +88,19 @@ mod tests {
         assert!(matches!(
             result,
             Err(EmailSignupRequestError::InvalidHandle(_))
+        ));
+    }
+
+    #[test]
+    fn test_invalid_password_signup_request() {
+        let email = Faker.fake::<Email>();
+        let handle = Faker.fake::<Handle>();
+        let invalid_password = "invalid-password".to_string();
+        let result =
+            EmailSignupRequest::new(email.to_string(), handle.to_string(), invalid_password);
+        assert!(matches!(
+            result,
+            Err(EmailSignupRequestError::InvalidPassword(_))
         ));
     }
 }

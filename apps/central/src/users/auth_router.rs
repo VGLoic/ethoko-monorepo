@@ -1,8 +1,8 @@
 use crate::{
-    newtypes::{email::EmailError, handle::HandleError},
+    newtypes::{email::EmailError, handle::HandleError, password::PasswordError},
     router::ApiError,
 };
-use axum::{Json, Router, http::StatusCode, response::IntoResponse, routing::post};
+use axum::{Json, Router, http::StatusCode, routing::post};
 use serde::{Deserialize, Serialize};
 
 use super::models::{EmailSignupRequest, EmailSignupRequestError};
@@ -37,6 +37,13 @@ async fn handle_signup_email(
                         HandleError::Empty => "\"handle\": empty value not allowed".to_string(),
                         HandleError::InvalidFormat => "\"handle\": invalid format, expected only alphanumeric characters and hyphens, length between 4 and 31".to_string(),
                         HandleError::InvalidSpecificHandle => "\"handle\": value is not allowed".to_string(),
+                    };
+                    return Err(ApiError::BadRequest(error_message));
+                }
+                EmailSignupRequestError::InvalidPassword(err) => {
+                    let error_message = match err {
+                        PasswordError::Empty => "\"password\": empty value not allowed".to_string(),
+                        PasswordError::InvalidFormat => "\"password\": invalid format, expected at least 8 characters, including uppercase, lowercase, digit and special character".to_string(),
                     };
                     return Err(ApiError::BadRequest(error_message));
                 }
