@@ -1,9 +1,12 @@
 use thiserror::Error;
 
-use crate::newtypes::{
-    email::{Email, EmailError},
-    handle::{Handle, HandleError},
-    password::{Password, PasswordError},
+use crate::{
+    newtypes::{
+        email::{Email, EmailError},
+        handle::{Handle, HandleError},
+        password::{Password, PasswordError},
+    },
+    users::password_hasher,
 };
 
 pub struct EmailSignupRequest {
@@ -42,7 +45,8 @@ impl EmailSignupRequest {
         let password =
             Password::new(&password).map_err(|e| EmailSignupRequestError::InvalidPassword(e))?;
 
-        let password_hash = password.as_str().to_string(); // REMIND ME
+        let password_hash = password_hasher::hash_password(&password)?;
+
         Ok(Self {
             email,
             handle,
