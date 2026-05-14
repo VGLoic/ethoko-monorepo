@@ -1,3 +1,4 @@
+use fake::{Dummy, Fake, faker, rand};
 use serde::{Deserialize, Serialize, de::Visitor};
 use sqlx::{Database, Decode, Encode};
 use validator::ValidateEmail;
@@ -142,6 +143,14 @@ where
     }
 }
 
+impl<T> Dummy<T> for Email {
+    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &T, rng: &mut R) -> Self {
+        let email: String = faker::internet::en::SafeEmail().fake_with_rng(rng);
+        Email::new(&email).unwrap()
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 

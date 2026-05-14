@@ -1,8 +1,11 @@
+use fake::{Dummy, Fake, faker, rand};
 use serde::{Deserialize, Serialize, de::Visitor};
 use sqlx::{Database, Decode, Encode};
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub struct Handle(String);
+
+const INVALID_HANDLES: &[&str] = &["admin", "user", "test"];
 
 impl Handle {
     /// Creates an `Handle` instance from a string slice, validating its format and mapping it to lowercase.
@@ -17,8 +20,19 @@ impl Handle {
             return Err(HandleError::Empty);
         }
 
-        // Matches only letters and numbers, no spaces or special characters
-        if !trimmed.chars().all(|c| c.is_ascii_alphanumeric()) {
+        // Matches only letters, numbers and hyphens, no spaces or special characters
+        if !trimmed
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || c == '-')
+        {
+            return Err(HandleError::InvalidFormat);
+        }
+
+        if INVALID_HANDLES.contains(&trimmed) {
+            return Err(HandleError::InvalidSpecificHandle);
+        }
+
+        if trimmed.len() > 30 || trimmed.len() < 4 {
             return Err(HandleError::InvalidFormat);
         }
 
@@ -43,6 +57,7 @@ impl Handle {
 pub enum HandleError {
     Empty,
     InvalidFormat,
+    InvalidSpecificHandle,
 }
 
 impl std::fmt::Display for Handle {
@@ -80,6 +95,7 @@ impl<'de> Visitor<'de> for HandleVisitor {
         Handle::new(value).map_err(|err| match err {
             HandleError::Empty => E::custom("handle cannot be empty"),
             HandleError::InvalidFormat => E::custom("invalid handle format"),
+            HandleError::InvalidSpecificHandle => E::custom("invalid specific handle"),
         })
     }
 }
@@ -142,25 +158,33 @@ where
     }
 }
 
+impl<T> Dummy<T> for Handle {
+    fn dummy_with_rng<R: rand::Rng + ?Sized>(_: &T, rng: &mut R) -> Self {
+        let handle: String = faker::name::en::FirstName().fake_with_rng(rng);
+        Handle::new(&handle).unwrap()
+    }
+}
+
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_handle_creation() {
-        let handle = Handle::new("testhandle").unwrap();
-        assert_eq!(handle.as_str(), "testhandle");
+        let handle = Handle::new("test-handle").unwrap();
+        assert_eq!(handle.as_str(), "test-handle");
     }
 
     #[test]
     fn test_handle_creation_with_whitespace() {
-        let handle = Handle::new(" testhandle ").unwrap();
-        assert_eq!(handle.as_str(), "testhandle");
+        let handle = Handle::new(" test-handle ").unwrap();
+        assert_eq!(handle.as_str(), "test-handle");
     }
 
     #[test]
     fn test_handle_creation_uppercase() {
-        let handle = Handle::new("TESTHANDLE").unwrap();
-        assert_eq!(handle.as_str(), "testhandle");
+        let handle = Handle::new("TEST-HANDLE").unwrap();
+        assert_eq!(handle.as_str(), "test-handle");
     }
 
     #[test]
@@ -170,10 +194,24 @@ mod tests {
     }
 
     #[test]
+    fn test_handle_creation_invalid_length() {
+        let result = Handle::new("ab");
+        assert!(matches!(result, Err(HandleError::InvalidFormat)));
+
+        let result = Handle::new("a".repeat(31).as_str());
+        assert!(matches!(result, Err(HandleError::InvalidFormat)));
+    }
+
+    #[test]
+    fn test_handle_creation_invalid_specific_handle() {
+        let result = Handle::new("admin");
+        assert!(matches!(result, Err(HandleError::InvalidSpecificHandle)));
+    }
+
+    #[test]
     fn test_handle_creation_invalid_format() {
         let invalid_handles = [
             "invalid_handle_with_underscores",
-            "invalid-handle-with-hyphens",
             "invalid.handle.with.dots",
             "invalid handle with spaces",
         ];
@@ -209,7 +247,7 @@ mod tests {
 
     #[test]
     fn test_handle_failing_deserialization() {
-        let deserialized: Result<Handle, _> = serde_json::from_str("\"invalid-handle\"");
+        let deserialized: Result<Handle, _> = serde_json::from_str("\"invalid_handle\"");
         assert!(deserialized.is_err());
         assert!(
             deserialized
