@@ -4,8 +4,10 @@ use crate::users::{
         email_signup::{EmailSignupError, EmailSignupRequest},
         user::User,
     },
+    notifier::UsersNotifier,
     repository::UsersRepository,
 };
+use tracing::error;
 
 #[async_trait::async_trait]
 pub trait UsersService: Send + Sync + 'static {
@@ -22,22 +24,36 @@ pub trait UsersService: Send + Sync + 'static {
     ) -> Result<(User, AuthCredential), EmailSignupError>;
 }
 
-pub struct UsersServiceImpl<R: UsersRepository> {
+pub struct UsersServiceImpl<R: UsersRepository, N: UsersNotifier> {
     repository: R,
+    notifier: N,
 }
 
-impl<R: UsersRepository> UsersServiceImpl<R> {
-    pub fn new(repository: R) -> Self {
-        Self { repository }
+impl<R: UsersRepository, N: UsersNotifier> UsersServiceImpl<R, N> {
+    pub fn new(repository: R, notifier: N) -> Self {
+        Self {
+            repository,
+            notifier,
+        }
     }
 }
 
 #[async_trait::async_trait]
-impl<R: UsersRepository> UsersService for UsersServiceImpl<R> {
+impl<R: UsersRepository, N: UsersNotifier> UsersService for UsersServiceImpl<R, N> {
     async fn signup_with_email(
         &self,
         request: EmailSignupRequest,
     ) -> Result<(User, AuthCredential), EmailSignupError> {
-        self.repository.signup_with_email(request).await
+        let (user, auth_credential) = self.repository.signup_with_email(request).await?;
+
+        if let Err(e) = self
+            .notifier
+            .user_signed_up_with_email(&user, &auth_credential)
+            .await
+        {
+            error!("Error in user_signed_up_with_email notification: {:?}", e);
+        }
+
+        Ok((user, auth_credential))
     }
 }

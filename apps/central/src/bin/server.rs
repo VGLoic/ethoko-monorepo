@@ -52,8 +52,9 @@ async fn main() -> Result<(), anyhow::Error> {
 
     info!("Successfully ran migrations");
 
+    let users_notifier = users::notifier::UsersNotifierImpl;
     let users_repository = users::repository::PsqlAccountsRepository::new(pool);
-    let users_service = users::service::UsersServiceImpl::new(users_repository);
+    let users_service = users::service::UsersServiceImpl::new(users_repository, users_notifier);
 
     let addr = format!("0.0.0.0:{}", config.port);
     let listener = tokio::net::TcpListener::bind(&addr).await.map_err(|err| {

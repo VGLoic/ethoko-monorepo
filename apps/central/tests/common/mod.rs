@@ -45,8 +45,9 @@ pub async fn setup_instance(config: &Config) -> Result<InstanceState, anyhow::Er
         return Err(anyhow::anyhow!(err));
     };
 
+    let users_notifier = users::notifier::UsersNotifierImpl;
     let users_repository = users::repository::PsqlAccountsRepository::new(pool);
-    let users_service = users::service::UsersServiceImpl::new(users_repository);
+    let users_service = users::service::UsersServiceImpl::new(users_repository, users_notifier);
 
     let port = config.port;
 
