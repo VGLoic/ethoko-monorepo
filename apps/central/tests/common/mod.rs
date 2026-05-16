@@ -1,4 +1,4 @@
-use ethoko_central::{config::Config, httpserver::serve_http_server};
+use ethoko_central::{config::Config, httpserver::serve_http_server, users};
 use sqlx::postgres::PgPoolOptions;
 use std::{net::SocketAddr, time::Duration};
 use tracing::{Level, error, level_filters::LevelFilter};
@@ -45,6 +45,10 @@ pub async fn setup_instance(config: &Config) -> Result<InstanceState, anyhow::Er
         return Err(anyhow::anyhow!(err));
     };
 
+    let users_notifier = users::notifier::UsersNotifierImpl;
+    let users_repository = users::repository::PsqlAccountsRepository::new(pool);
+    let users_service = users::service::UsersServiceImpl::new(users_repository, users_notifier);
+
     let port = config.port;
 
     let listener = if port == 0 {
@@ -62,7 +66,7 @@ pub async fn setup_instance(config: &Config) -> Result<InstanceState, anyhow::Er
         listener.local_addr().unwrap().port()
     );
 
-    tokio::spawn(async move { serve_http_server(listener).await.unwrap() });
+    tokio::spawn(async move { serve_http_server(listener, users_service).await.unwrap() });
 
     Ok(InstanceState {
         server_url,
