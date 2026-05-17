@@ -12,10 +12,14 @@ export type InspectResult = {
   origin:
     | {
         id: string;
-        format: "forge" | "hardhat-v2" | "hardhat-v3-non-isolated-build";
+        kind:
+          | "forge-v1-default"
+          | "forge-v1-with-build-info-option"
+          | "hardhat-v2"
+          | "hardhat-v3-non-isolated-build";
       }
     | {
-        format: "hardhat-v3";
+        kind: "hardhat-v3";
         ids: string[];
       };
   compiler: {
@@ -84,24 +88,16 @@ export async function inspectArtifact(
 
   const compilerSettings = deriveCompilerSettings(inputArtifact);
 
-  const origin =
+  const origin: InspectResult["origin"] =
     inputArtifact.origin.type === "hardhat-v3"
       ? {
-          format: "hardhat-v3" as const,
+          kind: "hardhat-v3",
           ids: inputArtifact.origin.pairs.map((pair) => pair.id),
         }
-      : inputArtifact.origin.type === "hardhat-v3-non-isolated-build"
-        ? {
-            format: "hardhat-v3-non-isolated-build" as const,
-            id: inputArtifact.origin.id,
-          }
-        : {
-            format:
-              inputArtifact.origin.type === "hardhat-v2"
-                ? ("hardhat-v2" as const)
-                : ("forge" as const),
-            id: inputArtifact.origin.id,
-          };
+      : {
+          kind: inputArtifact.origin.type,
+          id: inputArtifact.origin.id,
+        };
 
   return {
     project: artifactRef.project,
