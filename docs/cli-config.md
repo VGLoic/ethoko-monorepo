@@ -93,9 +93,9 @@ config.globalProjectNames; // Set<string> of names defined in global config
 config.localArtifactStorePath; // AbsolutePath instance, always absolute
 ```
 
-## Storage Providers
+## Storage Backends
 
-Each project references a storage provider:
+Each project references a Storage Backend:
 
 ```json
 // AWS S3
