@@ -31,12 +31,12 @@ const EthokoArtifactOriginSchema = z.discriminatedUnion("type", [
   z.object({
     id: z.string(),
     type: z.literal("forge-v1-with-build-info-option"),
-    format: z.literal(FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT),
+    _format: z.literal(FORGE_COMPILER_OUTPUT_WITH_BUILD_INFO_OPTION_FORMAT),
   }),
   z.object({
     id: z.string(),
     type: z.literal("hardhat-v2"),
-    format: z.literal(HARDHAT_V2_COMPILER_OUTPUT_FORMAT),
+    _format: z.literal(HARDHAT_V2_COMPILER_OUTPUT_FORMAT),
   }),
   z.object({
     type: z.literal("hardhat-v3"),
