@@ -49,7 +49,7 @@ export async function mapHardhatV2ArtifactToEthokoArtifact(
     origin: {
       type: "hardhat-v2",
       id: parsingResult.data.id,
-      format: parsingResult.data._format,
+      _format: parsingResult.data._format,
     },
     solcLongVersion: parsingResult.data.solcLongVersion,
     input: parsingResult.data.input,

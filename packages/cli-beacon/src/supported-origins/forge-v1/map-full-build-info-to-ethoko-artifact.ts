@@ -84,7 +84,7 @@ export async function mapForgeV1FullBuildInfoToEthokoArtifact(
     origin: {
       type: "forge-v1-with-build-info-option",
       id: forgeBuildInfo.id,
-      format: forgeBuildInfo._format,
+      _format: forgeBuildInfo._format,
     },
     solcLongVersion: forgeBuildInfo.solcLongVersion,
     input: forgeBuildInfo.input,

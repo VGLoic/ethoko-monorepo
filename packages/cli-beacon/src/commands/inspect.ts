@@ -260,13 +260,13 @@ function countContracts(result: InspectResult): number {
 }
 
 function originToLabel(origin: InspectResult["origin"]): string {
-  if (origin.format === "hardhat-v3") {
+  if (origin.kind === "hardhat-v3") {
     return `Hardhat v3 (${origin.ids.join(", ")})`;
   }
-  if (origin.format === "hardhat-v2") {
+  if (origin.kind === "hardhat-v2") {
     return `Hardhat v2 (${origin.id})`;
   }
-  if (origin.format === "hardhat-v3-non-isolated-build") {
+  if (origin.kind === "hardhat-v3-non-isolated-build") {
     return `Hardhat v3 (${origin.id})`;
   }
   return `Forge (${origin.id})`;

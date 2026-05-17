@@ -604,12 +604,12 @@ type EthokoArtifactOrigin =
   | {
       type: "forge-v1-with-build-info-option";
       id: string;
-      format: string;
+      _format: string;
     }
   | {
       type: "hardhat-v2";
       id: string;
-      format: string;
+      _format: string;
     }
   | {
       type: "hardhat-v3-non-isolated-build";
