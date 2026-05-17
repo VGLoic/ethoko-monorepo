@@ -14,7 +14,7 @@ packages/cli-beacon/
 │   ├── local-artifact-store/          # Local Artifact Store read/write logic
 │   ├── solc-artifacts/                # Solc artifact definitions
 │   ├── storage-provider/              # Storage provider interfaces and implementations
-│   ├── supported-origins/             # Supported origins for artifacts with mapping logic (e.g., Hardhat, Foundry)
+│   ├── supported-origins/             # Supported origins for artifacts with mapping logic (e.g., Hardhat, Forge)
 │   ├── ui/                            # CLI UI command logger (spinners, loggers, etc.) and colours
 │   └── utils/                         # Utility functions and helpers
 ├── templates-builder/                 # Template for generated typescript typings (through `typings` command)
@@ -154,7 +154,7 @@ async function pullProject(
 - **Global setup:** `test/setup.ts` starts LocalStack (Docker), creates TestSession with unique ID
 - **Dual-provider testing:** Every test runs against both Filesystem and S3 via `describe.for(STORAGE_PROVIDER_STRATEGIES)`
 - **Scoped fixtures:** `storageProviderTest.scoped({ storageProviderFactory })` provides `storageProvider` and `localArtifactStore` -- auto-created and auto-cleaned per test
-- **Parameterized tests:** `storageProviderTest.for(ARTIFACTS_STRATEGIES)` iterates over all fixture formats (Foundry, Hardhat v2/v3 variants)
+- **Parameterized tests:** `storageProviderTest.for(ARTIFACTS_STRATEGIES)` iterates over all fixture formats (Forge, Hardhat v2/v3 variants)
 - **Project isolation:** `createTestProjectName()` generates `{sessionId}-{name}` to prevent collisions across parallel runs
-- **Fixtures:** Real compilation artifacts in `test/fixtures/` from Foundry and Hardhat
+- **Fixtures:** Real compilation artifacts in `test/fixtures/` from Forge and Hardhat
 - **Debugging:** `inspectS3Bucket()`, `inspectFilesystemStorage()` helpers; `pnpm test:localstack:logs`

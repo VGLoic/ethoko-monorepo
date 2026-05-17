@@ -116,7 +116,7 @@ ethoko push my-project:2026-02-02
 If not set up in the local configuration with `compilationOutputPath` or need to be overridden, the path to the compilation artifact can be provided:
 
 ```bash
-# e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
+# e.g. ./artifacts for Hardhat, ./out for Forge, etc...
 ethoko push my-project --artifact-path ./path/to/artifacts
 ```
 
@@ -231,7 +231,7 @@ Each project is labelled with its source: `[global]`, `[local]`, or `[local - ov
 Initialize the Ethoko configuration through an interactive wizard. It guides you through:
 
 - Adding projects (name, storage backend, and whether to store the config globally or locally)
-- Detecting and setting the compilation output path (`./artifacts` for Hardhat, `./out` for Foundry)
+- Detecting and setting the compilation output path (`./artifacts` for Hardhat, `./out` for Forge)
 - Adding the relevant paths to `.gitignore`
 
 ```bash
@@ -272,7 +272,7 @@ ethoko diff my-project@b5e41181986a
 If not set up in the configuration or need to be overridden, the path to the compilation artifact can be provided:
 
 ```bash
-# e.g. ./artifacts for Hardhat, ./out for Foundry, etc...
+# e.g. ./artifacts for Hardhat, ./out for Forge, etc...
 ethoko diff my-project:2026-02-02 --artifact-path ./path/to/artifacts
 ```
 
@@ -363,10 +363,10 @@ Integration examples with Foundry or Hardhat can be found in the `apps/` folder:
 
 - [hardhat-v3_hardhat-deploy-v2](apps/hardhat-v3_hardhat-deploy-v2/README.md): compile a contract using Hardhat v3, deploy using Hardhat Deploy v2,
 - [hardhat-v3_ignition](apps/hardhat-v3_ignition/README.md): compile a contract using Hardhat v3, deploy using Hardhat Ignition,
-- [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Foundry, deploy using Hardhat Deploy v2,
+- [foundry_hardhat-deploy-v2](apps/foundry_hardhat-deploy-v2/README.md): compile a contract with Forge, deploy using Hardhat Deploy v2,
 - [hardhat-v2_hardhat-deploy-v0](apps/hardhat-v2_hardhat-deploy-v0/README.md): compile a contract with Hardhat v2, deploy using Hardhat Deploy v0.12,
 - [hardhat-v2_hardhat-deploy-v0_external-lib](apps/hardhat-v2_hardhat-deploy-v0_external-lib/README.md): compile a contract and its external library with Hardhat v2, deploy using Hardhat Deploy v0.12,
-- [foundry_etherscan-verification](apps/foundry_etherscan-verification/README.md): compile a contract with Foundry, deploy using Hardhat Ignition, verify on Etherscan using the static artifact,
+- [foundry_etherscan-verification](apps/foundry_etherscan-verification/README.md): compile a contract with Forge, deploy using Hardhat Ignition, verify on Etherscan using the static artifact,
 - [hardhat-v3_etherscan-verification](apps/hardhat-v3_etherscan-verification/README.md): compile a contract with Hardhat v3, deploy using Hardhat Ignition, verify on Etherscan using the static artifact.
 
 ## FAQ
